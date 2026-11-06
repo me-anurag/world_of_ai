@@ -1,0 +1,328 @@
+# FIELD 13 — Safety, Security, Ethics & Governance
+# Audit: AIMA ch.27 (limits, ethics: weapons, surveillance, fairness, trust, work, robot rights, safety), Hendrycks "Introduction to AI Safety, Ethics, and Society", Amodei et al. "Concrete Problems in AI Safety", Barocas/Hardt/Narayanan "Fairness and Machine Learning", Molnar "Interpretable ML", Anthropic/OpenAI/DeepMind interpretability & alignment literature, International AI Safety Report (2025), EU AI Act, NIST AI RMF.
+!defaults d=int st=active
+
+######## L2: Robustness
+== safe.robust | Adversarial robustness
+def: Keeping models correct under small malicious perturbations and unexpected inputs. Tiny, invisible changes can flip a classifier's answer.
+pre: dl.basics.backprop, ml.concepts.shift
+paper: Szegedy et al. | Intriguing Properties of Neural Networks | 2013
+
+== safe.robust.attacks | Adversarial examples (FGSM, PGD)
+def: Perturb the input in the direction that increases the loss, in one step (FGSM) or iteratively within a norm ball (PGD).
+f: x' = x + ε·sign(∇ₓL)
+pre: found.opt.constrained.projected
+paper: Goodfellow, Shlens, Szegedy | Explaining and Harnessing Adversarial Examples | 2014
+
+== safe.robust.training | Adversarial training & certified defences
+def: Train on adversarial examples (the most reliable empirical defence) or prove robustness within a radius (randomized smoothing, verification).
+pre: safe.robust.attacks
+paper: Madry et al. | Towards Deep Learning Models Resistant to Adversarial Attacks | 2017
+
+== safe.robust.ood | Out-of-distribution detection
+def: Notice when an input is unlike the training data so the system can abstain or defer to a human.
+pre: prob.bayesml.uncertainty
+paper: Hendrycks, Gimpel | A Baseline for Detecting Misclassified and Out-of-Distribution Examples in Neural Networks | 2016
+
+######## L2: Security of ML systems
+== safe.security | Security of ML systems
+def: Attacks on the ML lifecycle beyond test-time perturbations: poisoning training data, planting backdoors, stealing models, and exploiting AI-powered applications.
+pre: safe.robust
+paper: Biggio, Roli | Wild Patterns: Ten Years After the Rise of Adversarial Machine Learning | 2018
+
+== safe.security.poisoning | Data poisoning & backdoors
+def: Corrupt training data so the model learns hidden triggers or degraded behaviour; a growing risk with web-scale training data.
+pre: infra.data
+paper: Gu, Dolan-Gavitt, Garg | BadNets: Identifying Vulnerabilities in the Machine Learning Model Supply Chain | 2017
+
+== safe.security.extraction | Model extraction & theft
+def: Reconstruct a model's behaviour or weights by querying its API, or steal weights directly; a reason to secure frontier model weights.
+paper: Tramèr et al. | Stealing Machine Learning Models via Prediction APIs | 2016
+
+######## L2: LLM safety & misuse
+== safe.llm | LLM safety & misuse
+def: Risks specific to language models and agents: being tricked into harmful output, hijacked by injected instructions, or misused for scams, disinformation, cyberattacks or weapons uplift.
+pre: llm.post.safety-tuning, safe.security
+
+== safe.llm.jailbreak | Jailbreaks
+def: Prompts that get a model to ignore its safety training (role-play, obfuscation, many-shot examples, automated adversarial suffixes).
+paper: Zou et al. | Universal and Transferable Adversarial Attacks on Aligned Language Models | 2023
+
+== safe.llm.injection | Prompt injection
+def: Instructions hidden in data the model reads (web pages, emails, documents, tool output) hijack it into following the attacker instead of the user. The central security problem for agents.
+pre: sys.agents.tools
+paper: Greshake et al. | Not What You've Signed Up For: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection | 2023
+
+== safe.llm.redteam | Red-teaming
+def: Deliberately attacking a model, by people or automated systems, to find harmful behaviours before release.
+paper: Ganguli et al. | Red Teaming Language Models to Reduce Harms: Methods, Scaling Behaviors, and Lessons Learned | 2022
+
+== safe.llm.misuse | Misuse risks (disinformation, cyber, bio/chem uplift)
+def: Ways capable models could help bad actors scale scams and propaganda or gain dangerous technical capabilities; assessed with dangerous-capability evaluations.
+to: safe.eval
+d: beg
+
+== safe.llm.provenance | Watermarking, provenance & deepfake detection
+def: Mark AI-generated text, images and audio (statistical watermarks, signed metadata like C2PA) and detect synthetic media. Detection of unmarked content remains unreliable.
+pre: llm.decode
+paper: Kirchenbauer et al. | A Watermark for Large Language Models | 2023
+
+######## L2: Privacy
+== safe.privacy | Privacy
+def: Protecting personal data used to train and query models: models can memorize and leak it, and inference can reveal sensitive attributes.
+pre: ml.concepts.generalization, infra.data
+paper: Shokri, Stronati, Song, Shmatikov | Membership Inference Attacks Against Machine Learning Models | 2017
+
+== safe.privacy.attacks | Membership inference & reconstruction attacks
+def: Determine whether a person's record was in the training set, or reconstruct training examples from a model.
+pre: llm.behavior.memorization
+
+== safe.privacy.dp | Differential privacy
+def: A mathematical guarantee that any single person's data barely changes the output; achieved by adding calibrated noise. DP-SGD applies it to training.
+f: P[M(D) ∈ S] ≤ e^ε · P[M(D') ∈ S]
+pre: found.prob.dist.exponential
+paper: Dwork, McSherry, Nissim, Smith | Calibrating Noise to Sensitivity in Private Data Analysis | 2006
+st: foundational
+d: adv
+
+== safe.privacy.dpsgd | DP-SGD
+def: Clip each example's gradient and add Gaussian noise during training, with privacy accounting across steps.
+pre: safe.privacy.dp, found.opt.first.sgd
+paper: Abadi et al. | Deep Learning with Differential Privacy | 2016
+d: adv
+
+== safe.privacy.pets | Privacy-enhancing technologies (federated, secure computation)
+def: Federated learning, secure multi-party computation, homomorphic encryption and trusted hardware let models train or run without exposing raw data.
+pre: ml.settings.federated
+d: adv
+
+== safe.privacy.unlearning | Machine unlearning
+def: Remove the influence of specific data from a trained model without retraining from scratch; needed for deletion requests and copyright claims.
+paper: Bourtoule et al. | Machine Unlearning | 2019
+d: adv
+
+######## L2: Fairness
+== safe.fairness | Fairness
+def: Preventing models from treating people unjustly by group (race, gender, caste, age, disability). Bias enters through data, labels, features, objectives and deployment.
+pre: ml.eval.cls-metrics, found.stats.testing.sampling
+paper: Barocas, Hardt, Narayanan | Fairness and Machine Learning: Limitations and Opportunities | 2019
+
+== safe.fairness.sources | Sources of bias
+def: Historical bias in data, unrepresentative sampling, biased labels, proxy features, feedback loops and mismatched deployment populations.
+paper: Buolamwini, Gebru | Gender Shades: Intersectional Accuracy Disparities in Commercial Gender Classification | 2018
+d: beg
+
+== safe.fairness.metrics | Fairness criteria (demographic parity, equalized odds, calibration)
+def: Formal definitions: equal positive rates across groups, equal error rates, or equal calibration.
+pre: ml.eval.calibration
+paper: Hardt, Price, Srebro | Equality of Opportunity in Supervised Learning | 2016
+
+== safe.fairness.impossibility | Impossibility results
+def: When base rates differ across groups, calibration and equal error rates cannot all hold at once, so fairness requires value choices, not just maths.
+pre: safe.fairness.metrics
+paper: Kleinberg, Mullainathan, Raghavan | Inherent Trade-Offs in the Fair Determination of Risk Scores | 2016
+st: foundational
+d: adv
+
+== safe.fairness.mitigation | Bias mitigation (pre-, in-, post-processing)
+def: Reweight or repair data, add fairness constraints to training, or adjust thresholds per group; plus auditing deployed systems.
+pre: safe.fairness.metrics
+
+######## L2: Interpretability
+== safe.interp | Interpretability
+def: Understanding what a model has learned and why it produces an output, to debug it, trust it, and detect dangerous behaviour.
+pre: ml.interp, dl.basics
+paper: Doshi-Velez, Kim | Towards A Rigorous Science of Interpretable Machine Learning | 2017
+
+== safe.interp.attribution | Feature attribution & saliency (gradients, Integrated Gradients, Grad-CAM)
+def: Highlight which input parts most influenced an output using gradients or path integrals; Grad-CAM produces heatmaps for CNNs. Useful but can be misleading.
+pre: dl.basics.backprop
+paper: Sundararajan, Taly, Yan | Axiomatic Attribution for Deep Networks | 2017
+
+== safe.interp.concepts | Concept-based explanations (TCAV)
+def: Test how much a human-defined concept (stripes, gender) influences a model's decisions using directions in its activation space.
+pre: dl.repr.probing
+paper: Kim et al. | Interpretability Beyond Feature Attribution: Quantitative Testing with Concept Activation Vectors (TCAV) | 2018
+d: adv
+
+== safe.interp.mech | Mechanistic interpretability
+def: Reverse-engineer networks into human-understandable features and circuits, the way one would decompile a program.
+pre: dl.arch.transformer.block
+paper: Olah et al. | Zoom In: An Introduction to Circuits | 2020
+d: adv
+
+== safe.interp.superposition | Features & superposition
+def: Networks represent more features than they have neurons by overlapping them, which is why single neurons are often polysemantic.
+pre: safe.interp.mech
+paper: Elhage et al. | Toy Models of Superposition | 2022
+d: adv
+
+== safe.interp.sae | Sparse autoencoders & dictionary learning
+def: Decompose activations into many sparse, more interpretable features using sparse autoencoders trained on a model's internals; scaled to frontier LLMs.
+pre: safe.interp.superposition, dl.arch.autoencoder, ml.unsup.nmf
+paper: Bricken et al. | Towards Monosemanticity: Decomposing Language Models With Dictionary Learning | 2023
+d: adv
+
+== safe.interp.circuits | Circuits, activation patching & attribution graphs
+def: Find which components causally implement a behaviour by patching activations between runs and tracing feature-to-feature interactions.
+pre: safe.interp.mech, prob.causal.do
+paper: Wang et al. | Interpretability in the Wild: a Circuit for Indirect Object Identification in GPT-2 small | 2022
+d: adv
+
+== safe.interp.steering | Representation engineering & steering
+def: Find directions for concepts (honesty, refusal, sentiment) in activation space and add or remove them to control behaviour.
+pre: safe.interp.mech
+paper: Zou et al. | Representation Engineering: A Top-Down Approach to AI Transparency | 2023
+d: adv
+
+######## L2: Alignment
+== safe.alignment | Alignment
+def: Making AI systems pursue what their developers and users actually intend, including in situations training didn't cover, and keeping that true as systems become more capable than their overseers.
+pre: hist.define.four.beneficial, rl.reward.hacking, llm.post.rlhf
+paper: Christian | The Alignment Problem: Machine Learning and Human Values | 2020
+
+== safe.alignment.outer-inner | Outer vs inner alignment; goal misgeneralization
+def: Outer: is the training objective what we want? Inner: does the trained model actually pursue that objective, or a proxy that coincided with it in training?
+paper: Langosco et al. | Goal Misgeneralization in Deep Reinforcement Learning | 2021
+d: adv
+
+== safe.alignment.oversight | Scalable oversight (debate, amplification, weak-to-strong)
+def: How humans can supervise systems smarter than themselves: let AIs debate, break tasks into checkable pieces, or study how weak supervisors can train strong models.
+paper: Irving, Christiano, Amodei | AI Safety via Debate | 2018
+d: adv
+
+== safe.alignment.honesty | Honesty, deception & scheming
+def: Whether models report what they believe, and whether they might strategically mislead overseers (e.g., behave differently when they think they are evaluated). Studied with model organisms and evaluations.
+pre: llm.reasoning.faithful
+paper: Greenblatt et al. | Alignment Faking in Large Language Models | 2024
+d: adv
+
+== safe.alignment.corrigibility | Corrigibility & control
+def: Systems that accept correction and shutdown, plus "AI control": deployment safeguards that keep even a misaligned model from causing harm.
+paper: Soares, Fallenstein, Yudkowsky, Armstrong | Corrigibility | 2015
+d: adv
+
+== safe.alignment.specs | Specifying values (constitutions, model specs)
+def: Writing down the principles and priorities a model should follow, then training and evaluating against them.
+pre: llm.post.cai
+
+######## L2: Evaluations & frontier safety
+== safe.eval | Safety evaluations & frontier safety policies
+def: Testing models for dangerous capabilities (cyber, bio, autonomy, persuasion) and propensities before and after release, tied to company policies that require stronger safeguards as capabilities rise.
+pre: llm.eval, safe.llm.redteam
+paper: Shevlane et al. | Model Evaluation for Extreme Risks | 2023
+
+== safe.eval.cards | System cards & transparency reports
+def: Published documentation of a model's evaluations, risks and mitigations at release.
+pre: infra.mlops.cards
+d: beg
+
+######## L2: Catastrophic & existential risk
+== safe.xrisk | Catastrophic & existential risk
+def: Arguments that advanced AI could cause irreversible global harm through misuse, accidents, races between developers, or loss of control over misaligned systems, and the debate over how likely that is.
+pre: safe.alignment, hist.philosophy.future
+paper: Bostrom | Superintelligence: Paths, Dangers, Strategies | 2014
+st: debate
+d: beg
+
+== safe.xrisk.orthogonality | Orthogonality thesis & instrumental convergence
+aka: paperclip maximizer; power-seeking
+def: Intelligence and final goals are independent; almost any goal favours acquiring resources, self-preservation and resisting shutdown, which makes misalignment dangerous.
+paper: Omohundro | The Basic AI Drives | 2008
+st: debate
+
+== safe.xrisk.debate | The risk debate & expert statements
+def: Leading researchers disagree sharply on the size of the risk; a 2023 statement signed by many AI scientists called extinction risk a global priority, while others see it as speculative.
+paper: Bengio et al. | International AI Safety Report | 2025
+st: debate
+d: beg
+
+######## L2: Ethics
+== safe.ethics | AI ethics
+def: The moral questions AI raises: who is harmed or helped, who is accountable, what should be automated, and what we owe each other (and possibly AI systems).
+pre: hist.philosophy
+x: hist.timeline.reality.weizenbaum
+paper: Floridi, Cowls | A Unified Framework of Five Principles for AI in Society | 2019
+d: beg
+
+== safe.ethics.principles | Principles (beneficence, non-maleficence, autonomy, justice, explicability)
+def: The recurring principles across hundreds of AI ethics guidelines, and the gap between stating them and implementing them.
+d: beg
+
+== safe.ethics.accountability | Accountability & transparency
+def: Who is responsible when an AI system causes harm, and what must be disclosed: documentation, audits, explanations to affected people, contestability.
+d: beg
+
+== safe.ethics.labor | Work, economy & inequality
+def: Automation's effects on jobs and wages, concentration of power and wealth in a few AI firms, and the distribution of AI's benefits.
+paper: Eloundou, Manning, Mishkin, Rock | GPTs are GPTs: An Early Look at the Labor Market Impact Potential of Large Language Models | 2023
+st: debate
+d: beg
+
+== safe.ethics.surveillance | Surveillance & autonomy
+def: Facial recognition, predictive policing and behavioural profiling threaten privacy and civil liberties.
+pre: dom.cv.face
+d: beg
+
+== safe.ethics.weapons | Lethal autonomous weapons & military AI
+def: Weapons that select and engage targets without meaningful human control; debated at the UN with calls for a treaty.
+st: debate
+d: beg
+
+== safe.ethics.environment | Environmental impact
+def: Energy, water and carbon costs of training and running large models, set against AI's potential climate benefits.
+pre: infra.hw.energy
+paper: Strubell, Ganesh, McCallum | Energy and Policy Considerations for Deep Learning in NLP | 2019
+d: beg
+
+== safe.ethics.creative | Copyright, creativity & attribution
+def: Disputes over training on copyrighted work, ownership of AI outputs, and the effect on artists and writers.
+pre: infra.data.licensing
+st: debate
+d: beg
+
+== safe.ethics.wellbeing | Human–AI relationships & wellbeing
+def: Over-reliance, emotional attachment to chatbots, manipulation and effects on learning and mental health.
+pre: llm.behavior.sycophancy
+st: debate
+d: beg
+
+== safe.ethics.moral-status | Moral status of AI
+def: Could AI systems ever have experiences or interests that matter morally, and how should uncertainty about that be handled? Discussed under model welfare and robot rights.
+pre: hist.philosophy.mind.consciousness
+paper: Long et al. | Taking AI Welfare Seriously | 2024
+st: debate
+d: adv
+
+######## L2: Governance & policy
+== safe.governance | Governance & policy
+def: Laws, standards, institutions and international agreements shaping how AI is built and used. Fast-moving: dates below are as of late 2026.
+pre: safe.ethics
+st: active
+d: beg
+
+== safe.governance.euaia | EU AI Act
+def: Risk-based EU law in force since August 2024: banned practices from February 2025, general-purpose model obligations from August 2025; the 2026 AI Omnibus moved high-risk rules to December 2027 (Annex III) and August 2028 (Annex I).
+yr: 2024
+d: beg
+
+== safe.governance.us | United States policy
+def: Policy has shifted with administrations: Executive Order 14110 (October 2023) was revoked in January 2025 and replaced by a deregulatory order and a July 2025 AI Action Plan; NIST's AI Risk Management Framework (2023) remains a voluntary standard.
+yr: 2023
+d: beg
+
+== safe.governance.global | International governance & safety institutes
+def: AI safety summits (Bletchley 2023 onward), national AI safety/security institutes, OECD principles, UN processes, China's rules for generative AI, and standards like ISO/IEC 42001.
+d: beg
+
+== safe.governance.compute | Compute governance & export controls
+def: Governing AI through its inputs: tracking large training runs, export controls on advanced chips, and know-your-customer rules for cloud compute.
+pre: infra.hw
+paper: Sastry et al. | Computing Power and the Governance of Artificial Intelligence | 2024
+st: debate
+
+== safe.governance.open-weights | Open vs closed model release
+def: Open weights enable research, competition and local use but can't be recalled or have safeguards enforced; staged and structured access are middle paths.
+pre: llm.models.llama
+st: debate
+d: beg

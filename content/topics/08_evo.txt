@@ -1,0 +1,184 @@
+# FIELD 4 — Evolutionary & Nature-Inspired Computing
+# Audit: Eiben & Smith "Introduction to Evolutionary Computing" (GA, ES, EP, GP, DE, PSO, multi-objective, constraint handling, parameter control, memetic, coevolution, interactive EC, theory), AIMA 4.1.4, Dorigo (ACO), Kennedy & Eberhart (PSO), neuroevolution & quality-diversity surveys.
+!defaults d=int st=foundational
+
+== evo.core | Core ideas of evolutionary computation
+def: Keep a population of candidate solutions, score them with a fitness function, keep the better ones and create new candidates by recombining and mutating them. Needs no gradients, only the ability to evaluate solutions.
+pre: found.opt.other.blackbox, found.prob.dist.uniform
+paper: Eiben, Smith | Introduction to Evolutionary Computing | 2003
+d: beg
+
+== evo.core.population | Population, genotype & phenotype
+def: The genotype is the encoding (bits, numbers, trees); the phenotype is the solution it decodes to. The population is the current set of candidates.
+d: beg
+
+== evo.core.fitness | Fitness function & fitness landscape
+def: The objective that scores each candidate. Picturing fitness over the search space as a landscape explains local optima, ruggedness and deception.
+d: beg
+
+== evo.core.selection | Selection (roulette, tournament, rank, elitism)
+def: How parents and survivors are chosen: proportional to fitness, by small tournaments, by rank, with elitism always keeping the best. Controls selection pressure.
+pre: evo.core.fitness
+d: beg
+
+== evo.core.variation | Variation: crossover & mutation
+def: Crossover recombines two parents (one-point, uniform, arithmetic); mutation makes small random changes. Crossover exploits, mutation explores.
+pre: evo.core.population
+d: beg
+
+== evo.core.exploration | Exploration vs exploitation & diversity
+def: Too much selection pressure collapses the population onto one solution (premature convergence); diversity preservation (niching, crowding, fitness sharing) keeps search open.
+pre: evo.core.selection, evo.core.variation
+x: rl.bandits
+
+== evo.core.params | Parameter tuning & self-adaptation
+def: Population size, mutation and crossover rates matter a lot. They can be tuned in advance or adapted during the run, even encoded in the genome itself.
+pre: evo.core.variation
+d: adv
+
+== evo.core.theory | Theory (schema theorem, no free lunch)
+def: Holland's schema theorem explains GA progress via building blocks; the no-free-lunch theorem says no optimizer beats others averaged over all problems.
+paper: Wolpert, Macready | No Free Lunch Theorems for Optimization | 1997
+d: adv
+
+== evo.ga | Genetic algorithms
+def: The classic EA: bit-string (or other) genomes evolved with selection, crossover and mutation.
+pre: evo.core.variation, evo.core.selection
+paper: Holland | Adaptation in Natural and Artificial Systems | 1975
+yr: 1975
+st: classic
+d: beg
+
+== evo.ga.encoding | Encodings (binary, real-valued, permutation)
+def: Choosing a representation that suits the problem; permutation encodings with special operators solve ordering problems like the travelling salesman.
+st: classic
+
+== evo.ga.memetic | Memetic algorithms
+def: Genetic algorithms combined with local search on each individual (Lamarckian or Baldwinian learning).
+pre: sym.search.local.hill
+st: classic
+d: adv
+
+== evo.es | Evolution strategies
+def: Evolve real-valued vectors with Gaussian mutation and self-adapted step sizes. Strong for continuous black-box optimization.
+pre: evo.core.variation, found.prob.dist.gaussian
+paper: Rechenberg | Evolutionsstrategie: Optimierung technischer Systeme nach Prinzipien der biologischen Evolution | 1973
+yr: 1973
+
+== evo.es.cmaes | CMA-ES
+def: Covariance matrix adaptation: learn the shape of the search distribution from successful steps. The state-of-the-art general-purpose black-box optimizer for continuous problems.
+pre: found.prob.rv.cov-matrix
+paper: Hansen, Ostermeier | Completely Derandomized Self-Adaptation in Evolution Strategies | 2001
+st: dominant
+d: adv
+
+== evo.es.nes | Natural evolution strategies & ES for RL
+def: Estimate a gradient of expected fitness from random perturbations. OpenAI showed this scales as a parallel alternative to RL for training policies.
+pre: found.opt.second.natural
+paper: Salimans, Ho, Chen, Sidor, Sutskever | Evolution Strategies as a Scalable Alternative to Reinforcement Learning | 2017
+to: rl.policy
+d: adv
+
+== evo.ep | Evolutionary programming
+def: Fogel's early approach evolving finite-state machines with mutation only; later merged in practice with evolution strategies.
+pre: evo.core.variation
+yr: 1966
+st: classic
+d: adv
+
+== evo.de | Differential evolution
+def: Create new candidates by adding the scaled difference of two population members to a third. Simple and very effective on continuous problems.
+f: v = x_a + F·(x_b − x_c)
+pre: evo.core.variation
+paper: Storn, Price | Differential Evolution – A Simple and Efficient Heuristic for Global Optimization over Continuous Spaces | 1997
+st: dominant
+
+== evo.gp | Genetic programming
+def: Evolve programs, usually expression trees, by crossover of subtrees and mutation. Used for symbolic regression (finding equations from data).
+pre: evo.ga, found.discrete.graphs.trees
+paper: Koza | Genetic Programming: On the Programming of Computers by Means of Natural Selection | 1992
+to: sym.learning.synthesis
+st: classic
+
+== evo.gp.symreg | Symbolic regression
+def: Search for a compact mathematical formula that fits data, rather than fitting parameters of a fixed model. Revived with neural guidance and LLMs (e.g., FunSearch).
+to: apps.science
+st: active
+d: adv
+
+== evo.moo | Multi-objective evolutionary optimization
+def: Optimize several conflicting objectives at once and return the Pareto front of trade-offs instead of one answer (NSGA-II, MOEA/D).
+pre: evo.core.selection
+paper: Deb, Pratap, Agarwal, Meyarivan | A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II | 2002
+st: dominant
+d: adv
+
+== evo.constraints | Constraint handling in EAs
+def: Penalty functions, repair operators and feasibility rules to keep evolution inside constraints.
+pre: evo.core.fitness
+d: adv
+
+== evo.coevolution | Coevolution
+def: Fitness depends on other evolving populations, competitive (predator–prey, game players) or cooperative (parts of a solution).
+pre: evo.core.fitness
+x: rl.multiagent
+d: adv
+
+== evo.swarm | Swarm intelligence
+def: Optimization from simple agents following local rules whose collective behaviour solves problems, inspired by flocks, ants and bees.
+pre: evo.core
+d: beg
+
+== evo.swarm.pso | Particle swarm optimization
+def: Particles fly through the search space pulled toward their own best position and the swarm's best.
+f: v ← ωv + c₁r₁(p_best − x) + c₂r₂(g_best − x)
+paper: Kennedy, Eberhart | Particle Swarm Optimization | 1995
+st: dominant
+
+== evo.swarm.aco | Ant colony optimization
+def: Artificial ants build solutions and lay pheromone on good paths; pheromone evaporates. Suited to routing and graph problems.
+pre: found.cs.algo.graph
+paper: Dorigo, Maniezzo, Colorni | Ant System: Optimization by a Colony of Cooperating Agents | 1996
+st: classic
+
+== evo.swarm.other | Other nature-inspired metaheuristics
+def: Bee colony, firefly, cuckoo search and many more. Few add much beyond PSO and DE; the field has been criticized for metaphor-driven duplication.
+st: superseded
+
+== evo.ais | Artificial immune systems
+def: Algorithms modelled on the immune system (clonal selection, negative selection) for anomaly detection and optimization.
+pre: evo.core
+st: classic
+d: adv
+
+== evo.ca | Cellular automata & artificial life
+def: Grids of cells updated by local rules that generate complex global behaviour (Conway's Game of Life). Artificial life studies lifelike behaviour in simulation; neural cellular automata learn the rules.
+pre: evo.core
+st: classic
+
+== evo.neuro | Neuroevolution
+def: Evolving neural network weights and/or architectures. Competitive in RL and the origin of neural architecture search.
+pre: evo.ga, dl.basics.mlp
+to: ml.automl.nas
+st: active
+
+== evo.neuro.neat | NEAT
+def: NeuroEvolution of Augmenting Topologies: evolve network structure starting small, with historical markings for crossover and speciation to protect innovation.
+paper: Stanley, Miikkulainen | Evolving Neural Networks through Augmenting Topologies | 2002
+st: classic
+d: adv
+
+== evo.neuro.qd | Quality-diversity & novelty search (MAP-Elites)
+def: Seek a diverse archive of high-performing solutions across behaviour descriptors, rather than one best solution. Novelty search rewards new behaviour instead of fitness.
+pre: evo.core.exploration
+paper: Mouret, Clune | Illuminating Search Spaces by Mapping Elites | 2015
+st: active
+d: adv
+
+== evo.llm | LLM-driven evolutionary search
+def: Use language models as mutation and crossover operators over code or text, scored by an evaluator (FunSearch, AlphaEvolve). Found new results in mathematics and algorithm design.
+pre: evo.gp, llm
+paper: Romera-Paredes et al. | Mathematical Discoveries from Program Search with Large Language Models | 2024
+to: front.discovery
+st: active
+d: adv

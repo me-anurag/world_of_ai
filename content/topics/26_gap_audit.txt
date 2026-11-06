@@ -1,0 +1,80 @@
+# Final gap-audit additions (ACM Computing Classification System: AI + ML branches; arXiv cs.AI/LG/CL/CV/RO/MA/NE/stat.ML scopes; Szeliski ch.10; SLP3 morphology; recent LLM practice)
+!defaults d=int st=foundational
+
+== sym.kr.abduction | Abduction & model-based diagnosis
+def: Reasoning to the best explanation of observations (the fault that explains the symptoms). Model-based diagnosis finds which components must be faulty given a system model.
+pre: sym.logic.fol
+paper: Reiter | A Theory of Diagnosis from First Principles | 1987
+d: adv
+
+== sym.kr.argumentation | Computational argumentation
+def: Represent arguments and attacks between them and compute which arguments survive (Dung's frameworks); used for reasoning with conflicting information and in explainable AI.
+pre: sym.kr.nonmono
+paper: Dung | On the Acceptability of Arguments and its Fundamental Role in Nonmonotonic Reasoning, Logic Programming and n-Person Games | 1995
+d: adv
+
+== ml.sup.rules | Rule learning (RIPPER, CN2)
+def: Learn ordered or unordered sets of IF–THEN rules directly from data by sequential covering; interpretable alternatives to trees.
+pre: ml.sup.trees
+paper: Cohen | Fast Effective Rule Induction | 1995
+st: classic
+
+== ml.sup.survival | Survival analysis
+def: Predict time until an event (death, churn, failure) when many examples are censored (the event hasn't happened yet): Kaplan–Meier, Cox proportional hazards, survival forests.
+pre: ml.sup.glm, found.prob.dist.exponential
+paper: Cox | Regression Models and Life-Tables | 1972
+d: adv
+
+== ml.eval.conformal | Conformal prediction
+def: Wrap any model to output prediction sets or intervals with a guaranteed coverage rate (e.g., 90%), assuming only exchangeable data.
+pre: ml.eval.calibration, found.stats.testing.ci
+paper: Angelopoulos, Bates | A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification | 2021
+st: active
+d: adv
+
+== ml.theory.grokking | Grokking & delayed generalization
+def: Networks sometimes generalize long after they have memorized the training set, a phenomenon studied to understand how learning dynamics form general algorithms.
+pre: ml.theory.deep
+paper: Power, Burda, Edwards, Babuschkin, Misra | Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets | 2022
+st: active
+d: adv
+
+== dom.nlp.morphology | Morphology & linguistic structure
+def: How words are built from smaller meaningful parts (prefixes, roots, inflections), which matters for richly inflected languages and tokenizer design.
+pre: dom.nlp.text
+d: beg
+
+== dom.nlp.corpora | Corpora, treebanks & language resources
+def: Annotated text collections and lexicons (Penn Treebank, Universal Dependencies, Common Crawl derivatives) that NLP is trained and evaluated on.
+paper: Marcus, Santorini, Marcinkiewicz | Building a Large Annotated Corpus of English: The Penn Treebank | 1993
+d: beg
+
+== dom.cv.retrieval | Image retrieval & visual search
+def: Find images similar to a query image or text using global embeddings and nearest-neighbour search; instance retrieval and reverse image search.
+pre: dom.cv.foundation, sys.rag.ann
+
+== dom.cv.compphoto | Computational photography
+def: Combine multiple exposures or algorithms to beat optics: HDR, panoramas, denoising bursts, portrait-mode depth effects, as in phone cameras.
+pre: dom.cv.geometry.homography, dom.cv.restoration
+paper: Hasinoff et al. | Burst Photography for High Dynamic Range and Low-Light Imaging on Mobile Cameras | 2016
+d: adv
+
+== dom.cv.biometrics | Biometrics (face, fingerprint, iris)
+def: Recognizing people by physical traits; raises accuracy, spoofing, privacy and fairness issues.
+pre: dom.cv.face
+x: safe.ethics.surveillance
+d: beg
+
+== llm.eff.merging | Model merging & task arithmetic
+def: Combine fine-tuned models by averaging or adding their weight differences, getting multi-skill models without more training.
+pre: llm.eff.lora
+paper: Ilharco et al. | Editing Models with Task Arithmetic | 2022
+st: active
+d: adv
+
+== llm.pretrain.collapse | Model collapse
+def: Training repeatedly on model-generated data can lose the tails of the original distribution and degrade models; mixing in real data avoids it.
+pre: llm.pretrain.synthetic
+paper: Shumailov et al. | AI Models Collapse when Trained on Recursively Generated Data | 2024
+st: debate
+d: adv

@@ -1,0 +1,18 @@
+---
+import Base from '../../layouts/Base.astro';
+import { fields, get } from '../../lib/data.js';
+---
+<Base title="Fields" description="The fifteen fields of artificial intelligence and the areas within each." section="fields">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span></nav>
+  <h1>Fields</h1>
+  <p class="lead">Artificial intelligence divides into fifteen fields. Each field holds areas, and each area holds topics.</p>
+  {fields.map(f => (
+    <section>
+      <h2><a href={f.url}>{f.name}</a> <span class="muted small">{f.descendants} topics</span></h2>
+      <p class="small" style="margin:0 0 8px;max-width:68ch;color:var(--fg-2)">{f.def}</p>
+      <ul class="cols small" style="padding-left:18px;margin:0">
+        {f.children.map(get).map(a => <li><a href={a.url}>{a.name}</a></li>)}
+      </ul>
+    </section>
+  ))}
+</Base>

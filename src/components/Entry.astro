@@ -1,0 +1,60 @@
+---
+// The shared body of every field, area and topic page.
+import Links from './Links.astro';
+import Neighbourhood from './Neighbourhood.astro';
+import { get, levelLabel, STATUS, DIFFICULTY, trail, scholarLink } from '../lib/data.js';
+import { site } from '../site.config.mjs';
+interface Props { node: any; children?: boolean }
+const { node, children = true } = Astro.props;
+const st = STATUS[node.status];
+const crumbs = node.crumbs.map(get);
+const issueTitle = encodeURIComponent(`Correction: ${node.name}`);
+const issueBody = encodeURIComponent(`Page: ${new URL(node.url, site.url).href}\n\nWhat is wrong:\n\nWhat it should say (with a source if possible):\n`);
+const issueUrl = `https://github.com/${site.repo}/issues/new?title=${issueTitle}&body=${issueBody}&labels=correction`;
+const hasChildren = children && node.children.length > 0;
+---
+<article data-pagefind-body>
+  <nav class="crumbs" aria-label="Breadcrumb">
+    {crumbs.map((c, i) => <><a href={c.url}>{c.level === 0 ? 'Home' : c.name}</a><span aria-hidden="true">/</span></>)}
+  </nav>
+  <h1 data-pagefind-meta="title">{node.name}</h1>
+  <span hidden data-pagefind-meta="trail">{trail(node) || 'Overview'}</span>
+  <div class="meta">
+    <span class="lv">{levelLabel(node)}</span>
+    {st && <span><span class={`dot ${node.status}`} aria-hidden="true"></span>{st.label}</span>}
+    {node.level >= 2 && <span>{DIFFICULTY[node.difficulty]}</span>}
+    {node.year && <span>{node.year}</span>}
+  </div>
+
+  <p class="lead">{node.def}</p>
+  {node.aka.length > 0 && <p class="aka"><span class="k">Also called</span>{node.aka.join(', ')}</p>}
+  {node.formula && <div class="formula" role="math" aria-label={`Formula: ${node.formula}`}>{node.formula}</div>}
+
+  <dl class="facts">
+    {node.paper && <>
+      <dt>Key paper</dt>
+      <dd>{node.paper.authors} ({node.paper.year}). <i>{node.paper.title}</i>. <a href={scholarLink(node.paper)} rel="noopener">Find it</a></dd>
+    </>}
+    {node.pre.length > 0 && <><dt>Prerequisites</dt><dd><Links ids={node.pre} /></dd></>}
+    {node.level >= 3 && node.pre.length === 0 && node.inheritedPre.length === 0 && <><dt>Prerequisites</dt><dd class="muted">None. This is a starting point.</dd></>}
+    {node.inheritedPre.length > 0 && <><dt>Also assumes</dt><dd><Links ids={node.inheritedPre} /></dd></>}
+    {node.to.length > 0 && <><dt>Leads to</dt><dd><Links ids={node.to} /></dd></>}
+    {node.related.length > 0 && <><dt>Related across fields</dt><dd><Links ids={node.related} /></dd></>}
+    {node.requiredFor.length > 0 && <><dt>Required for</dt><dd><Links ids={node.requiredFor} /></dd></>}
+    {node.developedFrom.length > 0 && <><dt>Developed from</dt><dd><Links ids={node.developedFrom} /></dd></>}
+    {hasChildren && <><dt>Contains</dt><dd><Links ids={node.children} /></dd></>}
+  </dl>
+
+  <div class="actions" data-pagefind-ignore>
+    {node.kind === 'topic' && node.path.length > 1 && <a class="btn" href={`/paths/${node.slug}/`}>Learning path to this topic ({node.path.length - 1} steps)</a>}
+    <a class="btn secondary" href={issueUrl} rel="noopener">Suggest a correction</a>
+  </div>
+
+  <Neighbourhood node={node} />
+
+  <p class="note" data-pagefind-ignore>
+    {node.review
+      ? <><b>Reviewed</b> by {node.review.by}{node.review.date && <> on {node.review.date}</>}.</>
+      : <><b>Not yet reviewed.</b> This entry was drafted with AI assistance and checked against the sources listed in the <a href="/methodology/">methodology</a>; an editor has not yet read it line by line.</>}
+  </p>
+</article>

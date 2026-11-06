@@ -1,0 +1,28 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import Entry from '../../../../components/Entry.astro';
+import { areas, get } from '../../../../lib/data.js';
+export function getStaticPaths() {
+  return areas.map(n => ({ params: { field: get(n.parent).slug, area: n.slug }, props: { id: n.id } }));
+}
+const node = get(Astro.props.id);
+---
+<Base title={node.name} description={node.def.split('. ')[0].replace(/\.$/, '') + '.'} current={node.id} section="fields">
+  <Entry node={node} children={false} />
+  {node.children.length > 0 && (
+    <section>
+      <h2>Topics in {node.name}</h2>
+      <ul class="list-plain">
+        {node.children.map(get).map(t => (
+          <li>
+            <a href={t.url}>{t.name}</a>
+            <span class="sub">{t.def.split('. ')[0].replace(/\.$/, '')}.</span>
+            {t.children.length > 0 && (
+              <span class="sub">Subtopics: {t.children.map(get).map((s, i) => <>{i > 0 && ', '}<a href={s.url}>{s.name}</a></>)}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Base>

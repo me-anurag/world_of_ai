@@ -1,0 +1,296 @@
+# FIELD 8 — Domains, part B: Computer vision
+# Audit: Szeliski "Computer Vision: Algorithms and Applications" 2nd ed. (image formation, image processing, model fitting, deep learning, recognition, features, alignment & stitching, motion, computational photography, SfM & SLAM, depth, 3D reconstruction, image-based rendering), Hartley & Zisserman, Stanford CS231n, AIMA ch.25.
+!defaults d=int st=foundational
+
+== dom.cv | Computer vision
+def: Getting machines to understand images and video: recognize, locate, segment, track, measure in 3D, and generate. Moved from hand-designed features and geometry to deep learning and now to vision foundation models.
+pre: found.linalg.maps.geometric, found.signal.convolution
+paper: Szeliski | Computer Vision: Algorithms and Applications | 2010
+x: hist.timeline.expert.marr
+
+#### Image formation & processing
+== dom.cv.image | Image formation & representation
+def: How 3D scenes become 2D pixel arrays: light, lenses, sensors and colour.
+d: beg
+
+== dom.cv.image.pinhole | Pinhole camera & perspective projection
+def: A 3D point projects to the image by dividing by its depth: far objects look smaller and parallel lines meet at vanishing points.
+f: x = f·X/Z,  y = f·Y/Z
+pre: found.linalg.maps.homogeneous
+d: beg
+
+== dom.cv.image.pixels | Digital images, channels & colour spaces
+def: An image is a height × width × channels array. RGB, HSV, YUV/YCbCr and Lab represent colour differently for display, compression or perception.
+pre: found.linalg.tensor.shape
+d: beg
+
+== dom.cv.filters | Image filtering
+def: Classical image processing: transform pixels or neighbourhoods to blur, sharpen, find edges, threshold and clean images.
+pre: dom.cv.image.pixels, found.signal.convolution
+d: beg
+
+== dom.cv.filters.linear | Linear filters (box, Gaussian, sharpening)
+def: Convolve with a small kernel: averaging blurs, Gaussian blurs smoothly, unsharp masking sharpens.
+pre: found.prob.dist.gaussian
+d: beg
+
+== dom.cv.filters.edges | Edge detection (Sobel, Laplacian, Canny)
+def: Find sharp intensity changes with gradient filters; Canny adds smoothing, non-maximum suppression and hysteresis thresholding.
+pre: dom.cv.filters.linear, found.calc.multi.gradient
+paper: Canny | A Computational Approach to Edge Detection | 1986
+d: beg
+
+== dom.cv.filters.threshold | Thresholding, histograms & equalization
+def: Separate foreground with a threshold (Otsu chooses it automatically); spread contrast with histogram equalization.
+d: beg
+
+== dom.cv.filters.morphology | Morphological operations
+def: Erosion, dilation, opening and closing on binary or grey images to clean masks and shapes.
+pre: dom.cv.filters.threshold
+d: beg
+
+== dom.cv.filters.pyramids | Image pyramids & scale space
+def: Represent an image at several resolutions (Gaussian and Laplacian pyramids) so features can be found at any scale.
+pre: dom.cv.filters.linear, found.signal.signal
+
+#### Classical features
+== dom.cv.features | Feature detection, description & matching
+def: Find distinctive points, describe their neighbourhoods with vectors, and match them across images. The basis of classical recognition, stitching and 3D reconstruction.
+pre: dom.cv.filters.edges, dom.cv.filters.pyramids
+
+== dom.cv.features.corners | Corners & blobs (Harris, DoG)
+def: Points where intensity changes in two directions (Harris) or scale-space extrema (difference of Gaussians) are stable to find again.
+pre: found.linalg.decomp.eigen
+paper: Harris, Stephens | A Combined Corner and Edge Detector | 1988
+
+== dom.cv.features.sift | SIFT & descriptors (SURF, ORB)
+def: Scale- and rotation-invariant descriptors built from local gradient histograms. ORB is a fast binary alternative.
+pre: dom.cv.features.corners
+paper: Lowe | Distinctive Image Features from Scale-Invariant Keypoints | 2004
+st: classic
+
+== dom.cv.features.hog | HOG & classical pipelines (Viola–Jones, bag of visual words)
+def: Histograms of oriented gradients with a linear SVM for pedestrian detection; Haar features with boosting for real-time face detection; clustered descriptors as visual words.
+pre: ml.sup.svm, ml.ensemble.boosting
+paper: Viola, Jones | Rapid Object Detection using a Boosted Cascade of Simple Features | 2001
+st: classic
+
+== dom.cv.features.matching | Feature matching & learned matchers
+def: Nearest-neighbour matching with a ratio test, then geometric verification; learned detectors and matchers (SuperPoint, SuperGlue, LoFTR) now do better.
+pre: dom.cv.features.sift, ml.sup.knn
+d: adv
+
+#### Geometry & 3D
+== dom.cv.geometry | Multi-view geometry
+def: The mathematics of how multiple cameras see the same 3D scene: calibration, transformations between views, depth, and reconstruction.
+pre: dom.cv.image.pinhole, found.linalg.decomp.svd
+paper: Hartley, Zisserman | Multiple View Geometry in Computer Vision | 2000
+d: adv
+
+== dom.cv.geometry.calibration | Camera calibration (intrinsics, extrinsics, distortion)
+def: Estimate focal length, principal point and lens distortion (intrinsics) and camera pose (extrinsics), often from a checkerboard.
+f: x = K[R | t]X
+paper: Zhang | A Flexible New Technique for Camera Calibration | 2000
+d: adv
+
+== dom.cv.geometry.homography | Homographies & image alignment (stitching)
+aka: image registration; panorama stitching
+def: A 3×3 matrix maps points between two views of a plane or a rotating camera; used to stitch panoramas and rectify documents.
+pre: found.linalg.maps.homogeneous
+d: adv
+
+== dom.cv.geometry.ransac | RANSAC (robust fitting)
+def: Fit a model to random minimal subsets and keep the one most points agree with. Removes bad matches before geometry estimation.
+pre: dom.cv.features.matching
+paper: Fischler, Bolles | Random Sample Consensus: A Paradigm for Model Fitting with Applications to Image Analysis and Automated Cartography | 1981
+
+== dom.cv.geometry.epipolar | Epipolar geometry (fundamental & essential matrices)
+def: A point in one image constrains its match in another to a line. The fundamental and essential matrices encode this and the relative camera pose.
+f: x'ᵀFx = 0
+pre: dom.cv.geometry.calibration, dom.cv.geometry.ransac
+d: adv
+
+== dom.cv.geometry.stereo | Stereo & depth from two views
+def: Match pixels between a calibrated pair; depth is inversely proportional to disparity.
+f: Z = f·B / d
+pre: dom.cv.geometry.epipolar
+d: adv
+
+== dom.cv.geometry.sfm | Structure from motion & bundle adjustment
+def: Recover camera poses and 3D points from many photos, refined jointly by bundle adjustment (nonlinear least squares). Basis of photogrammetry (COLMAP).
+pre: dom.cv.geometry.epipolar, found.opt.second.gauss-newton
+paper: Schönberger, Frahm | Structure-from-Motion Revisited | 2016
+d: adv
+
+== dom.cv.geometry.slam | Visual SLAM & visual odometry
+def: Track a moving camera's pose while building a map in real time (ORB-SLAM). Used in AR, drones and robots.
+pre: dom.cv.geometry.sfm, prob.temporal.kalman
+paper: Mur-Artal, Montiel, Tardós | ORB-SLAM: A Versatile and Accurate Monocular SLAM System | 2015
+to: dom.robotics.slam
+d: adv
+
+#### Motion & video
+== dom.cv.motion | Motion estimation & tracking
+def: Measure how pixels and objects move between frames.
+pre: dom.cv.features
+
+== dom.cv.motion.flow | Optical flow
+def: A motion vector for every pixel, from brightness constancy (Lucas–Kanade, Horn–Schunck) or deep networks (RAFT).
+pre: found.calc.multi.partial
+paper: Teed, Deng | RAFT: Recurrent All-Pairs Field Transforms for Optical Flow | 2020
+d: adv
+
+== dom.cv.motion.tracking | Object tracking (single & multi-object)
+def: Follow objects across frames: correlation and Siamese trackers for one object; tracking-by-detection with Kalman filters and association (SORT, ByteTrack) for many.
+pre: dom.cv.detection, prob.temporal.kalman
+paper: Bewley, Ge, Ott, Ramos, Upcroft | Simple Online and Realtime Tracking | 2016
+
+== dom.cv.video | Video understanding & action recognition
+def: Classify actions and events in video using two-stream networks, 3D CNNs (I3D), or video Transformers.
+pre: dom.cv.classification, dom.cv.motion.flow
+paper: Carreira, Zisserman | Quo Vadis, Action Recognition? A New Model and the Kinetics Dataset | 2017
+d: adv
+
+#### Recognition
+== dom.cv.classification | Image classification
+def: Assign a label to a whole image. The task that proved deep learning (ImageNet, 2012). Measured by top-1/top-5 accuracy; usually done by fine-tuning a pretrained backbone.
+pre: dl.arch.cnn
+x: hist.timeline.stat.imagenet
+d: beg
+
+== dom.cv.datasets | Vision datasets & benchmarks (MNIST, CIFAR, ImageNet, COCO)
+def: The datasets that defined progress: digits (MNIST), small images (CIFAR), 1000-class images (ImageNet), detection and segmentation in context (COCO).
+pre: dom.cv.classification
+paper: Lin et al. | Microsoft COCO: Common Objects in Context | 2014
+d: beg
+
+== dom.cv.detection | Object detection
+def: Find every object of interest and draw a box with a class label around it. Used in driving, retail, surveillance and robotics.
+pre: dom.cv.classification
+
+== dom.cv.detection.metrics | Detection metrics & post-processing (IoU, mAP, NMS)
+def: Intersection-over-union scores box overlap; mean average precision summarizes detection quality; non-maximum suppression removes duplicate boxes.
+pre: ml.eval.roc
+d: beg
+
+== dom.cv.detection.two-stage | Two-stage detectors (R-CNN, Fast/Faster R-CNN)
+def: Propose candidate regions, then classify and refine each. Faster R-CNN learns proposals with a region proposal network and anchors.
+pre: dom.cv.detection.metrics
+paper: Ren, He, Girshick, Sun | Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks | 2015
+
+== dom.cv.detection.one-stage | One-stage detectors (YOLO, SSD, RetinaNet)
+def: Predict boxes and classes in a single pass over a grid of locations; fast enough for real time. RetinaNet's focal loss handles the imbalance of easy background.
+pre: dom.cv.detection.metrics
+paper: Redmon, Divvala, Girshick, Farhadi | You Only Look Once: Unified, Real-Time Object Detection | 2016
+st: dominant
+
+== dom.cv.detection.detr | Transformer detectors (DETR)
+def: Treat detection as set prediction with a Transformer and bipartite matching, removing anchors and NMS.
+pre: dom.cv.detection.two-stage, dl.arch.transformer
+paper: Carion et al. | End-to-End Object Detection with Transformers | 2020
+d: adv
+
+== dom.cv.detection.open-vocab | Open-vocabulary & grounded detection
+def: Detect objects named by any text prompt rather than a fixed class list, using vision–language models (OWL-ViT, Grounding DINO).
+pre: dom.cv.detection.detr, dom.mm.clip
+st: active
+d: adv
+
+== dom.cv.segmentation | Image segmentation
+def: Label every pixel: by class (semantic), by object instance (instance), or both (panoptic).
+pre: dom.cv.detection, dl.arch.cnn.unet
+
+== dom.cv.segmentation.semantic | Semantic segmentation (FCN, U-Net, DeepLab)
+def: Fully convolutional networks with encoder–decoder structure and dilated convolutions predict a class for each pixel.
+paper: Long, Shelhamer, Darrell | Fully Convolutional Networks for Semantic Segmentation | 2015
+
+== dom.cv.segmentation.instance | Instance & panoptic segmentation (Mask R-CNN)
+def: Separate each object's mask; Mask R-CNN adds a mask branch to Faster R-CNN.
+pre: dom.cv.segmentation.semantic, dom.cv.detection.two-stage
+paper: He, Gkioxari, Dollár, Girshick | Mask R-CNN | 2017
+
+== dom.cv.segmentation.sam | Promptable segmentation (Segment Anything)
+def: A foundation model that segments any object from a point, box or text prompt, trained on over a billion masks.
+pre: dom.cv.segmentation.instance, dl.arch.vit
+paper: Kirillov et al. | Segment Anything | 2023
+st: dominant
+
+== dom.cv.keypoints | Pose & keypoint estimation
+aka: pose estimation; keypoint detection
+def: Locate body joints, hands or facial landmarks with heatmap regression (OpenPose, HRNet). Used in fitness, AR and motion capture.
+pre: dom.cv.detection
+paper: Cao, Simon, Wei, Sheikh | Realtime Multi-Person 2D Pose Estimation using Part Affinity Fields | 2017
+
+== dom.cv.face | Face detection & recognition
+def: Detect faces, align them by landmarks, embed them with a metric-learning network (FaceNet, ArcFace), and compare embeddings for verification or identification.
+pre: dom.cv.detection, dl.arch.siamese
+paper: Deng, Guo, Xue, Zafeiriou | ArcFace: Additive Angular Margin Loss for Deep Face Recognition | 2019
+x: safe.fairness
+
+== dom.cv.ocr | OCR & document understanding
+def: Read text from images (detection + recognition, CTC decoding) and understand layout, tables and forms (LayoutLM); now often done end-to-end by vision–language models.
+pre: dom.cv.detection, dl.arch.rnn
+paper: Xu et al. | LayoutLM: Pre-training of Text and Layout for Document Image Understanding | 2020
+
+#### 3D vision
+== dom.cv.3d | 3D vision
+def: Perceive and represent the 3D world: depth, point clouds, meshes, and neural scene representations.
+pre: dom.cv.geometry
+d: adv
+
+== dom.cv.3d.depth | Monocular depth estimation
+def: Predict depth from a single image with a network trained on varied data (MiDaS, Depth Anything).
+pre: dl.arch.vit
+st: active
+d: adv
+
+== dom.cv.3d.pointcloud | Point clouds & 3D deep learning (PointNet)
+def: Process unordered 3D points from LiDAR or depth sensors with permutation-invariant networks.
+pre: dl.basics.mlp
+paper: Qi, Su, Mo, Guibas | PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation | 2017
+d: adv
+
+== dom.cv.3d.nerf | Neural radiance fields (NeRF)
+def: Represent a scene as a neural network mapping 3D position and view direction to colour and density, rendered by volume rendering; gives photorealistic novel views.
+pre: found.signal.positional, dom.cv.geometry.sfm
+paper: Mildenhall et al. | NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis | 2020
+d: adv
+
+== dom.cv.3d.gaussian-splatting | 3D Gaussian splatting
+def: Represent scenes as millions of 3D Gaussians rasterized directly, giving real-time photorealistic rendering; largely displaced NeRF in practice.
+pre: dom.cv.3d.nerf
+paper: Kerbl, Kopanas, Leimkühler, Drettakis | 3D Gaussian Splatting for Real-Time Radiance Field Rendering | 2023
+st: active
+d: adv
+
+#### Image synthesis & enhancement
+== dom.cv.restoration | Image restoration & enhancement
+def: Denoising, deblurring, super-resolution, inpainting and low-light enhancement, now done by CNNs, Transformers or diffusion models.
+pre: dom.cv.filters, dl.arch.cnn
+paper: Dong, Loy, He, Tang | Image Super-Resolution Using Deep Convolutional Networks | 2014
+
+== dom.cv.generation | Image & video generation
+aka: style transfer; text-to-image
+def: Text-to-image, image editing, style transfer and text-to-video, built on GANs and especially diffusion and diffusion-Transformer models.
+pre: dl.gen.diffusion.latent
+paper: Gatys, Ecker, Bethge | Image Style Transfer Using Convolutional Neural Networks | 2016
+to: dom.mm
+st: dominant
+
+== dom.cv.generation.video | Video generation
+def: Generating coherent video clips from text or images with diffusion Transformers over space-time patches; an active frontier since 2024.
+pre: dl.gen.diffusion.dit
+st: active
+d: adv
+
+== dom.cv.foundation | Vision foundation models
+def: Large pretrained backbones reused across tasks: CLIP (aligned with text), DINOv2 (self-supervised features), SAM (segmentation), plus vision–language models that answer questions about images.
+pre: dl.arch.vit, dl.repr.noncontrastive
+to: dom.mm.vlm
+st: dominant
+
+== dom.cv.efficient | Efficient & on-device vision
+def: Running vision models on phones and embedded hardware with compact architectures, quantization and pruning.
+pre: dl.arch.cnn.efficient
+to: infra.deploy.edge
+d: adv

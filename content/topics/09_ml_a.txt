@@ -1,0 +1,375 @@
+# FIELD 5 — Machine Learning, part A: paradigms, concepts, data, supervised, kernels, ensembles
+# Audit: ESL (18 chapters), ISLR, Bishop PRML, Murphy PML1 parts II–IV, Mitchell, scikit-learn user guide (all sections), AIMA ch.19–20, Stanford CS229.
+!defaults d=int st=foundational
+
+######## L2: Learning paradigms
+== ml.paradigms | Learning paradigms
+def: The basic kinds of learning problems, defined by what feedback is available: labels, no labels, labels made from the data itself, or rewards.
+pre: found.stats.est, found.opt.first.gd
+paper: Mitchell | Machine Learning | 1997
+d: beg
+
+== ml.paradigms.supervised | Supervised learning
+def: Learn a function from inputs to outputs using labelled examples (x, y). Classification predicts categories; regression predicts numbers.
+d: beg
+
+== ml.paradigms.unsupervised | Unsupervised learning
+def: Find structure in unlabelled data: clusters, low-dimensional representations, densities, anomalies.
+d: beg
+
+== ml.paradigms.selfsup | Self-supervised learning
+def: Create the labels from the data itself, e.g., predict the next word or a masked image patch. How foundation models learn from unlabelled internet-scale data.
+pre: ml.paradigms.supervised, ml.paradigms.unsupervised
+to: dl.repr.ssl, llm.pretrain.ntp
+st: dominant
+
+== ml.paradigms.semisup | Semi-supervised learning
+def: Use a few labelled examples together with many unlabelled ones (self-training, pseudo-labels, label propagation, consistency regularization).
+pre: ml.paradigms.supervised, ml.paradigms.unsupervised
+
+== ml.paradigms.weak | Weak supervision
+def: Train from noisy, cheap labels: heuristics, labelling functions, distant supervision, or crowd labels (e.g., Snorkel). LLM-generated labels are the modern form.
+pre: ml.paradigms.supervised
+paper: Ratner et al. | Snorkel: Rapid Training Data Creation with Weak Supervision | 2017
+
+== ml.paradigms.rl | Reinforcement learning (as a paradigm)
+def: Learn by acting and receiving rewards rather than correct answers. It has its own field on this map.
+to: rl
+d: beg
+
+== ml.paradigms.tasks | Task types (classification, regression, ranking, structured prediction)
+def: Binary, multiclass, multilabel and multi-output classification; regression; ranking; structured outputs like sequences, trees and segmentations.
+pre: ml.paradigms.supervised
+d: beg
+
+== ml.paradigms.gen-disc | Generative vs discriminative models
+def: Generative models learn p(x, y) (or p(x)) and can produce data; discriminative models learn p(y | x) or a direct decision boundary. Naive Bayes vs logistic regression is the classic pair.
+pre: ml.paradigms.supervised, found.prob.basics.bayes
+paper: Ng, Jordan | On Discriminative vs. Generative Classifiers: A Comparison of Logistic Regression and Naive Bayes | 2001
+
+== ml.paradigms.parametric | Parametric vs nonparametric models
+def: Parametric models have a fixed number of parameters (linear regression); nonparametric models grow with the data (k-NN, Gaussian processes, decision trees).
+pre: ml.paradigms.supervised
+
+== ml.paradigms.online | Batch vs online learning
+def: Batch learning trains on a fixed dataset; online learning updates one example at a time as data streams in, measured by regret.
+to: ml.settings.continual
+
+######## L2: Core concepts
+== ml.concepts | Core concepts of learning
+def: The ideas every model shares: a loss to minimize, the gap between training and test performance, and the tools to control it.
+pre: ml.paradigms.supervised
+d: beg
+
+== ml.concepts.loss | Loss function
+def: Scores how wrong a prediction is: squared error for regression, cross-entropy (log loss) for classification, hinge for SVMs. Training minimizes average loss.
+f: L(y, ŷ)
+pre: found.stats.decision.loss-risk
+d: beg
+
+== ml.concepts.erm | Empirical risk minimization
+def: Minimize the average loss on training data as a stand-in for the true expected loss on unseen data. The principle behind nearly all training.
+f: θ̂ = argmin_θ (1/n) Σᵢ L(yᵢ, f_θ(xᵢ))
+pre: ml.concepts.loss, found.prob.dist.dirac
+paper: Vapnik | The Nature of Statistical Learning Theory | 1995
+
+== ml.concepts.generalization | Generalization, train/validation/test split
+def: The goal is low error on new data. Hold out data never used for training to measure it: validation for choices, test for the final number.
+pre: ml.concepts.erm, found.prob.rv.iid
+d: beg
+
+== ml.concepts.overfitting | Overfitting & underfitting
+def: Overfitting memorizes noise and fails on new data; underfitting is too simple to capture the pattern. Visible as a gap between training and validation error.
+pre: ml.concepts.generalization
+d: beg
+
+== ml.concepts.bias-variance | Bias–variance tradeoff
+def: Expected error splits into bias (error from wrong assumptions), variance (sensitivity to the particular training set) and irreducible noise. Model complexity trades one for the other.
+f: E[(y − f̂)²] = Bias² + Var + σ²
+pre: ml.concepts.overfitting, found.stats.est.estimator
+
+== ml.concepts.regularization | Regularization
+def: Any technique that discourages overly complex fits: penalties on weights (L2/ridge, L1/lasso), early stopping, dropout, data augmentation.
+f: min L(θ) + λ‖θ‖²
+pre: ml.concepts.overfitting, found.linalg.geom.norms
+x: found.stats.est.map
+to: dl.reg
+
+== ml.concepts.inductive-bias | Inductive bias
+def: The assumptions a learner uses to generalize beyond its data (linearity, smoothness, locality, translation invariance). Every architecture choice is an inductive bias.
+pre: ml.concepts.generalization
+to: dl.arch
+
+== ml.concepts.curse | Curse of dimensionality
+def: In high dimensions data becomes sparse and distances become similar, so methods based on neighbourhoods or grids break down.
+pre: ml.concepts.generalization, found.linalg.geom.distance
+
+== ml.concepts.shift | Distribution shift
+def: Test data differs from training data: covariate shift (inputs change), label shift (class balance changes), concept drift (the relationship changes). The main cause of models failing in deployment.
+pre: ml.concepts.generalization, found.prob.rv.iid
+to: infra.mlops.monitoring
+st: active
+
+== ml.concepts.leakage | Data leakage
+def: Information from the test set or the future sneaks into training (e.g., scaling before splitting, target-derived features), giving falsely good scores.
+pre: ml.concepts.generalization
+d: beg
+
+######## L2: Data & features
+== ml.data | Data preparation & feature engineering
+def: Turning raw data into model-ready features. In practice this often matters more than the choice of algorithm.
+pre: found.cs.prog.pandas, found.stats.desc
+d: beg
+
+== ml.data.eda | Exploratory data analysis
+def: Look before modelling: distributions, missing values, outliers, correlations, label balance.
+pre: found.stats.desc.viz
+d: beg
+
+== ml.data.cleaning | Cleaning & missing-value imputation
+def: Fix errors and duplicates; fill missing values by mean/median, nearest neighbours or model-based imputation, or let models handle them natively.
+pre: ml.data.eda
+d: beg
+
+== ml.data.encoding | Encoding categorical features
+def: Represent categories as numbers: one-hot, ordinal, target (mean) encoding, hashing. Embeddings are the learned version.
+to: dl.repr.embedding
+d: beg
+
+== ml.data.scaling | Feature scaling
+def: Standardize or normalize features so ones with large ranges don't dominate distance-based and gradient-based methods.
+pre: found.stats.desc.standardize
+d: beg
+
+== ml.data.features | Feature engineering & basis expansion
+def: Create informative features: polynomial terms, interactions, logs, binning, date parts, domain ratios. Basis expansions (splines) make linear models flexible.
+pre: ml.data.encoding
+
+== ml.data.text | Text features (bag-of-words, TF-IDF)
+def: Represent documents by word counts weighted by how rare each word is across documents. The classic baseline for text classification and keyword search.
+f: tfidf(t,d) = tf(t,d) · log(N / df(t))
+pre: ml.data.features
+to: dom.ir.bm25, dom.nlp
+
+== ml.data.selection | Feature selection
+def: Keep only useful features: filter methods (correlation, mutual information), wrapper methods (recursive feature elimination), embedded methods (lasso, tree importances).
+pre: ml.data.features, found.info.mi
+
+== ml.data.imbalance | Class imbalance
+aka: cost-sensitive learning; SMOTE
+def: When one class is rare (fraud, disease): resample (undersample, oversample, SMOTE), weight classes, and use metrics like precision–recall instead of accuracy.
+pre: ml.data.eda
+paper: Chawla, Bowyer, Hall, Kegelmeyer | SMOTE: Synthetic Minority Over-sampling Technique | 2002
+
+== ml.data.pipelines | Pipelines
+def: Chain preprocessing and model into one object fitted only on training folds, which prevents leakage and makes deployment reproducible.
+pre: ml.data.scaling, ml.concepts.leakage
+to: infra.mlops
+
+######## L2: Supervised learning algorithms
+== ml.sup | Supervised learning algorithms
+def: The classical model families for prediction from labelled data. Still the best choice for most tabular problems.
+pre: ml.concepts.erm
+paper: Hastie, Tibshirani, Friedman | The Elements of Statistical Learning | 2001
+
+#### Linear models
+== ml.sup.linreg | Linear regression
+def: Predict a number as a weighted sum of features, fit by least squares. The starting point of almost all of ML.
+f: ŷ = wᵀx + b
+pre: found.linalg.mat.least-squares
+d: beg
+
+== ml.sup.linreg.ridge | Ridge, lasso & elastic net
+def: Linear regression with L2 (ridge, shrinks weights), L1 (lasso, sets some to zero, selecting features) or both (elastic net) penalties.
+pre: ml.concepts.regularization
+paper: Tibshirani | Regression Shrinkage and Selection via the Lasso | 1996
+
+== ml.sup.linreg.poly | Polynomial regression & splines
+def: Linear models on expanded features (powers, piecewise polynomials) to fit curves while staying linear in the parameters.
+pre: ml.data.features
+d: beg
+
+== ml.sup.linreg.robust | Robust & quantile regression
+def: Losses that resist outliers (Huber) or predict quantiles instead of the mean (pinball loss), giving prediction intervals.
+d: adv
+
+== ml.sup.logreg | Logistic regression
+def: Linear model for classification: a weighted sum passed through the sigmoid to give a probability, fit by minimizing cross-entropy. Softmax regression extends it to many classes.
+f: P(y=1|x) = σ(wᵀx + b) = 1/(1 + e^(−(wᵀx+b)))
+pre: ml.sup.linreg, found.info.cross-entropy, found.prob.dist.bernoulli
+d: beg
+
+== ml.sup.glm | Generalized linear models
+def: A linear predictor plus a link function and an exponential-family output: linear, logistic and Poisson regression in one framework.
+pre: ml.sup.logreg, found.prob.dist.expfamily
+paper: Nelder, Wedderburn | Generalized Linear Models | 1972
+
+== ml.sup.gam | Generalized additive models
+def: Sum of smooth functions of each feature: flexible yet interpretable, since each feature's effect can be plotted.
+pre: ml.sup.glm, ml.sup.linreg.poly
+paper: Hastie, Tibshirani | Generalized Additive Models | 1986
+d: adv
+
+== ml.sup.lda | Linear & quadratic discriminant analysis
+def: Generative classifiers that model each class as a Gaussian; shared covariance gives linear boundaries (LDA), separate ones give quadratic (QDA). LDA also reduces dimensionality.
+pre: ml.paradigms.gen-disc, found.prob.dist.mvn
+paper: Fisher | The Use of Multiple Measurements in Taxonomic Problems | 1936
+
+== ml.sup.naive-bayes | Naive Bayes
+def: Apply Bayes' rule assuming features are independent given the class. Crude but fast and strong on text (spam filtering).
+f: P(y|x) ∝ P(y) Πᵢ P(xᵢ|y)
+pre: found.prob.basics.bayes, found.prob.basics.cond-indep
+d: beg
+
+#### Instance-based
+== ml.sup.knn | k-nearest neighbors
+def: Predict from the k most similar training examples. No training at all; everything rests on the distance metric. The same nearest-neighbour idea powers vector search in RAG.
+pre: found.linalg.geom.distance
+paper: Cover, Hart | Nearest Neighbor Pattern Classification | 1967
+to: sys.rag.ann
+d: beg
+
+== ml.sup.knn.index | KD-trees & ball trees
+def: Spatial index structures that find nearest neighbours fast in low dimensions; they degrade in high dimensions, which is why approximate methods exist.
+pre: found.cs.ds.trees
+to: sys.rag.ann
+
+== ml.sup.knn.metric | Metric learning
+def: Learn the distance function itself so similar items are close (Mahalanobis metrics, NCA, siamese and triplet networks).
+to: dl.repr.contrastive
+d: adv
+
+== ml.sup.local | Kernel smoothing & local regression
+def: Predict with a weighted average of nearby points (Nadaraya–Watson) or a locally fitted line (LOESS). Attention is a learned kernel smoother.
+pre: ml.sup.knn
+x: dl.arch.attention
+d: adv
+
+#### Trees
+== ml.sup.trees | Decision trees
+def: Split the data on feature thresholds again and again to form a tree of if–then rules. Interpretable, handle mixed data, and are the building block of the strongest tabular methods.
+pre: found.discrete.graphs.trees
+paper: Breiman, Friedman, Olshen, Stone | Classification and Regression Trees | 1984
+d: beg
+
+== ml.sup.trees.split | Splitting criteria (Gini, entropy, variance)
+def: Choose the split that most reduces impurity: Gini impurity or information gain (entropy) for classification, variance for regression.
+pre: found.info.entropy
+d: beg
+
+== ml.sup.trees.algos | ID3, C4.5, CART
+def: The classic tree-growing algorithms. ID3 and C4.5 use information gain and multiway splits; CART uses binary splits and handles regression.
+pre: ml.sup.trees.split
+paper: Quinlan | Induction of Decision Trees | 1986
+st: classic
+
+== ml.sup.trees.pruning | Pruning & stopping
+def: Limit depth or prune back branches (cost-complexity pruning) so a tree does not memorize the training set.
+pre: ml.concepts.overfitting
+
+#### SVM
+== ml.sup.svm | Support vector machines
+def: Find the boundary with the largest margin between classes; only the closest points (support vectors) matter. With kernels, they learn nonlinear boundaries.
+pre: ml.sup.logreg, found.opt.constrained.kkt
+x: hist.timeline.stat.svm
+paper: Cortes, Vapnik | Support-Vector Networks | 1995
+st: classic
+
+== ml.sup.svm.margin | Hard & soft margin, hinge loss
+def: Hard margin needs perfectly separable data; soft margin allows violations with a penalty C, equivalent to minimizing hinge loss plus L2 regularization.
+f: min ½‖w‖² + C Σ max(0, 1 − yᵢ(wᵀxᵢ + b))
+
+== ml.sup.svm.svr | Support vector regression & one-class SVM
+def: SVM ideas for regression (an ε-insensitive tube) and for novelty detection (enclose the normal data).
+pre: ml.sup.svm.margin
+d: adv
+
+== ml.sup.multiclass | Multiclass strategies (one-vs-rest, one-vs-one)
+def: Turn binary classifiers into multiclass ones, or use natively multiclass models such as softmax regression and trees.
+pre: ml.paradigms.tasks
+d: beg
+
+== ml.sup.isotonic | Isotonic regression
+def: Fit the best non-decreasing function to data. Used mainly to calibrate classifier probabilities.
+pre: ml.sup.linreg
+to: ml.eval.calibration
+d: adv
+
+######## L2: Kernel methods
+== ml.kernel | Kernel methods
+def: Work in a high-dimensional feature space implicitly by only computing inner products through a kernel function. Turns linear algorithms into nonlinear ones.
+pre: found.linalg.geom.inner, ml.sup.svm
+paper: Schölkopf, Smola | Learning with Kernels | 2002
+st: classic
+
+== ml.kernel.trick | The kernel trick & common kernels
+def: Replace every xᵀx' with k(x, x') = φ(x)ᵀφ(x') without computing φ. Common kernels: linear, polynomial, RBF (Gaussian), Laplacian.
+f: k_RBF(x,x') = exp(−‖x − x'‖² / 2σ²)
+
+== ml.kernel.rkhs | Mercer's theorem, RKHS & representer theorem
+def: Valid kernels are exactly positive semidefinite functions (Mercer); they define a function space (RKHS) in which the optimal solution is a weighted sum of kernels at the training points (representer theorem).
+pre: ml.kernel.trick, found.linalg.special.psd
+d: adv
+
+== ml.kernel.ridge | Kernel ridge regression & kernel PCA
+def: Ridge regression and PCA rewritten with kernels so they become nonlinear.
+pre: ml.kernel.trick, ml.sup.linreg.ridge
+x: prob.gp
+d: adv
+
+== ml.kernel.approx | Kernel approximation (Nyström, random Fourier features)
+def: Approximate the kernel with explicit low-dimensional features so kernel methods scale to large datasets.
+pre: ml.kernel.trick, found.signal.fourier
+paper: Rahimi, Recht | Random Features for Large-Scale Kernel Machines | 2007
+d: adv
+
+######## L2: Ensembles
+== ml.ensemble | Ensemble methods
+def: Combine many models to get one that is more accurate and stable than any of them. Tree ensembles are the strongest default for tabular data.
+pre: ml.sup.trees, ml.concepts.bias-variance
+
+== ml.ensemble.voting | Voting & averaging
+def: Average predictions or take a majority vote across diverse models; works when their errors are not correlated.
+d: beg
+
+== ml.ensemble.bagging | Bagging
+def: Train each model on a bootstrap resample of the data and average them. Reduces variance.
+pre: found.stats.est.bootstrap
+paper: Breiman | Bagging Predictors | 1996
+
+== ml.ensemble.rf | Random forests
+def: Bagged decision trees that also consider only a random subset of features at each split, which decorrelates the trees. Robust, little tuning, gives feature importances.
+pre: ml.ensemble.bagging
+x: hist.timeline.stat.rf
+paper: Breiman | Random Forests | 2001
+st: dominant
+
+== ml.ensemble.boosting | Boosting & AdaBoost
+def: Train models one after another, each focusing on the examples the previous ones got wrong. AdaBoost reweights examples; it turns weak learners into a strong one.
+paper: Freund, Schapire | A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting | 1997
+
+== ml.ensemble.gbm | Gradient boosting
+def: Each new tree fits the gradient of the loss (the residuals) of the current ensemble: gradient descent in function space.
+pre: ml.ensemble.boosting, found.opt.first.gd
+paper: Friedman | Greedy Function Approximation: A Gradient Boosting Machine | 2001
+st: dominant
+
+== ml.ensemble.xgboost | XGBoost, LightGBM, CatBoost
+def: Fast, regularized gradient-boosting libraries with tricks like histogram splits, leaf-wise growth and native categorical handling. Usually the winning method on tabular data.
+pre: ml.ensemble.gbm
+paper: Chen, Guestrin | XGBoost: A Scalable Tree Boosting System | 2016
+st: dominant
+to: dom.tabular
+
+== ml.ensemble.stacking | Stacking
+def: Train a meta-model on the predictions of several base models (using out-of-fold predictions).
+pre: ml.ensemble.voting
+paper: Wolpert | Stacked Generalization | 1992
+d: adv
+
+== ml.ensemble.moe | Mixture of experts (classical)
+def: A gating network routes each input to specialized expert models and combines their outputs. Revived as sparse MoE layers in large language models.
+pre: found.prob.dist.mixture
+paper: Jacobs, Jordan, Nowlan, Hinton | Adaptive Mixtures of Local Experts | 1991
+to: llm.arch.moe
+d: adv

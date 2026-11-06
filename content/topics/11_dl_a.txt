@@ -1,0 +1,228 @@
+# FIELD 6 — Deep Learning, part A: basics, training, normalization, regularization
+# Audit: Goodfellow et al. parts II–III; Prince, Understanding Deep Learning (21 ch.); d2l.ai (ch.3–11); Bishop & Bishop, Deep Learning: Foundations and Concepts; AIMA ch.21; Stanford CS231n/CS224n.
+!defaults d=int st=foundational
+
+######## L2: Neural network basics
+== dl.basics | Neural network basics
+def: The building blocks: artificial neurons, layers, activation functions, losses and backpropagation. Every architecture on the map is assembled from these.
+pre: ml.concepts.erm, found.calc.multi.chain, found.linalg.mat.matmul
+paper: Goodfellow, Bengio, Courville | Deep Learning | 2016
+d: beg
+
+== dl.basics.perceptron | Perceptron
+def: A single neuron: weighted sum of inputs plus bias, then a threshold. Learns linearly separable classes with the perceptron rule; cannot learn XOR.
+f: ŷ = step(wᵀx + b)
+pre: ml.sup.linreg
+x: hist.timeline.enthusiasm.perceptron, hist.timeline.reality.perceptrons
+paper: Rosenblatt | The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain | 1958
+st: classic
+d: beg
+
+== dl.basics.mlp | Multilayer perceptron (feedforward network)
+def: Layers of neurons where each layer applies an affine map followed by a nonlinearity. Hidden layers learn intermediate features; stacking them is what makes a network "deep".
+f: h = σ(Wx + b)
+pre: dl.basics.perceptron, dl.basics.activations
+d: beg
+
+== dl.basics.activations | Activation functions
+def: The nonlinearity that lets networks represent more than linear maps: sigmoid, tanh, ReLU, Leaky ReLU, GELU, SiLU/Swish. ReLU-family functions fixed many training problems; GELU and SwiGLU dominate in Transformers.
+f: ReLU(x) = max(0, x);  GELU(x) = x·Φ(x)
+pre: found.calc.single.functions
+paper: Nair, Hinton | Rectified Linear Units Improve Restricted Boltzmann Machines | 2010
+d: beg
+
+== dl.basics.gated | Gated linear units (GLU, SwiGLU)
+def: Multiply one linear projection by a gated (activated) second one. SwiGLU feed-forward layers are standard in modern LLMs.
+f: SwiGLU(x) = (xW ⊙ Swish(xV))
+pre: dl.basics.activations, found.linalg.tensor.elementwise
+paper: Shazeer | GLU Variants Improve Transformer | 2020
+d: adv
+
+== dl.basics.softmax | Softmax
+def: Turns a vector of scores (logits) into a probability distribution. The output layer of classifiers and LLMs, and the core of attention.
+f: softmax(z)ᵢ = e^(zᵢ) / Σⱼ e^(zⱼ)
+pre: found.calc.single.explog, found.prob.rv.pmf
+to: dl.arch.attention
+d: beg
+
+== dl.basics.losses | Loss functions for deep learning
+def: Cross-entropy for classification and language modelling, MSE/L1 for regression, plus specialized losses (focal, contrastive, triplet, perceptual). The loss defines what the network learns.
+pre: ml.concepts.loss, found.info.cross-entropy
+d: beg
+
+== dl.basics.forward | Forward pass & computational graph
+def: Computing the output layer by layer while recording the graph of operations needed for gradients.
+pre: dl.basics.mlp, found.calc.autodiff.graph
+d: beg
+
+== dl.basics.backprop | Backpropagation
+def: Compute the gradient of the loss with respect to every weight in one backward pass, applying the chain rule layer by layer from the output. Reverse-mode automatic differentiation applied to networks.
+f: ∂L/∂W⁽ˡ⁾ = δ⁽ˡ⁾ h⁽ˡ⁻¹⁾ᵀ;  δ⁽ˡ⁾ = (W⁽ˡ⁺¹⁾ᵀδ⁽ˡ⁺¹⁾) ⊙ σ'(z⁽ˡ⁾)
+pre: dl.basics.forward, found.calc.autodiff.reverse, found.calc.multi.chain
+x: hist.timeline.nn.backprop
+paper: Rumelhart, Hinton, Williams | Learning Representations by Back-propagating Errors | 1986
+
+== dl.basics.vanishing | Vanishing & exploding gradients
+def: Gradients multiplied through many layers shrink to zero or blow up, so deep or recurrent networks stop learning. Fixed by ReLU, careful initialization, normalization, residual connections and gating.
+pre: dl.basics.backprop
+paper: Hochreiter | Untersuchungen zu dynamischen neuronalen Netzen (Diploma thesis) | 1991
+to: dl.arch.cnn.resnet, dl.arch.rnn.lstm
+
+== dl.basics.init | Weight initialization (Xavier/Glorot, He)
+def: Set initial weights so activations and gradients keep a stable scale through the layers: Xavier for tanh, He (Kaiming) for ReLU.
+f: Var(W) = 2 / n_in  (He)
+pre: dl.basics.vanishing, found.prob.rv.variance
+paper: Glorot, Bengio | Understanding the Difficulty of Training Deep Feedforward Neural Networks | 2010
+
+== dl.basics.uat | Universal approximation theorem
+def: A network with one hidden layer and enough units can approximate any continuous function on a bounded region. It says nothing about how to find the weights or how many units are needed.
+pre: dl.basics.mlp
+paper: Cybenko | Approximation by Superpositions of a Sigmoidal Function | 1989
+d: adv
+
+== dl.basics.depth | Why depth helps (expressivity & hierarchical features)
+def: Deep networks can represent some functions with exponentially fewer units than shallow ones and naturally build features in layers (edges → parts → objects).
+pre: dl.basics.uat
+d: adv
+
+######## L2: Optimization for deep learning
+== dl.opt | Optimization for deep learning
+def: The practical machinery for minimizing a non-convex loss over millions to trillions of parameters with stochastic gradients.
+pre: found.opt.first.sgd, dl.basics.backprop
+
+== dl.opt.minibatch | Minibatches, epochs & batch size
+def: Train on small random batches; one epoch is a full pass over the data. Batch size trades gradient noise against hardware efficiency and interacts with the learning rate.
+d: beg
+
+== dl.opt.adaptive | AdaGrad & RMSProp
+def: Per-parameter learning rates scaled by the history of squared gradients, so rarely updated parameters take bigger steps.
+pre: found.opt.first.momentum
+paper: Duchi, Hazan, Singer | Adaptive Subgradient Methods for Online Learning and Stochastic Optimization | 2011
+
+== dl.opt.adam | Adam
+def: Momentum plus RMSProp-style scaling, with bias correction. The default optimizer for most deep learning.
+f: θ ← θ − η·m̂/(√v̂ + ε)
+pre: dl.opt.adaptive
+paper: Kingma, Ba | Adam: A Method for Stochastic Optimization | 2014
+st: dominant
+
+== dl.opt.adamw | AdamW (decoupled weight decay)
+def: Apply weight decay directly to the weights instead of through the gradient, which makes regularization work properly with Adam. Standard for training Transformers and LLMs.
+pre: dl.opt.adam, dl.reg.weight-decay
+paper: Loshchilov, Hutter | Decoupled Weight Decay Regularization | 2017
+st: dominant
+
+== dl.opt.new | Newer optimizers (Lion, Shampoo, Muon)
+def: Optimizers using sign updates, matrix preconditioning or orthogonalized updates that can train large models faster than AdamW. Active area; results vary by setting.
+pre: dl.opt.adamw, found.opt.second.natural
+st: active
+d: adv
+
+== dl.opt.schedule | Learning-rate schedules (warmup, cosine, step)
+def: Change the learning rate during training: warm up from small values, then decay (step, cosine, linear, or warmup–stable–decay). Large models are unstable without warmup.
+pre: found.opt.first.lr
+paper: Loshchilov, Hutter | SGDR: Stochastic Gradient Descent with Warm Restarts | 2016
+
+== dl.opt.clipping | Gradient clipping
+def: Cap the gradient norm so one bad batch can't blow up training. Standard for RNNs and LLMs.
+pre: dl.basics.vanishing
+paper: Pascanu, Mikolov, Bengio | On the Difficulty of Training Recurrent Neural Networks | 2013
+
+== dl.opt.landscape | Loss landscapes, sharp vs flat minima
+def: The geometry of the loss surface. Flatter minima are linked to better generalization; methods like sharpness-aware minimization seek them.
+pre: found.opt.basics.saddle
+paper: Li, Xu, Taylor, Studer, Goldstein | Visualizing the Loss Landscape of Neural Nets | 2018
+st: active
+d: adv
+
+######## L2: Normalization
+== dl.norm | Normalization layers
+def: Rescale activations inside the network to zero mean and unit variance (with learned scale and shift). Makes deep networks train faster and more stably.
+pre: dl.basics.mlp, found.stats.desc.standardize
+
+== dl.norm.batch | Batch normalization
+def: Normalize each feature over the minibatch. Big gains for CNNs, but behaves differently at train and test time and depends on batch size.
+paper: Ioffe, Szegedy | Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift | 2015
+
+== dl.norm.layer | Layer normalization
+def: Normalize across the features of each single example, so it works for any batch size and sequence. The standard in Transformers.
+paper: Ba, Kiros, Hinton | Layer Normalization | 2016
+
+== dl.norm.rms | RMSNorm
+def: Layer norm without mean-centering, dividing only by the root mean square. Cheaper, and used in most modern LLMs.
+f: y = x / RMS(x) · g
+pre: dl.norm.layer
+paper: Zhang, Sennrich | Root Mean Square Layer Normalization | 2019
+st: dominant
+
+== dl.norm.group | Group & instance normalization
+def: Normalize over groups of channels (group norm) or per channel per image (instance norm); used when batches are small and in style transfer.
+pre: dl.norm.batch
+paper: Wu, He | Group Normalization | 2018
+d: adv
+
+== dl.norm.placement | Pre-norm vs post-norm
+def: Whether normalization comes before or after each residual sub-block. Pre-norm trains deep Transformers more stably and is the modern default.
+pre: dl.norm.layer, dl.arch.cnn.resnet
+d: adv
+
+######## L2: Regularization in deep learning
+== dl.reg | Regularization in deep learning
+def: Techniques that make large networks generalize rather than memorize.
+pre: ml.concepts.regularization, dl.basics.mlp
+
+== dl.reg.weight-decay | Weight decay
+def: Shrink weights toward zero each step; equivalent to L2 regularization for plain SGD.
+d: beg
+
+== dl.reg.dropout | Dropout
+def: Randomly zero a fraction of activations during training so units cannot co-adapt; acts like training an ensemble of sub-networks.
+paper: Srivastava, Hinton, Krizhevsky, Sutskever, Salakhutdinov | Dropout: A Simple Way to Prevent Neural Networks from Overfitting | 2014
+d: beg
+
+== dl.reg.early-stop | Early stopping
+def: Stop training when validation loss stops improving.
+pre: ml.eval.curves
+d: beg
+
+== dl.reg.augmentation | Data augmentation (flips, crops, mixup, CutMix)
+def: Train on transformed copies of the data so the network learns invariances. Standard in vision; mixup and CutMix blend images and labels.
+paper: Zhang, Cisse, Dauphin, Lopez-Paz | mixup: Beyond Empirical Risk Minimization | 2017
+
+== dl.reg.label-smoothing | Label smoothing
+def: Train against slightly softened targets (e.g., 0.9 instead of 1) so the network is less overconfident.
+pre: found.info.cross-entropy
+d: adv
+
+== dl.reg.stochastic-depth | Stochastic depth & DropPath
+def: Randomly skip whole residual blocks during training; used in deep vision Transformers.
+pre: dl.reg.dropout, dl.arch.cnn.resnet
+d: adv
+
+######## L2: Training practice
+== dl.train | Training practice & debugging
+def: The working craft of getting a network to train: sanity checks, monitoring, and knowing which knob to turn.
+pre: dl.opt, dl.reg
+
+== dl.train.recipe | A training recipe (overfit one batch first)
+def: Start small, check the loss can reach zero on one batch, verify data and shapes, then scale up while watching training and validation curves.
+d: beg
+
+== dl.train.monitoring | Monitoring (loss curves, gradient norms, activations)
+def: Track loss, accuracy, gradient norms and learning rate with tools like TensorBoard or Weights & Biases. Divergence, plateaus and spikes each point to different fixes.
+to: infra.mlops.tracking
+d: beg
+
+== dl.train.finetune | Fine-tuning pretrained networks
+def: Start from pretrained weights, replace the head, and train with a small learning rate (optionally freezing early layers). The everyday way to apply deep learning.
+pre: ml.settings.transfer
+to: llm.post.sft
+st: dominant
+d: beg
+
+== dl.train.scaling | Scaling behaviour of networks
+def: Loss improves predictably as a power law in parameters, data and compute; this guides how big a model to train.
+to: llm.pretrain.scaling
+paper: Hestness et al. | Deep Learning Scaling is Predictable, Empirically | 2017
+st: active
+d: adv

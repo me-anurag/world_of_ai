@@ -1,0 +1,271 @@
+# FIELD 2 — Symbolic & Classical AI, part A: search, adversarial search, CSP
+!defaults d=int st=foundational
+
+######## L2: Search
+== sym.search | Search
+def: Solving problems by exploring a space of states from a start to a goal. The oldest core technique in AI; it reappears in planning, games, decoding and LLM reasoning (tree-of-thought, MCTS over solutions).
+pre: hist.agents.types.goal, found.cs.algo.graph
+paper: Russell, Norvig | Artificial Intelligence: A Modern Approach (1st ed.) | 1995
+
+#### Problem formulation
+== sym.search.problem | Search problem formulation
+def: Define states, initial state, actions, transition model, goal test and action costs. A good formulation (what to abstract away) matters more than the algorithm.
+d: beg
+
+== sym.search.problem.state-space | State space & search tree
+def: The state space is a graph of all reachable states; the search tree is the (possibly repeating) tree of paths the algorithm explores through it.
+pre: found.discrete.graphs.trees
+d: beg
+
+== sym.search.problem.frontier | Frontier, reached set & redundant paths
+def: The frontier holds nodes waiting to be expanded; the reached set stops the same state being expanded twice. Graph search vs tree search differs only in this bookkeeping.
+pre: sym.search.problem.state-space, found.cs.ds.trees
+d: beg
+
+== sym.search.problem.criteria | Completeness, optimality & complexity
+def: The four yardsticks for search algorithms: does it always find a solution, is it the cheapest, and how much time and memory does it use (in terms of branching factor b and depth d)?
+pre: sym.search.problem.state-space, found.cs.algo.bigo
+d: beg
+
+#### Uninformed search
+== sym.search.uninformed | Uninformed (blind) search
+def: Strategies that use no knowledge about how close a state is to the goal.
+pre: sym.search.problem.frontier
+d: beg
+
+== sym.search.uninformed.bfs | Breadth-first search
+def: Expand shallowest nodes first using a FIFO queue. Complete, and optimal when all actions cost the same, but memory grows as b^d.
+d: beg
+
+== sym.search.uninformed.ucs | Uniform-cost search (Dijkstra)
+def: Expand the node with the lowest path cost g(n) using a priority queue. Optimal for any non-negative costs; it is Dijkstra's algorithm applied to search.
+f: expand argmin g(n)
+pre: sym.search.uninformed.bfs, found.cs.algo.graph
+d: beg
+
+== sym.search.uninformed.dfs | Depth-first search
+def: Expand the deepest node first using a stack. Memory is only linear in depth, but it is not optimal and can loop forever in infinite spaces.
+d: beg
+
+== sym.search.uninformed.ids | Depth-limited & iterative deepening search
+def: Run depth-limited DFS with limits 0, 1, 2, … Combines BFS's completeness with DFS's small memory; the repeated work costs little.
+pre: sym.search.uninformed.dfs, sym.search.uninformed.bfs
+d: beg
+
+== sym.search.uninformed.bidirectional | Bidirectional search
+def: Search forward from the start and backward from the goal until the two frontiers meet, cutting b^d to about 2·b^(d/2).
+pre: sym.search.uninformed.bfs
+
+#### Informed search
+== sym.search.informed | Informed (heuristic) search
+def: Use a heuristic h(n), an estimate of the cost from n to the goal, to expand promising nodes first.
+pre: sym.search.uninformed.ucs
+
+== sym.search.informed.greedy | Greedy best-first search
+def: Expand the node that looks closest to the goal by h(n) alone. Fast but neither optimal nor complete in general.
+f: expand argmin h(n)
+
+== sym.search.astar | A* search
+def: Expand the node with the lowest f(n) = g(n) + h(n): cost so far plus estimated cost to go. Optimal when the heuristic never overestimates. Still the standard for pathfinding in games, maps and robotics.
+f: f(n) = g(n) + h(n)
+pre: sym.search.informed.greedy, sym.search.uninformed.ucs
+paper: Hart, Nilsson, Raphael | A Formal Basis for the Heuristic Determination of Minimum Cost Paths | 1968
+yr: 1968
+st: dominant
+to: dom.robotics.motion
+
+== sym.search.astar.admissible | Admissible & consistent heuristics
+def: Admissible: never overestimates the true cost (needed for optimal tree search). Consistent: obeys the triangle inequality h(n) ≤ c(n,n') + h(n') (needed for optimal graph search without re-expansion).
+
+== sym.search.astar.weighted | Weighted A* & satisficing search
+def: Inflate the heuristic (f = g + w·h) to find good-enough solutions much faster, with cost at most w times optimal.
+pre: sym.search.astar.admissible
+d: adv
+
+== sym.search.astar.memory | Memory-bounded search (IDA*, RBFS, SMA*)
+def: Variants of A* that cap memory: iterative deepening on f-cost (IDA*), recursive best-first search, and simplified memory-bounded A*.
+pre: sym.search.uninformed.ids
+paper: Korf | Depth-First Iterative-Deepening: An Optimal Admissible Tree Search | 1985
+d: adv
+
+== sym.search.informed.beam | Beam search
+def: Keep only the k best nodes at each depth. Incomplete but bounded; this is the decoding strategy used in machine translation and some LLM generation.
+pre: sym.search.informed.greedy
+to: llm.decode
+
+== sym.search.heuristics | Designing heuristics
+def: Where good heuristics come from, and how to measure them (effective branching factor).
+pre: sym.search.astar.admissible
+
+== sym.search.heuristics.relaxed | Relaxed problems
+def: Remove constraints from the problem and use the exact cost of the easier problem as the heuristic (e.g., Manhattan distance for the 8-puzzle). The main source of admissible heuristics.
+
+== sym.search.heuristics.pdb | Pattern databases & landmarks
+def: Precompute exact costs for subproblems (pattern databases) or required waypoints (landmarks) and use them as heuristics.
+pre: sym.search.heuristics.relaxed
+d: adv
+
+== sym.search.heuristics.dominance | Dominance & effective branching factor
+def: A heuristic that is always at least as large (and admissible) dominates and expands fewer nodes. Effective branching factor b* measures the quality.
+
+== sym.search.heuristics.learned | Learned heuristics
+def: Learn h(n) from experience or data, e.g. value networks as heuristics. The bridge from search to learning (AlphaGo's value network).
+to: rl.games.alphago
+st: active
+d: adv
+
+#### Local search
+== sym.search.local | Local search
+def: Keep one (or a few) current states and move to neighbours, ignoring the path. Works on huge or continuous spaces where only the final state matters (scheduling, layout).
+pre: sym.search.problem
+x: found.opt.other.local-search, evo
+
+== sym.search.local.hill | Hill climbing
+def: Always move to the best neighbour. Gets stuck on local maxima, ridges and plateaus; random restarts and sideways moves help.
+d: beg
+
+== sym.search.local.anneal | Simulated annealing
+def: Accept worse moves with a probability that shrinks as a "temperature" cools. Can escape local optima, inspired by annealing metals.
+f: P(accept) = e^(ΔE/T)
+pre: sym.search.local.hill
+paper: Kirkpatrick, Gelatt, Vecchi | Optimization by Simulated Annealing | 1983
+
+== sym.search.local.beam | Local beam & stochastic beam search
+def: Track k states at once and keep the k best successors across all of them, sharing information between searches.
+pre: sym.search.local.hill
+
+== sym.search.local.tabu | Tabu search
+def: Local search that remembers recently visited states or moves and forbids returning to them, to avoid cycling.
+pre: sym.search.local.hill
+paper: Glover | Future Paths for Integer Programming and Links to Artificial Intelligence | 1986
+d: adv
+
+== sym.search.local.continuous | Local search in continuous spaces
+def: When states are continuous, local search becomes gradient-based or sampling-based optimization.
+x: found.opt.first.gd
+
+#### Search under uncertainty
+== sym.search.complex | Search with nondeterminism & partial observability
+def: When actions have uncertain outcomes or the state is hidden, solutions become contingency plans or searches over belief states.
+pre: sym.search.uninformed
+x: hist.agents.env.observable
+d: adv
+
+== sym.search.complex.and-or | AND–OR search
+def: OR nodes are the agent's choices; AND nodes are the environment's possible outcomes, all of which the plan must handle. Solutions are trees (conditional plans).
+d: adv
+
+== sym.search.complex.belief | Belief-state (sensorless) search
+def: Search over sets of possible states. Sensorless problems become ordinary searches in belief space.
+to: rl.pomdp
+d: adv
+
+== sym.search.complex.online | Online search & LRTA*
+def: Interleave acting and searching in an unknown environment, learning cost estimates as you go (Learning Real-Time A*).
+pre: sym.search.astar
+paper: Korf | Real-Time Heuristic Search | 1990
+to: rl
+d: adv
+
+######## L2 (under search): adversarial
+== sym.search.adversarial | Adversarial search (game-tree search)
+def: Search when an opponent chooses some of the moves. Classic AI for chess, checkers and Go, and the root of game AI.
+pre: sym.search.uninformed.dfs
+x: rl.multiagent
+
+== sym.search.adversarial.zero-sum | Two-player zero-sum games
+def: Deterministic, turn-taking, perfect-information games where one player's gain is the other's loss.
+d: beg
+
+== sym.search.adversarial.minimax | Minimax
+def: Assume the opponent plays optimally: maximize at your levels, minimize at theirs, and back up values from the leaves.
+f: V(s) = max_a min_b V(result(s,a,b))
+pre: sym.search.adversarial.zero-sum
+paper: von Neumann | Zur Theorie der Gesellschaftsspiele | 1928
+d: beg
+
+== sym.search.adversarial.alphabeta | Alpha–beta pruning
+def: Skip branches that cannot change the minimax decision. With good move ordering it searches about twice as deep in the same time.
+pre: sym.search.adversarial.minimax
+paper: Knuth, Moore | An Analysis of Alpha-Beta Pruning | 1975
+
+== sym.search.adversarial.eval | Evaluation functions & cutoff
+def: Stop at a depth limit and score positions heuristically (material, mobility). Quiescence search extends unstable positions; transposition tables cache repeated positions.
+pre: sym.search.adversarial.alphabeta
+to: sym.search.heuristics.learned
+
+== sym.search.adversarial.expectimax | Stochastic games (expectiminimax)
+def: Add chance nodes for dice or cards and back up expected values. Used in backgammon.
+pre: sym.search.adversarial.minimax, found.prob.rv.expectation
+d: adv
+
+== sym.search.adversarial.imperfect | Partially observable games
+def: Games with hidden information (poker, bridge, Kriegspiel) need reasoning about beliefs and mixed strategies; game theory takes over from pure search.
+pre: sym.search.adversarial.expectimax
+to: rl.multiagent
+d: adv
+
+== sym.search.mcts | Monte Carlo tree search (MCTS)
+def: Build a search tree from random playouts: select (balancing exploration and exploitation), expand, simulate, back up. Needs no evaluation function, and with learned networks it powered AlphaGo. Now also used to search over LLM reasoning steps.
+pre: sym.search.adversarial.minimax, found.prob.mc.estimation
+paper: Kocsis, Szepesvári | Bandit Based Monte-Carlo Planning | 2006
+yr: 2006
+st: dominant
+to: rl.games.alphago, llm.reasoning
+
+== sym.search.mcts.uct | UCT (upper confidence bounds for trees)
+def: The selection rule of MCTS: treat each node's children as a bandit problem and pick by UCB1.
+f: UCT = Q/N + c·√(ln N_parent / N)
+to: rl.bandits
+d: adv
+
+######## L2: Constraint satisfaction
+== sym.csp | Constraint satisfaction
+def: Problems stated as variables, domains and constraints (scheduling, timetabling, Sudoku, configuration). Factored representation lets general-purpose algorithms prune huge spaces.
+pre: sym.search.uninformed.dfs, hist.agents.repr
+x: found.opt.other.combinatorial
+
+== sym.csp.formulation | CSP formulation & constraint graphs
+def: Variables X, domains D, constraints C (unary, binary, global). The constraint graph shows which variables interact.
+d: beg
+
+== sym.csp.consistency | Constraint propagation (node, arc, path, k-consistency)
+aka: arc consistency; AC-3
+def: Shrink domains by removing values that cannot be part of any solution. Arc consistency (AC-3) is the workhorse.
+pre: sym.csp.formulation
+paper: Mackworth | Consistency in Networks of Relations | 1977
+
+== sym.csp.global | Global constraints
+def: Constraints over many variables with specialized propagators, such as AllDifferent and resource constraints.
+pre: sym.csp.consistency
+d: adv
+
+== sym.csp.backtracking | Backtracking search
+def: Assign variables one at a time and back up on failure. Variable ordering (MRV, degree) and value ordering (least-constraining value) matter enormously.
+pre: sym.csp.formulation
+
+== sym.csp.inference | Forward checking & MAC
+def: After each assignment, prune neighbouring domains (forward checking) or run full arc consistency (maintaining arc consistency).
+pre: sym.csp.backtracking, sym.csp.consistency
+
+== sym.csp.backjump | Backjumping & constraint learning
+def: On failure, jump back to the variable that caused the conflict and record the conflict as a new constraint (nogood) so it is never repeated.
+pre: sym.csp.backtracking
+to: sym.logic.sat.cdcl
+d: adv
+
+== sym.csp.min-conflicts | Min-conflicts local search
+def: Start from a complete assignment and repeatedly change a conflicted variable to the value with fewest conflicts. Solves million-queens instantly.
+pre: sym.csp.formulation, sym.search.local.hill
+
+== sym.csp.structure | Problem structure (trees, cutsets, decompositions)
+def: Tree-structured CSPs are solvable in linear time; cutset conditioning and tree decomposition turn general CSPs toward that case.
+pre: sym.csp.consistency
+x: prob.inference.exact.junction
+d: adv
+
+== sym.csp.optimization | Constraint optimization & solvers
+def: CSPs with an objective: constraint programming solvers (e.g., OR-Tools CP-SAT), integer programming. The practical tools for scheduling and logistics.
+pre: sym.csp.backtracking
+x: found.opt.constrained.lp
+st: dominant

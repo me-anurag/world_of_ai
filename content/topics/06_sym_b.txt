@@ -1,0 +1,418 @@
+# FIELD 2 — Symbolic & Classical AI, part B: logic, KR, planning, expert systems, fuzzy, symbolic learning
+!defaults d=int st=foundational
+
+######## L2: Logic & automated reasoning
+== sym.logic | Logic & automated reasoning
+def: Representing knowledge as sentences in a formal language and deriving new sentences that must be true. Gives guarantees no statistical method gives, and is now paired with LLMs for verification and math.
+pre: found.discrete.logic, hist.agents.repr
+paper: McCarthy | Programs with Common Sense | 1958
+
+== sym.logic.kb-agent | Knowledge-based agents
+def: An agent with a knowledge base of sentences that it TELLs facts and ASKs queries, with an inference engine in between. Separates what is known from how it reasons.
+d: beg
+
+== sym.logic.semantics | Syntax, semantics, entailment
+def: Syntax says what sentences are well formed; semantics says when they are true in a model. KB ⊨ α means α is true in every model where the KB is true.
+f: KB ⊨ α  ⇔  M(KB) ⊆ M(α)
+pre: sym.logic.kb-agent
+
+== sym.logic.inference | Soundness & completeness of inference
+def: A sound procedure derives only entailed sentences; a complete one derives all of them. The two properties every logical method is judged by.
+pre: sym.logic.semantics
+
+#### Propositional
+== sym.logic.propositional | Propositional logic
+def: Logic over true/false propositions joined by ¬, ∧, ∨, ⇒, ⇔. Simple and decidable, but it cannot talk about objects or generalize over them.
+pre: sym.logic.semantics, found.discrete.boolean
+d: beg
+
+== sym.logic.propositional.normal | Normal forms (CNF, DNF, Horn clauses)
+def: Standard shapes for formulas. CNF (an AND of ORs) is the input to SAT solvers and resolution; Horn clauses (at most one positive literal) allow linear-time inference.
+
+== sym.logic.propositional.resolution | Resolution
+def: One inference rule, complete for refutation: to prove α, add ¬α and derive the empty clause.
+f: (A ∨ B), (¬B ∨ C) ⊢ (A ∨ C)
+pre: sym.logic.propositional.normal, sym.logic.inference
+x: hist.timeline.enthusiasm.resolution
+
+== sym.logic.propositional.chaining | Forward & backward chaining
+aka: forward chaining; backward chaining
+def: With Horn clauses: forward chaining fires rules from known facts (data-driven); backward chaining works back from the query (goal-driven). The engines of rule-based and expert systems.
+pre: sym.logic.propositional.normal
+to: sym.expert, sym.lp.prolog
+
+#### SAT
+== sym.logic.sat | Boolean satisfiability (SAT)
+def: Is there an assignment making a CNF formula true? The canonical NP-complete problem, yet modern solvers handle millions of variables, so many problems (planning, verification, scheduling) are solved by reducing to SAT.
+pre: sym.logic.propositional.normal, found.cs.algo.complexity
+paper: Cook | The Complexity of Theorem-Proving Procedures | 1971
+st: dominant
+
+== sym.logic.sat.dpll | DPLL
+def: Backtracking search over variable assignments with unit propagation and pure-literal elimination. The basis of all complete SAT solvers.
+pre: sym.csp.backtracking
+paper: Davis, Logemann, Loveland | A Machine Program for Theorem-Proving | 1962
+
+== sym.logic.sat.cdcl | Conflict-driven clause learning (CDCL)
+def: DPLL plus learning a new clause from every conflict and backjumping non-chronologically. The breakthrough behind modern industrial SAT solvers.
+pre: sym.logic.sat.dpll, sym.csp.backjump
+paper: Marques-Silva, Sakallah | GRASP: A Search Algorithm for Propositional Satisfiability | 1999
+st: dominant
+d: adv
+
+== sym.logic.sat.walksat | Local search for SAT (WalkSAT)
+def: Flip variables in unsatisfied clauses, mixing greedy and random moves. Incomplete but fast on satisfiable instances.
+pre: sym.csp.min-conflicts
+d: adv
+
+== sym.logic.sat.phase | Random SAT & the phase transition
+def: Random 3-SAT is easy when under- or over-constrained and hardest near a clause/variable ratio of about 4.26.
+d: adv
+
+== sym.logic.sat.smt | SMT solvers
+def: Satisfiability modulo theories: SAT plus reasoning about arithmetic, arrays, bit-vectors and more (e.g., Z3). Used in program verification and test generation.
+pre: sym.logic.sat.cdcl
+paper: de Moura, Bjørner | Z3: An Efficient SMT Solver | 2008
+st: dominant
+d: adv
+
+#### First-order logic
+== sym.logic.fol | First-order logic
+def: Logic with objects, relations, functions and quantifiers (∀, ∃). Expressive enough for most of mathematics; entailment is only semi-decidable.
+pre: sym.logic.propositional
+x: hist.timeline.pre.frege
+
+== sym.logic.fol.syntax | Terms, predicates, quantifiers
+def: Constants and functions build terms; predicates make atomic sentences; ∀ and ∃ generalize. ∀x King(x) ⇒ Person(x).
+
+== sym.logic.fol.engineering | Knowledge engineering in FOL
+def: Choosing a vocabulary (ontology), encoding general and specific knowledge, posing queries and debugging the knowledge base.
+pre: sym.logic.fol.syntax
+to: sym.kr
+
+== sym.logic.fol.unification | Unification
+def: Find a substitution that makes two expressions identical (Knows(John, x) with Knows(y, Mother(y))). The core step of first-order inference and Prolog.
+pre: sym.logic.fol.syntax
+
+== sym.logic.fol.chaining | First-order forward & backward chaining
+def: Lifted versions of chaining using unification. Rete-style matching makes forward chaining efficient; backward chaining is the execution model of Prolog.
+pre: sym.logic.fol.unification, sym.logic.propositional.chaining
+
+== sym.logic.fol.resolution | First-order resolution & theorem proving
+def: Resolution with unification is refutation-complete for FOL. Automated theorem provers (Vampire, E) build on it.
+pre: sym.logic.fol.unification, sym.logic.propositional.resolution
+paper: Robinson | A Machine-Oriented Logic Based on the Resolution Principle | 1965
+d: adv
+
+== sym.logic.fol.equality | Equality reasoning (paramodulation)
+def: Special inference rules for = so provers can substitute equals for equals efficiently.
+pre: sym.logic.fol.resolution
+d: adv
+
+== sym.logic.provers | Interactive theorem provers & formal verification
+def: Systems where humans write proofs a computer checks (Lean, Coq/Rocq, Isabelle). LLMs now generate such proofs, and DeepMind's AlphaProof (2024) used Lean to reach IMO silver-medal standard.
+pre: sym.logic.fol.resolution
+to: front.neurosym
+st: active
+d: adv
+
+== sym.logic.nonclassical | Modal, temporal & other logics
+def: Logics for necessity and possibility, knowledge and belief (epistemic), time (LTL, CTL) and obligation (deontic). Temporal logic underlies model checking of software and hardware.
+pre: sym.logic.fol
+d: adv
+
+######## L2: Logic programming
+== sym.lp | Logic programming
+def: Programs written as logical rules, run by an inference engine. The program says what is true; the engine decides how to compute it.
+pre: sym.logic.fol.chaining
+paper: Kowalski | Predicate Logic as Programming Language | 1974
+
+== sym.lp.prolog | Prolog
+def: The classic logic programming language: Horn clauses executed by depth-first backward chaining with unification.
+x: hist.timeline.expert.prolog
+st: classic
+
+== sym.lp.datalog | Datalog
+def: Function-free logic programs evaluated bottom-up. Guaranteed to terminate; used for database queries, program analysis and knowledge graph rules.
+to: sym.kr.kg
+
+== sym.lp.asp | Answer set programming
+def: Declarative programs whose stable models are the solutions; good for combinatorial search with defaults and exceptions (e.g., clingo).
+pre: sym.kr.nonmono
+paper: Gelfond, Lifschitz | The Stable Model Semantics for Logic Programming | 1988
+d: adv
+
+== sym.lp.clp | Constraint logic programming
+def: Logic programming with built-in constraint solving over domains such as integers and reals. Merges Prolog and CSP.
+pre: sym.lp.prolog, sym.csp.consistency
+d: adv
+
+######## L2: Knowledge representation
+== sym.kr | Knowledge representation
+def: How to represent the world's objects, categories, events, time, beliefs and defaults so a machine can reason about them. Lives on today in ontologies, knowledge graphs and the structured context fed to LLMs.
+pre: sym.logic.fol
+paper: Brachman, Levesque | Knowledge Representation and Reasoning | 2004
+
+== sym.kr.ontology | Ontologies & ontological engineering
+aka: ontology
+def: A formal vocabulary of categories and relations for a domain, often arranged as a hierarchy with an upper ontology at the top (e.g., schema.org, SNOMED CT, Gene Ontology).
+
+== sym.kr.categories | Categories, inheritance & objects
+def: Organizing objects into categories with subclass links so properties are inherited (Basketball ⊂ Ball). Also covers composition (part-of) and measures.
+pre: sym.kr.ontology
+d: beg
+
+== sym.kr.events | Events, time & fluents (situation & event calculus)
+def: Representing actions and change: situation calculus (states after action sequences) and event calculus (events and intervals). The setting where the frame problem appears.
+pre: sym.logic.fol
+x: hist.philosophy.mind.frame
+paper: Kowalski, Sergot | A Logic-Based Calculus of Events | 1986
+d: adv
+
+== sym.kr.temporal | Temporal & spatial reasoning (Allen's interval algebra)
+aka: spatial reasoning; qualitative reasoning
+def: Qualitative relations between time intervals (before, meets, overlaps, during…) or regions, with inference over them.
+pre: sym.kr.events
+paper: Allen | Maintaining Knowledge about Temporal Intervals | 1983
+d: adv
+
+== sym.kr.semantic-net | Semantic networks
+def: Knowledge as a graph of concepts connected by labelled links (is-a, has-part). Intuitive and the ancestor of knowledge graphs.
+pre: sym.kr.categories, found.discrete.graphs.knowledge
+paper: Quillian | Semantic Memory | 1968
+st: classic
+
+== sym.kr.frames | Frames
+def: Structured records for stereotyped concepts or situations, with slots, default values and attached procedures. A precursor of object-oriented design.
+pre: sym.kr.categories
+x: hist.timeline.expert.frames
+st: classic
+
+== sym.kr.description | Description logics
+def: Decidable fragments of FOL for defining concepts and checking subsumption and consistency. The logical basis of the OWL web ontology language.
+pre: sym.kr.semantic-net, sym.logic.fol
+paper: Brachman, Schmolze | An Overview of the KL-ONE Knowledge Representation System | 1985
+d: adv
+
+== sym.kr.nonmono | Nonmonotonic & default reasoning
+def: Drawing conclusions that may be withdrawn when new facts arrive ("birds fly", until you learn it's a penguin). Default logic, circumscription and the closed-world assumption.
+paper: Reiter | A Logic for Default Reasoning | 1980
+d: adv
+
+== sym.kr.tms | Truth maintenance & belief revision
+def: Track the justifications for each belief so they can be retracted consistently when assumptions change. AGM theory formalizes rational belief revision.
+pre: sym.kr.nonmono
+paper: Doyle | A Truth Maintenance System | 1979
+d: adv
+
+== sym.kr.commonsense | Commonsense knowledge & reasoning
+def: The everyday knowledge humans never state (water is wet, people can't be in two places). Long the hardest problem for symbolic AI (Cyc, ConceptNet); now partly absorbed by LLMs.
+pre: sym.kr.ontology
+x: hist.timeline.expert.cyc, hist.philosophy.measure.winograd
+st: active
+
+== sym.kr.semweb | Semantic web (RDF, OWL, SPARQL)
+def: W3C standards for publishing machine-readable data: RDF triples, OWL ontologies, SPARQL queries, linked data.
+pre: sym.kr.description, found.discrete.graphs.knowledge
+paper: Berners-Lee, Hendler, Lassila | The Semantic Web | 2001
+
+== sym.kr.kg | Knowledge graphs
+def: Large graphs of entities and relations (Wikidata, Google Knowledge Graph, enterprise KGs). Used for search, question answering, recommendations and as a structured retrieval source for LLMs (GraphRAG).
+pre: sym.kr.semweb
+paper: Vrandečić, Krötzsch | Wikidata: A Free Collaborative Knowledgebase | 2014
+yr: 2012
+st: dominant
+to: sys.rag.graphrag, dom.graph.kge
+
+== sym.kr.lexical | Lexical knowledge bases (WordNet)
+def: Hand-built networks of word senses and their relations (synonymy, hypernymy). WordNet powered NLP for two decades.
+pre: sym.kr.semantic-net
+paper: Miller | WordNet: A Lexical Database for English | 1995
+to: dom.nlp
+st: classic
+
+######## L2: Automated planning
+== sym.planning | Automated planning
+def: Finding a sequence of actions that achieves a goal, using a factored description of states and actions. The ancestor of the "plan" step in LLM agents.
+pre: sym.search.informed, sym.logic.propositional
+to: sys.agents.planning
+paper: Ghallab, Nau, Traverso | Automated Planning: Theory and Practice | 2004
+
+== sym.planning.classical | Classical planning
+def: Fully observable, deterministic, static world with known actions. States are sets of facts; actions have preconditions and effects.
+
+== sym.planning.strips | STRIPS
+def: The original action language: each action has preconditions, an add list and a delete list. Still the core of planning languages.
+pre: sym.planning.classical
+paper: Fikes, Nilsson | STRIPS: A New Approach to the Application of Theorem Proving to Problem Solving | 1971
+x: hist.timeline.enthusiasm.shakey
+
+== sym.planning.pddl | PDDL
+def: The Planning Domain Definition Language, the standard input format for planners and planning competitions. LLMs are sometimes used to translate tasks into PDDL.
+pre: sym.planning.strips
+paper: McDermott et al. | PDDL — The Planning Domain Definition Language | 1998
+
+== sym.planning.search | Forward & backward state-space planning
+def: Progression searches forward from the start; regression searches back from the goal over relevant actions.
+pre: sym.planning.strips, sym.search.astar
+
+== sym.planning.heuristics | Planning heuristics (ignore-delete, FF)
+def: Domain-independent heuristics from relaxed problems, especially ignoring delete lists. The FF planner's heuristic made heuristic search the leading planning method.
+pre: sym.planning.search, sym.search.heuristics.relaxed
+paper: Hoffmann, Nebel | The FF Planning System: Fast Plan Generation Through Heuristic Search | 2001
+d: adv
+
+== sym.planning.graphplan | Planning graphs (Graphplan)
+def: A layered graph of reachable facts and actions with mutual-exclusion links, used to extract plans or estimate heuristics.
+pre: sym.planning.strips
+paper: Blum, Furst | Fast Planning Through Planning Graph Analysis | 1997
+st: classic
+d: adv
+
+== sym.planning.sat | Planning as satisfiability
+def: Encode "is there a plan of length T?" as a SAT problem and hand it to a solver.
+pre: sym.planning.strips, sym.logic.sat
+d: adv
+
+== sym.planning.pop | Partial-order planning
+def: Build plans as partially ordered steps with causal links, committing to an order only when needed.
+pre: sym.planning.strips
+st: classic
+d: adv
+
+== sym.planning.htn | Hierarchical task network (HTN) planning
+def: Decompose high-level tasks into subtasks using methods, down to primitive actions. How large real-world planners (and many agent frameworks) structure tasks.
+pre: sym.planning.classical
+paper: Erol, Hendler, Nau | HTN Planning: Complexity and Expressivity | 1994
+to: sys.agents.planning
+
+== sym.planning.uncertain | Planning under uncertainty (contingent, conformant, online)
+def: Sensorless (conformant) plans work without observations; contingent plans branch on observations; online planning replans as the world surprises the agent.
+pre: sym.planning.classical, sym.search.complex
+to: rl.mdp
+d: adv
+
+== sym.planning.scheduling | Temporal planning & scheduling
+def: Actions with durations, deadlines and limited resources (critical path, job-shop scheduling).
+pre: sym.planning.classical, sym.csp.optimization
+d: adv
+
+######## L2: Expert systems
+== sym.expert | Expert systems
+def: Programs that capture a human expert's knowledge as rules and reason with it. The first commercial AI wave (1980s); the pattern survives in business rule engines.
+pre: sym.logic.propositional.chaining
+x: hist.timeline.expert
+paper: Buchanan, Shortliffe | Rule-Based Expert Systems: The MYCIN Experiments of the Stanford Heuristic Programming Project | 1984
+st: classic
+d: beg
+
+== sym.expert.architecture | Knowledge base + inference engine
+def: The defining split: domain rules in a knowledge base, a generic inference engine applying them, plus working memory and an explanation facility.
+st: classic
+d: beg
+
+== sym.expert.rules | Production rules
+def: IF condition THEN action rules. Conflict resolution decides which matching rule fires first.
+pre: sym.expert.architecture
+st: classic
+d: beg
+
+== sym.expert.rete | Rete algorithm
+def: Efficient matching of many rules against many facts by caching partial matches in a network. Still inside rule engines such as Drools and CLIPS.
+pre: sym.expert.rules
+paper: Forgy | Rete: A Fast Algorithm for the Many Pattern/Many Object Pattern Match Problem | 1982
+d: adv
+
+== sym.expert.certainty | Certainty factors
+def: MYCIN's ad hoc numbers for rule confidence. Their inconsistencies pushed the field toward proper probability (Bayesian networks).
+pre: sym.expert.rules
+to: prob.gm.bayesnet
+st: superseded
+
+== sym.expert.acquisition | Knowledge acquisition bottleneck
+def: Extracting and maintaining rules from experts is slow, costly and brittle. The main reason expert systems faded and machine learning took over.
+to: ml
+st: classic
+d: beg
+
+== sym.expert.cbr | Case-based reasoning
+def: Solve new problems by retrieving similar past cases and adapting their solutions (retrieve, reuse, revise, retain). A conceptual ancestor of retrieval-augmented systems.
+paper: Aamodt, Plaza | Case-Based Reasoning: Foundational Issues, Methodological Variations, and System Approaches | 1994
+x: sys.rag
+st: classic
+
+######## L2: Fuzzy logic
+== sym.fuzzy | Fuzzy logic
+def: Reasoning with degrees of truth in [0, 1] instead of true/false, to handle vague concepts like "warm" or "fast". Widely used in control (appliances, trains, cameras).
+pre: found.discrete.sets
+x: hist.timeline.enthusiasm.fuzzy
+paper: Zadeh | Fuzzy Sets | 1965
+st: classic
+d: beg
+
+== sym.fuzzy.sets | Fuzzy sets & membership functions
+def: A membership function μ(x) gives the degree to which x belongs to a set (triangular, trapezoidal, Gaussian shapes).
+d: beg
+st: classic
+
+== sym.fuzzy.ops | Fuzzy operators (t-norms, t-conorms)
+def: Fuzzy AND, OR and NOT, commonly min, max and 1 − μ.
+f: μ(A∧B) = min(μA, μB);  μ(A∨B) = max(μA, μB)
+pre: sym.fuzzy.sets
+st: classic
+
+== sym.fuzzy.linguistic | Linguistic variables & hedges
+def: Variables whose values are words (temperature ∈ {cold, warm, hot}), each a fuzzy set; hedges like "very" modify them.
+pre: sym.fuzzy.sets
+st: classic
+
+== sym.fuzzy.inference | Fuzzy inference (Mamdani, Takagi–Sugeno)
+def: Fuzzify inputs, fire IF–THEN rules, aggregate, then defuzzify (e.g., centroid) into a crisp output. Mamdani outputs fuzzy sets; Sugeno outputs functions.
+pre: sym.fuzzy.ops, sym.fuzzy.linguistic
+paper: Mamdani, Assilian | An Experiment in Linguistic Synthesis with a Fuzzy Logic Controller | 1975
+st: classic
+
+== sym.fuzzy.control | Fuzzy control
+def: Controllers built from fuzzy rules instead of differential equations; famous uses include the Sendai subway and camera autofocus.
+pre: sym.fuzzy.inference
+x: hist.roots.control
+st: classic
+
+== sym.fuzzy.neuro | Neuro-fuzzy systems (ANFIS)
+def: Fuzzy inference systems whose parameters are tuned by neural-network learning.
+pre: sym.fuzzy.inference
+paper: Jang | ANFIS: Adaptive-Network-Based Fuzzy Inference System | 1993
+st: classic
+d: adv
+
+######## L2: Symbolic learning
+== sym.learning | Symbolic & logic-based learning
+def: Learning rules, concepts and programs rather than numeric weights. Small today, but its ideas return in neuro-symbolic AI and program synthesis.
+pre: sym.logic.fol
+to: front.neurosym
+st: classic
+
+== sym.learning.version-space | Version spaces & concept learning
+def: Track the set of all hypotheses consistent with the examples so far, bounded by the most general and most specific (candidate elimination).
+paper: Mitchell | Generalization as Search | 1982
+st: classic
+
+== sym.learning.ilp | Inductive logic programming
+def: Learn first-order logic rules from examples plus background knowledge. Data-efficient and interpretable.
+pre: sym.lp.prolog
+paper: Muggleton | Inductive Logic Programming | 1991
+st: classic
+d: adv
+
+== sym.learning.ebl | Explanation-based learning
+def: Generalize from a single example by explaining why it works with background knowledge, then compiling the explanation into a reusable rule.
+st: classic
+d: adv
+
+== sym.learning.synthesis | Program synthesis (classical)
+def: Constructing programs from specifications or input–output examples by search and deduction (e.g., FlashFill in Excel). LLM code generation is the modern statistical version.
+pre: sym.search.informed
+paper: Gulwani | Automating String Processing in Spreadsheets Using Input-Output Examples | 2011
+to: sys.agents.coding
+st: active
+d: adv

@@ -1,0 +1,37 @@
+---
+import Base from '../../layouts/Base.astro';
+import { topics, get } from '../../lib/data.js';
+import { site } from '../../site.config.mjs';
+export function getStaticPaths() {
+  return topics.filter(n => n.path.length > 1).map(n => ({ params: { slug: n.slug }, props: { id: n.id } }));
+}
+const node = get(Astro.props.id);
+const steps = node.path.map(get);
+const byField = {};
+for (const s of steps.slice(0, -1)) { const f = get(s.field).name; byField[f] = (byField[f] || 0) + 1; }
+const fieldCounts = Object.entries(byField).sort((a, b) => b[1] - a[1]);
+const shareUrl = new URL(`/paths/${node.slug}/`, site.url).href;
+---
+<Base title={`Learning path to ${node.name}`} description={`${steps.length - 1} topics to learn before ${node.name}, in an order where every prerequisite comes first.`} current={node.id} section="fields">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href={node.url}>{node.name}</a><span aria-hidden="true">/</span></nav>
+  <h1>Learning path to {node.name}</h1>
+  <p class="lead">{steps.length - 1} topics to learn first, ordered so that every topic comes after the topics it depends on. The order follows the prerequisite links in the map, so it is the same for every reader.</p>
+  <p class="small muted">Steps by field: {fieldCounts.map(([f, c], i) => <>{i > 0 && ', '}{`${f} ${c}`}</>)}.</p>
+  <div class="copy-row" data-pagefind-ignore>
+    <label class="small muted" for="share-url">Link to this path</label>
+    <input id="share-url" type="text" readonly value={shareUrl} />
+    <button class="btn secondary" type="button" id="copy-btn">Copy link</button>
+  </div>
+  <ol class="steps">
+    {steps.map(s => <li class={s.id === node.id ? 'goal' : undefined}><a href={s.url}>{s.name}</a><span class="where">{get(s.field).name}</span></li>)}
+  </ol>
+  <p class="small muted" style="margin-top:20px">Topics you already know can be skipped. Areas such as "Probability theory" appear when a step depends on the whole area rather than one topic in it.</p>
+  <script>
+    const b = document.getElementById('copy-btn'); const i = document.getElementById('share-url') as HTMLInputElement;
+    b?.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(i.value); b.textContent = 'Copied'; }
+      catch (e) { i.focus(); i.select(); b.textContent = 'Press Ctrl+C to copy'; }
+      setTimeout(() => { b.textContent = 'Copy link'; }, 2000);
+    });
+  </script>
+</Base>

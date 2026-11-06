@@ -1,0 +1,323 @@
+# FIELD 6 — Deep Learning, part B: architectures
+!defaults d=int st=foundational
+
+== dl.arch | Architectures
+def: How layers are wired together. Each architecture builds in an inductive bias: locality (CNNs), order (RNNs), relations between all pairs (attention), graph structure (GNNs).
+pre: dl.basics.mlp, ml.concepts.inductive-bias
+
+######## Convolutional networks
+== dl.arch.cnn | Convolutional neural network
+def: Layers that slide small learned filters over the input, sharing weights across positions. Built-in locality and translation equivariance made CNNs the engine of computer vision.
+pre: found.signal.convolution
+x: hist.timeline.nn.neocognitron
+paper: LeCun, Bottou, Bengio, Haffner | Gradient-Based Learning Applied to Document Recognition | 1998
+
+== dl.arch.cnn.layer | Convolution layer: kernels, stride, padding, channels
+def: Each filter spans all input channels and produces one output channel; stride sets the step and padding preserves borders. Output size = (n + 2p − k)/s + 1.
+pre: found.linalg.tensor.shape
+d: beg
+
+== dl.arch.cnn.pooling | Pooling & downsampling
+def: Max or average pooling shrinks feature maps and adds small translation invariance; global average pooling replaces fully connected heads.
+pre: dl.arch.cnn.layer
+d: beg
+
+== dl.arch.cnn.receptive | Receptive field & feature hierarchy
+def: Each deeper unit sees a larger patch of the input, so features grow from edges to textures to parts to objects.
+pre: dl.arch.cnn.pooling
+paper: Zeiler, Fergus | Visualizing and Understanding Convolutional Networks | 2013
+
+== dl.arch.cnn.variants | Convolution variants (1×1, dilated, depthwise-separable, transposed)
+def: 1×1 convs mix channels; dilated convs widen the receptive field; depthwise-separable convs cut cost (MobileNet); transposed convs upsample.
+pre: dl.arch.cnn.layer
+d: adv
+
+== dl.arch.cnn.lenet | LeNet
+def: LeCun's 1989–1998 CNN for handwritten digits: conv, pool, conv, pool, fully connected. The template for every CNN since.
+pre: dl.arch.cnn.pooling
+x: hist.timeline.nn.lenet
+paper: LeCun, Bottou, Bengio, Haffner | Gradient-Based Learning Applied to Document Recognition | 1998
+st: classic
+
+== dl.arch.cnn.alexnet | AlexNet
+def: A deeper CNN with ReLU, dropout, data augmentation and GPU training that won ImageNet 2012 and launched the deep-learning era.
+pre: dl.arch.cnn.lenet, dl.basics.activations, dl.reg.dropout
+x: hist.timeline.deep.alexnet
+paper: Krizhevsky, Sutskever, Hinton | ImageNet Classification with Deep Convolutional Neural Networks | 2012
+st: classic
+
+== dl.arch.cnn.vgg | VGG
+def: Very deep stacks of small 3×3 convolutions; showed depth with simple uniform blocks works.
+pre: dl.arch.cnn.alexnet
+paper: Simonyan, Zisserman | Very Deep Convolutional Networks for Large-Scale Image Recognition | 2014
+st: classic
+
+== dl.arch.cnn.inception | GoogLeNet / Inception
+def: Parallel branches with different filter sizes inside each block, plus 1×1 bottlenecks to keep cost down.
+pre: dl.arch.cnn.vgg, dl.arch.cnn.variants
+paper: Szegedy et al. | Going Deeper with Convolutions | 2014
+st: classic
+
+== dl.arch.cnn.resnet | ResNet
+def: Residual (skip) connections let each block learn a correction to its input, so gradients flow through 100+ layers. Residual connections are now in almost every deep architecture, including Transformers.
+f: y = x + F(x)
+pre: dl.arch.cnn.vgg, dl.basics.vanishing
+x: hist.timeline.deep.resnet
+paper: He, Zhang, Ren, Sun | Deep Residual Learning for Image Recognition | 2015
+st: dominant
+
+== dl.arch.cnn.densenet | DenseNet
+def: Each layer receives the feature maps of all previous layers in its block, encouraging feature reuse.
+pre: dl.arch.cnn.resnet
+paper: Huang, Liu, van der Maaten, Weinberger | Densely Connected Convolutional Networks | 2017
+st: classic
+d: adv
+
+== dl.arch.cnn.efficient | Efficient CNNs (MobileNet, EfficientNet)
+def: Architectures for phones and edge devices built from depthwise-separable convolutions, with depth, width and resolution scaled together (EfficientNet).
+pre: dl.arch.cnn.variants, dl.arch.cnn.resnet
+paper: Tan, Le | EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks | 2019
+d: adv
+
+== dl.arch.cnn.convnext | ConvNeXt (modernized CNNs)
+def: A ResNet updated with Transformer-era design choices, showing CNNs can match vision Transformers.
+pre: dl.arch.cnn.resnet, dl.arch.vit
+paper: Liu et al. | A ConvNet for the 2020s | 2022
+st: active
+d: adv
+
+== dl.arch.cnn.unet | U-Net & encoder–decoder CNNs
+def: A downsampling encoder and upsampling decoder joined by skip connections, giving per-pixel outputs. Standard for segmentation and the backbone of many diffusion models.
+pre: dl.arch.cnn.variants, dl.arch.cnn.resnet
+paper: Ronneberger, Fischer, Brox | U-Net: Convolutional Networks for Biomedical Image Segmentation | 2015
+to: dl.gen.diffusion, dom.cv.segmentation
+st: dominant
+
+######## Recurrent networks
+== dl.arch.rnn | Recurrent neural networks
+def: Process sequences one step at a time while carrying a hidden state, reusing the same weights at every step.
+f: hₜ = tanh(W hₜ₋₁ + U xₜ + b)
+pre: dl.basics.mlp
+paper: Elman | Finding Structure in Time | 1990
+st: classic
+
+== dl.arch.rnn.bptt | Backpropagation through time
+def: Unroll the RNN over the sequence and backpropagate through all steps; long sequences cause vanishing or exploding gradients.
+pre: dl.basics.backprop, dl.basics.vanishing
+paper: Werbos | Backpropagation Through Time: What It Does and How to Do It | 1990
+st: classic
+
+== dl.arch.rnn.lstm | LSTM
+def: Adds a cell state with input, forget and output gates so information can survive over long spans. Dominated speech, translation and language modelling from about 2014 to 2017.
+pre: dl.arch.rnn.bptt, found.linalg.tensor.elementwise
+x: hist.timeline.nn.lstm
+paper: Hochreiter, Schmidhuber | Long Short-Term Memory | 1997
+st: classic
+
+== dl.arch.rnn.gru | GRU
+def: A simplified gated RNN with update and reset gates; similar quality to LSTM with fewer parameters.
+pre: dl.arch.rnn.lstm
+paper: Cho et al. | Learning Phrase Representations using RNN Encoder–Decoder for Statistical Machine Translation | 2014
+st: classic
+
+== dl.arch.rnn.bidir | Bidirectional & stacked RNNs
+def: Run one RNN forward and one backward to use context from both sides; stack layers for depth.
+pre: dl.arch.rnn.lstm
+st: classic
+
+######## Sequence-to-sequence & attention
+== dl.arch.seq2seq | Sequence-to-sequence
+def: An encoder reads the input sequence into a representation and a decoder generates the output sequence token by token. The frame for translation, summarization and speech recognition.
+pre: dl.arch.rnn.lstm
+x: hist.timeline.deep.seq2seq
+paper: Sutskever, Vinyals, Le | Sequence to Sequence Learning with Neural Networks | 2014
+
+== dl.arch.seq2seq.teacher | Teacher forcing & exposure bias
+def: Train the decoder by feeding it the true previous token; at test time it sees its own (possibly wrong) outputs, a mismatch called exposure bias.
+d: adv
+
+== dl.arch.attention | Attention
+def: Let each output compute a weighted average of a set of values, with weights from how well a query matches each key. Removes the fixed-size bottleneck between encoder and decoder.
+f: Attention(Q,K,V) = softmax(QKᵀ/√d)V
+pre: dl.arch.seq2seq, dl.basics.softmax, found.linalg.geom.dot
+x: ml.sup.local
+paper: Bahdanau, Cho, Bengio | Neural Machine Translation by Jointly Learning to Align and Translate | 2014
+st: dominant
+
+== dl.arch.attention.qkv | Queries, keys & values
+def: Queries ask, keys advertise, values carry content. Each is a learned linear projection of the inputs.
+
+== dl.arch.attention.scoring | Scoring functions (additive, dot-product, scaled)
+def: How query–key similarity is computed: a small MLP (additive/Bahdanau), a dot product (Luong), or a dot product divided by √d so softmax doesn't saturate.
+pre: dl.arch.attention.qkv
+d: adv
+
+== dl.arch.attention.self | Self-attention
+def: Queries, keys and values all come from the same sequence, so every position can directly attend to every other position. Cost grows with the square of sequence length.
+pre: dl.arch.attention.qkv, found.cs.algo.bigo
+
+== dl.arch.attention.cross | Cross-attention
+def: Queries come from one sequence and keys/values from another: the decoder attending to the encoder, or text tokens attending to image features.
+pre: dl.arch.attention.self
+
+######## Transformer
+== dl.arch.transformer | Transformer
+def: Stacks of self-attention and feed-forward blocks with residual connections and normalization, with no recurrence. Parallel over the sequence, scales extremely well, and became the universal architecture for language, vision, audio and more.
+pre: dl.arch.attention.self, dl.arch.cnn.resnet, dl.norm.layer
+x: hist.timeline.deep.transformer
+paper: Vaswani et al. | Attention Is All You Need | 2017
+yr: 2017
+st: dominant
+
+== dl.arch.transformer.mha | Multi-head attention
+def: Run several attention operations in parallel on lower-dimensional projections, so different heads can track different relationships, then concatenate.
+pre: found.linalg.tensor.reshape
+
+== dl.arch.transformer.ffn | Position-wise feed-forward block
+def: An MLP applied to each token separately after attention; holds most of the parameters and much of the stored knowledge.
+pre: dl.basics.gated
+
+== dl.arch.transformer.block | Transformer block (residual stream)
+def: x + Attention(Norm(x)), then x + FFN(Norm(x)). The residual stream view treats each layer as reading from and writing to a shared vector per token.
+pre: dl.arch.transformer.mha, dl.arch.transformer.ffn, dl.norm.placement
+to: safe.interp
+
+== dl.arch.transformer.posenc | Positional encoding
+def: Attention ignores order, so position must be injected: sinusoidal or learned absolute embeddings, or relative schemes (RoPE, ALiBi) that extrapolate better.
+pre: found.signal.positional
+
+== dl.arch.transformer.rope | Rotary position embedding (RoPE) & ALiBi
+def: RoPE rotates query and key vectors by position-dependent angles so attention depends on relative distance; ALiBi adds a distance penalty. RoPE is standard in modern LLMs and is stretched for long context.
+pre: dl.arch.transformer.posenc
+paper: Su et al. | RoFormer: Enhanced Transformer with Rotary Position Embedding | 2021
+to: llm.longctx
+d: adv
+
+== dl.arch.transformer.causal-mask | Causal masking
+def: Block each position from attending to later positions, so the model can be trained to predict the next token on all positions at once.
+pre: dl.arch.transformer.mha, found.linalg.special.triangular
+
+== dl.arch.transformer.variants | Encoder-only, decoder-only, encoder–decoder
+def: Encoder-only (BERT) builds representations; decoder-only (GPT) generates text; encoder–decoder (T5, original Transformer) maps one sequence to another. Decoder-only won for LLMs.
+pre: dl.arch.transformer.causal-mask
+to: llm.models.bert, llm.models.gpt
+
+== dl.arch.transformer.efficient | Efficient attention (sparse, linear, FlashAttention)
+def: Ways around quadratic cost: sparse or windowed patterns, kernel/linear approximations, grouped KV heads, and IO-aware exact kernels like FlashAttention.
+pre: dl.arch.transformer.mha, found.cs.prog.systems
+paper: Dao, Fu, Ermon, Rudra, Ré | FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness | 2022
+to: llm.longctx, llm.inference.kvcache
+st: active
+d: adv
+
+== dl.arch.vit | Vision Transformer (ViT)
+def: Cut an image into patches, embed each as a token and run a standard Transformer. With enough data it matches or beats CNNs, and it unified vision with language architectures.
+pre: dl.arch.transformer, dl.arch.cnn
+paper: Dosovitskiy et al. | An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale | 2020
+st: dominant
+
+== dl.arch.vit.swin | Hierarchical vision Transformers (Swin)
+def: Attention within shifted local windows and patch merging across stages, giving CNN-like multi-scale features for detection and segmentation.
+paper: Liu et al. | Swin Transformer: Hierarchical Vision Transformer using Shifted Windows | 2021
+d: adv
+
+######## Other architecture families
+== dl.arch.gnn | Graph neural networks
+def: Networks that operate on graphs by passing messages between connected nodes, for molecules, social networks, knowledge graphs and meshes.
+pre: found.discrete.graphs.adjacency
+paper: Gilmer, Schoenholz, Riley, Vinyals, Dahl | Neural Message Passing for Quantum Chemistry | 2017
+to: dom.graph
+
+== dl.arch.gnn.gcn | Graph convolutional networks (GCN)
+def: Each node averages transformed features of its neighbours; a first-order approximation of spectral graph convolution.
+pre: found.discrete.graphs.adjacency
+paper: Kipf, Welling | Semi-Supervised Classification with Graph Convolutional Networks | 2016
+d: adv
+
+== dl.arch.gnn.gat | Graph attention networks & GraphSAGE
+def: GAT learns attention weights over neighbours; GraphSAGE samples and aggregates neighbours so it scales and generalizes to unseen nodes.
+pre: dl.arch.gnn.gcn, dl.arch.attention
+paper: Veličković et al. | Graph Attention Networks | 2017
+d: adv
+
+== dl.arch.gnn.equivariant | Geometric & equivariant networks
+def: Networks that respect symmetries such as rotations and translations in 3D, used for molecules, proteins and physics.
+paper: Bronstein, Bruna, Cohen, Veličković | Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges | 2021
+to: apps.science
+st: active
+d: adv
+
+== dl.arch.ssm | State-space sequence models
+def: Sequence layers based on linear state-space recurrences that train in parallel like convolutions and run in linear time like RNNs (S4, Mamba). A main alternative or complement to attention for long sequences.
+pre: dl.arch.rnn, prob.temporal.ssm
+paper: Gu, Dao | Mamba: Linear-Time Sequence Modeling with Selective State Spaces | 2023
+st: active
+d: adv
+
+== dl.arch.ssm.linear-rnn | Linear attention & modern RNNs (RWKV, RetNet, hybrids)
+def: Recurrent formulations of attention-like layers with constant memory per token; hybrid models mix them with standard attention.
+pre: dl.arch.transformer.efficient
+st: active
+d: adv
+
+== dl.arch.autoencoder | Autoencoders
+def: An encoder compresses the input to a bottleneck code and a decoder reconstructs it. Variants: denoising, sparse, contractive. Sparse autoencoders are now a core interpretability tool.
+pre: dl.basics.mlp, ml.unsup.dimred
+paper: Hinton, Salakhutdinov | Reducing the Dimensionality of Data with Neural Networks | 2006
+to: dl.gen.vae, safe.interp
+
+== dl.arch.energy | Energy-based models
+def: Assign a scalar energy to each configuration, low for likely data. Includes Hopfield networks, Boltzmann machines and modern EBMs trained with contrastive or score-based methods.
+f: p(x) = e^(−E(x)) / Z
+pre: prob.gm.mrf, dl.basics.mlp
+paper: LeCun, Chopra, Hadsell, Ranzato, Huang | A Tutorial on Energy-Based Learning | 2006
+d: adv
+
+== dl.arch.energy.hopfield | Hopfield networks & associative memory
+def: Recurrent networks that store patterns as energy minima and recall them from partial cues. Modern Hopfield networks have exponential capacity and their update equals attention.
+x: hist.timeline.nn.hopfield
+paper: Ramsauer et al. | Hopfield Networks is All You Need | 2020
+d: adv
+
+== dl.arch.energy.rbm | Boltzmann machines, RBMs & deep belief nets
+def: Stochastic energy-based networks; restricted Boltzmann machines (no within-layer links) trained with contrastive divergence were stacked into deep belief networks.
+pre: prob.inference.mcmc.gibbs
+x: hist.timeline.nn.boltzmann, hist.timeline.stat.dbn
+paper: Hinton | Training Products of Experts by Minimizing Contrastive Divergence | 2002
+st: superseded
+d: adv
+
+== dl.arch.neural-ode | Neural ODEs
+def: Treat depth as continuous time: the network defines dx/dt and an ODE solver computes the output. Links residual networks, dynamical systems and continuous normalizing flows.
+pre: found.calc.ode.solvers, dl.arch.cnn.resnet
+paper: Chen, Rubanova, Bettencourt, Duvenaud | Neural Ordinary Differential Equations | 2018
+st: active
+d: adv
+
+== dl.arch.memory | Memory-augmented networks (NTM, memory networks)
+def: Networks with an external, differentiable memory they read and write with attention. Precursors of retrieval-augmented models.
+pre: dl.arch.attention, dl.arch.rnn.lstm
+paper: Graves, Wayne, Danihelka | Neural Turing Machines | 2014
+to: sys.rag
+st: classic
+d: adv
+
+== dl.arch.siamese | Siamese & triplet networks
+def: Two or three weight-sharing networks trained so similar inputs map close together. Used for face verification and the ancestors of embedding models for retrieval.
+pre: dl.basics.mlp, ml.sup.knn.metric
+paper: Schroff, Kalenichenko, Philbin | FaceNet: A Unified Embedding for Face Recognition and Clustering | 2015
+to: dl.repr.contrastive
+
+== dl.arch.capsule | Capsule networks
+def: Groups of neurons representing an entity's pose, combined by routing-by-agreement. Interesting idea that did not scale; rarely used.
+pre: dl.arch.cnn
+paper: Sabour, Frosst, Hinton | Dynamic Routing Between Capsules | 2017
+st: superseded
+d: adv
+
+== dl.arch.kan | Kolmogorov–Arnold networks
+def: Networks with learnable activation functions on edges (splines) instead of fixed activations on nodes. Interpretable on small scientific problems; their broader value is still debated.
+pre: dl.basics.mlp, ml.sup.linreg.poly
+paper: Liu et al. | KAN: Kolmogorov-Arnold Networks | 2024
+st: active
+d: adv

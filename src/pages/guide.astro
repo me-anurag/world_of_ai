@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import { STATUS, DIFFICULTY } from '../lib/data.js';
+---
+<Base title="How to read the map" description="What each part of a topic page means, how topics are organised, and how learning paths are built." section="guide" wide>
+  <div class="prose" style="max-width:760px">
+    <h1>How to read the map</h1>
+    <p class="lead">Every page on the map has the same parts in the same places. This page explains them.</p>
+
+    <h2>How topics are organised</h2>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th scope="col">Level</th><th scope="col">What it is</th><th scope="col">Example</th></tr></thead>
+        <tbody>
+          <tr><td>Field</td><td>A major part of AI with its own methods and literature</td><td><a href="/fields/deep-learning/">Deep Learning</a></td></tr>
+          <tr><td>Area</td><td>A group of related topics within a field</td><td><a href="/fields/deep-learning/architectures/">Architectures</a></td></tr>
+          <tr><td>Topic</td><td>A method family, model or core concept</td><td><a href="/topics/transformer/">Transformer</a></td></tr>
+          <tr><td>Subtopic</td><td>A specific technique, variant, result or event within a topic</td><td><a href="/topics/multi-head-attention/">Multi-head attention</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>The parts of a topic page</h2>
+    <div class="table-wrap">
+      <table class="data">
+        <tbody>
+          <tr><td style="width:11em">Definition</td><td>What the topic is, then why it matters, in plain sentences.</td></tr>
+          <tr><td>Formula</td><td>Shown only where one equation defines the topic.</td></tr>
+          <tr><td>Key paper</td><td>The work that introduced the topic or changed its direction, with a link to find it.</td></tr>
+          <tr><td>Prerequisites</td><td>Topics to understand first. Learning paths are built from these links.</td></tr>
+          <tr><td>Also assumes</td><td>Prerequisites of the area or topic this one belongs to.</td></tr>
+          <tr><td>Leads to</td><td>What the topic made possible or developed into.</td></tr>
+          <tr><td>Related across fields</td><td>The same idea appearing in another field. Attention, for example, appears in both language and vision.</td></tr>
+          <tr><td>Required for</td><td>Topics that list this one as a prerequisite.</td></tr>
+          <tr><td>Developed from</td><td>Earlier topics that led to this one.</td></tr>
+          <tr><td>Where it sits</td><td>A small drawing of the topics it builds on and the topics that build on it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Status</h2>
+    <div class="table-wrap">
+      <table class="data">
+        <tbody>
+          {Object.entries(STATUS).map(([k, v]) => <tr><td style="width:14em;white-space:nowrap"><span class={`dot ${k}`} aria-hidden="true"></span>{v.label}</td><td>{v.note}</td></tr>)}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Difficulty</h2>
+    <p>{DIFFICULTY.beg} topics need little beyond school mathematics. {DIFFICULTY.int} topics assume the prerequisites listed on the page. {DIFFICULTY.adv} topics are typically met in graduate courses or research papers.</p>
+
+    <h2>Learning paths</h2>
+    <p>Every topic with prerequisites has a learning path. It lists all the topics the topic depends on, directly or indirectly, ordered so that each topic comes after the topics it depends on. Paths are calculated from the prerequisite links alone, so two readers asking for the same topic get the same path.</p>
+    <p>A path is a dependency order, not a course. Skip the steps you already know.</p>
+
+    <h2>Search</h2>
+    <p>Press <kbd>/</kbd> on any page, or use the search button. Search covers topic names, abbreviations, definitions and paper titles.</p>
+  </div>
+</Base>

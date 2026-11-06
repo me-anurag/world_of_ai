@@ -1,0 +1,343 @@
+# FIELD 8 — Domains, part C: speech, IR, multimodal, robotics, time series, graphs, recommenders, tabular, anomaly, code
+# Audit: SLP3 ch.15–17 (speech), Manning/Raghavan/Schütze "Introduction to Information Retrieval", Thrun/Burgard/Fox "Probabilistic Robotics", LaValle "Planning Algorithms", Hyndman & Athanasopoulos "Forecasting: Principles and Practice", Hamilton "Graph Representation Learning", Aggarwal "Recommender Systems".
+!defaults d=int st=foundational
+
+######## Speech & audio
+== dom.speech | Speech & audio
+def: Recognizing, generating and understanding spoken language and other sound: speech recognition, speech synthesis, speaker recognition, audio classification and music.
+pre: found.signal.stft
+paper: Jurafsky, Martin | Speech and Language Processing | 2000
+
+== dom.speech.features | Acoustic features (MFCCs, mel spectrograms)
+def: Turn waveforms into frames of frequency content on a perceptual (mel) scale; MFCCs compress them further.
+pre: found.signal.stft
+d: beg
+
+== dom.speech.asr | Automatic speech recognition
+def: Convert speech to text. Classic systems combined acoustic HMM-GMM models, a pronunciation lexicon and an n-gram language model; neural end-to-end systems replaced them. Measured by word error rate.
+pre: dom.speech.features, prob.gm.hmm, dom.nlp.ngram
+paper: Hinton et al. | Deep Neural Networks for Acoustic Modeling in Speech Recognition | 2012
+
+== dom.speech.ctc | CTC & end-to-end ASR (RNN-T, attention)
+def: Connectionist temporal classification aligns unsegmented audio to text without frame labels; RNN transducers and attention-based encoder–decoders followed.
+pre: dom.speech.asr, found.cs.algo.dp
+paper: Graves, Fernández, Gomez, Schmidhuber | Connectionist Temporal Classification: Labelling Unsegmented Sequence Data with Recurrent Neural Networks | 2006
+d: adv
+
+== dom.speech.ssl | Self-supervised speech (wav2vec 2.0, HuBERT) & Whisper
+def: Pretrain on unlabelled audio by masked prediction, or train a Transformer on huge weakly labelled audio (Whisper) for robust multilingual recognition and translation.
+pre: dom.speech.ctc, dl.repr.masked
+paper: Radford et al. | Robust Speech Recognition via Large-Scale Weak Supervision | 2022
+st: dominant
+
+== dom.speech.tts | Text-to-speech
+def: Generate natural speech from text: concatenative and parametric systems, then neural acoustic models (Tacotron) with neural vocoders (WaveNet), now codec-token language models and diffusion with voice cloning.
+pre: dom.speech.features, dl.gen.autoregressive
+paper: Shen et al. | Natural TTS Synthesis by Conditioning WaveNet on Mel Spectrogram Predictions | 2018
+
+== dom.speech.codec | Neural audio codecs & audio tokens
+def: Compress audio into discrete tokens (SoundStream, EnCodec) so language models can generate speech and music.
+pre: dl.gen.vae.vqvae, dom.speech.features
+paper: Zeghidour et al. | SoundStream: An End-to-End Neural Audio Codec | 2021
+st: active
+d: adv
+
+== dom.speech.speaker | Speaker recognition & diarization
+def: Identify who is speaking (speaker embeddings like x-vectors) and segment a recording by speaker.
+pre: dom.speech.features, dl.arch.siamese
+d: adv
+
+== dom.speech.audio | Audio classification, separation & music AI
+aka: keyword spotting; source separation
+def: Sound event detection, source separation, music tagging, transcription and music generation.
+pre: dom.speech.features, dl.arch.cnn
+d: adv
+
+== dom.speech.spoken-dialogue | Spoken dialogue & voice assistants
+def: End-to-end voice interfaces combining ASR, an LLM and TTS, increasingly as single speech-to-speech models with low latency.
+pre: dom.speech.asr, dom.speech.tts, dom.nlp.dialogue
+st: active
+
+######## Information retrieval
+== dom.ir | Information retrieval
+def: Finding relevant documents in large collections for a query: the science behind search engines, and the "R" in RAG.
+pre: ml.data.text
+paper: Manning, Raghavan, Schütze | Introduction to Information Retrieval | 2008
+
+== dom.ir.index | Inverted index & Boolean retrieval
+def: Map each term to the list of documents containing it so queries touch only relevant postings. The core data structure of search engines.
+pre: found.cs.ds.hashmap
+d: beg
+
+== dom.ir.vsm | Vector space model & TF-IDF ranking
+def: Represent queries and documents as weighted term vectors and rank by cosine similarity.
+pre: dom.ir.index, ml.data.text, found.linalg.geom.cosine
+paper: Salton, Wong, Yang | A Vector Space Model for Automatic Indexing | 1975
+d: beg
+
+== dom.ir.bm25 | BM25
+def: Probabilistic ranking function with saturating term frequency and document-length normalization. Still a strong baseline and the sparse half of hybrid RAG search.
+f: Σ_t IDF(t)·tf·(k₁+1) / (tf + k₁(1 − b + b·|d|/avgdl))
+pre: dom.ir.vsm
+paper: Robertson, Zaragoza | The Probabilistic Relevance Framework: BM25 and Beyond | 2009
+st: dominant
+
+== dom.ir.eval | IR evaluation (precision@k, recall@k, MAP, MRR, nDCG)
+def: Measure ranked results: how many of the top k are relevant, where the first relevant one appears (MRR), graded relevance discounted by position (nDCG).
+pre: ml.eval.cls-metrics
+
+== dom.ir.query | Query processing & expansion
+def: Spelling correction, synonyms, pseudo-relevance feedback and query rewriting to better match what users mean.
+pre: dom.ir.vsm
+
+== dom.ir.pagerank | PageRank & link analysis
+def: Score web pages by the stationary distribution of a random surfer following links. Powered Google's early ranking.
+pre: found.prob.process.stationary
+paper: Brin, Page | The Anatomy of a Large-Scale Hypertextual Web Search Engine | 1998
+st: classic
+
+== dom.ir.ltr | Learning to rank in search
+def: Combine hundreds of signals with ranking models (LambdaMART) trained on relevance labels or clicks.
+pre: dom.ir.eval, ml.settings.ltr
+
+== dom.ir.neural | Neural retrieval (dense, sparse-learned, late interaction)
+def: Bi-encoders embed queries and documents for vector search (DPR); learned sparse models (SPLADE) expand terms; late interaction (ColBERT) compares token embeddings.
+pre: dom.ir.bm25, dom.nlp.sentence-emb
+paper: Karpukhin et al. | Dense Passage Retrieval for Open-Domain Question Answering | 2020
+to: sys.rag.retrieval
+st: dominant
+
+== dom.ir.rerank | Re-ranking with cross-encoders
+def: Score each query–document pair jointly with a Transformer to reorder a shortlist; more accurate than bi-encoders but slower.
+pre: dom.ir.neural
+paper: Nogueira, Cho | Passage Re-ranking with BERT | 2019
+st: dominant
+
+######## Multimodal
+== dom.mm | Multimodal learning
+def: Models that connect several modalities (text, images, audio, video): matching them, translating between them and reasoning across them.
+pre: dom.nlp, dom.cv, dl.repr.multimodal
+
+== dom.mm.captioning | Image captioning & visual question answering
+def: Generate descriptions of images or answer questions about them; early systems paired a CNN encoder with an RNN decoder and attention.
+pre: dl.arch.attention.cross
+paper: Xu et al. | Show, Attend and Tell: Neural Image Caption Generation with Visual Attention | 2015
+st: classic
+
+== dom.mm.clip | CLIP
+def: Train an image encoder and a text encoder contrastively on hundreds of millions of image–caption pairs so they share an embedding space. Enables zero-shot classification, image search and text conditioning for generators.
+pre: dl.repr.contrastive, dl.arch.vit
+x: hist.timeline.fm.clip
+paper: Radford et al. | Learning Transferable Visual Models From Natural Language Supervision | 2021
+st: dominant
+
+== dom.mm.vlm | Vision–language models
+def: LLMs that take images (and often video) as input by connecting a vision encoder through a projection or cross-attention (Flamingo, LLaVA, GPT-4V-class models). Read charts, documents and screens.
+pre: dom.mm.clip, llm
+paper: Liu, Li, Wu, Lee | Visual Instruction Tuning | 2023
+to: sys.agents.computer-use
+st: dominant
+
+== dom.mm.native | Natively multimodal & any-to-any models
+def: Models trained from the start on interleaved text, image, audio and video tokens, able to take and produce several modalities.
+pre: dom.mm.vlm, dl.gen.vae.vqvae
+st: active
+d: adv
+
+== dom.mm.grounding | Visual grounding & referring expressions
+def: Link phrases to image regions ("the red cup on the left"), the basis of open-vocabulary detection and GUI agents that click on described elements.
+pre: dom.mm.vlm, dom.cv.detection
+d: adv
+
+######## Robotics
+== dom.robotics | Robotics
+def: AI with a body: perceive the physical world, plan and control motion, manipulate objects and move safely around people.
+pre: hist.agents, hist.roots.control
+paper: Thrun, Burgard, Fox | Probabilistic Robotics | 2005
+x: hist.philosophy.mind.moravec
+
+== dom.robotics.kinematics | Kinematics & dynamics
+def: Relating joint angles to positions (forward and inverse kinematics) and forces to motion (dynamics).
+pre: found.linalg.maps.homogeneous
+d: adv
+
+== dom.robotics.localization | Localization (Markov, Monte Carlo localization)
+def: Estimate the robot's pose in a known map from noisy sensors using Bayes filters, Kalman filters or particle filters.
+pre: prob.temporal.particle
+
+== dom.robotics.slam | SLAM
+def: Simultaneous localization and mapping: build a map of an unknown environment while tracking the robot within it (EKF-SLAM, FastSLAM, graph-SLAM).
+pre: dom.robotics.localization, dom.cv.geometry.slam
+paper: Montemerlo, Thrun, Koller, Wegbreit | FastSLAM: A Factored Solution to the Simultaneous Localization and Mapping Problem | 2002
+d: adv
+
+== dom.robotics.motion | Motion planning
+def: Find a collision-free path in configuration space: grid search with A*, sampling-based planners (PRM, RRT, RRT*), trajectory optimization.
+pre: dom.robotics.kinematics, sym.search.astar
+paper: LaValle | Rapidly-Exploring Random Trees: A New Tool for Path Planning | 1998
+d: adv
+
+== dom.robotics.control | Control (PID, LQR, MPC)
+def: Make the robot follow a planned trajectory despite disturbances: PID feedback, optimal linear control (LQR), model predictive control.
+pre: dom.robotics.kinematics, hist.roots.control
+x: rl.model.mpc
+d: adv
+
+== dom.robotics.manipulation | Grasping & manipulation
+def: Picking up and handling objects: grasp detection, contact-rich control, dexterous hands.
+pre: dom.robotics.control, dom.cv.3d.pointcloud
+d: adv
+
+== dom.robotics.learning | Robot learning (sim-to-real, imitation, RL)
+def: Learn skills from demonstrations or RL, often in simulation with domain randomization to transfer to real hardware.
+pre: rl.imitation.bc, rl.policy.sac
+paper: Tobin et al. | Domain Randomization for Transferring Deep Neural Networks from Simulation to the Real World | 2017
+st: active
+d: adv
+
+== dom.robotics.foundation | Robot foundation models (vision–language–action)
+def: Large models that map camera images and language instructions to robot actions, trained on data pooled across many robots (RT-2, OpenVLA, π0).
+pre: dom.robotics.learning, dom.mm.vlm
+paper: Brohan et al. | RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control | 2023
+to: front.embodied
+st: active
+d: adv
+
+== dom.robotics.hri | Human–robot interaction
+def: Robots that predict, communicate with and safely work around people, and learn what people want.
+x: prob.decision.preferences
+d: adv
+
+######## Time series
+== dom.ts | Time series & forecasting
+def: Modelling data indexed by time (sales, sensors, prices, demand) to forecast, detect anomalies or classify sequences.
+pre: found.prob.process
+paper: Hyndman, Athanasopoulos | Forecasting: Principles and Practice | 2013
+
+== dom.ts.components | Trend, seasonality, stationarity & autocorrelation
+def: Decompose series into trend, seasonal and residual parts; check stationarity and autocorrelation before modelling.
+d: beg
+
+== dom.ts.classical | Classical forecasting (exponential smoothing, ARIMA)
+def: Exponential smoothing (Holt–Winters) and ARIMA models capture level, trend, seasonality and autocorrelation; strong baselines.
+pre: dom.ts.components, ml.sup.linreg
+paper: Box, Jenkins | Time Series Analysis: Forecasting and Control | 1970
+st: classic
+
+== dom.ts.statespace | State-space forecasting
+def: Kalman-filter-based structural models and Prophet-style decomposable models for business forecasting.
+pre: dom.ts.classical, prob.temporal.kalman
+d: adv
+
+== dom.ts.ml | ML & deep forecasting
+def: Gradient boosting on lag features, and neural models (DeepAR, N-BEATS, Temporal Fusion Transformer, PatchTST).
+pre: dom.ts.components, ml.ensemble.gbm, dl.arch.transformer
+paper: Salinas, Flunkert, Gasthaus, Januschowski | DeepAR: Probabilistic Forecasting with Autoregressive Recurrent Networks | 2020
+d: adv
+
+== dom.ts.foundation | Time-series foundation models
+def: Large pretrained forecasters that work zero-shot on new series (TimesFM, Chronos). Their advantage over tuned baselines varies by dataset.
+pre: dom.ts.ml
+st: active
+d: adv
+
+== dom.ts.eval | Forecast evaluation & backtesting
+def: Rolling-origin evaluation, scale-free errors (MASE, sMAPE) and probabilistic scores; never shuffle time.
+pre: ml.eval.cv
+
+######## Graphs
+== dom.graph | Graph learning
+def: Machine learning on networks: predict node labels, missing links or properties of whole graphs (molecules, social networks, transactions, knowledge graphs).
+pre: found.discrete.graphs
+paper: Hamilton | Graph Representation Learning | 2020
+
+== dom.graph.spectral | Spectral graph methods
+def: Use eigenvectors of the graph Laplacian for clustering, embedding and defining graph convolutions.
+pre: found.discrete.graphs.adjacency, found.linalg.decomp.eigen
+d: adv
+
+== dom.graph.embedding | Node embeddings (DeepWalk, node2vec)
+def: Learn node vectors by running random walks and applying word2vec-style training.
+pre: found.prob.process.random-walk, dom.nlp.word2vec
+paper: Grover, Leskovec | node2vec: Scalable Feature Learning for Networks | 2016
+
+== dom.graph.tasks | Node classification, link prediction, graph classification
+def: The three main graph learning tasks, now usually solved with GNNs.
+pre: dl.arch.gnn
+x: dom.graph.embedding
+
+== dom.graph.kge | Knowledge graph embeddings
+def: Embed entities and relations so true triples score highly (TransE, RotatE), enabling link prediction and knowledge base completion.
+pre: dom.graph.embedding, sym.kr.kg
+paper: Bordes et al. | Translating Embeddings for Modeling Multi-relational Data | 2013
+d: adv
+
+== dom.graph.molecules | Molecular graphs & chemistry
+def: Atoms as nodes and bonds as edges for property prediction and molecule generation in drug discovery.
+pre: dom.graph.tasks, dl.arch.gnn.equivariant
+to: apps.science
+d: adv
+
+######## Recommender systems
+== dom.recsys | Recommender systems
+def: Predict what a user will want next (products, videos, songs, posts). Among the most commercially important uses of ML.
+pre: ml.paradigms.supervised
+paper: Aggarwal | Recommender Systems: The Textbook | 2016
+
+== dom.recsys.content | Content-based filtering
+def: Recommend items similar to what the user liked, using item features or embeddings.
+pre: found.linalg.geom.cosine
+d: beg
+
+== dom.recsys.cf | Collaborative filtering
+def: Recommend what similar users liked (user–user) or items liked by people who liked this item (item–item), from interaction data alone.
+pre: ml.sup.knn
+d: beg
+
+== dom.recsys.mf | Matrix factorization
+def: Factor the sparse user–item rating matrix into low-dimensional user and item vectors; won the Netflix Prize.
+f: r̂ᵤᵢ = pᵤᵀqᵢ
+pre: dom.recsys.cf, found.linalg.decomp.lowrank
+paper: Koren, Bell, Volinsky | Matrix Factorization Techniques for Recommender Systems | 2009
+
+== dom.recsys.implicit | Implicit feedback & ranking losses
+def: Learn from clicks and views rather than ratings, with pairwise ranking objectives (BPR) and negative sampling.
+pre: dom.recsys.mf, ml.settings.ltr
+d: adv
+
+== dom.recsys.deep | Deep & two-tower recommenders
+def: Two-tower retrieval models embed users and items for candidate generation; deep ranking models (Wide & Deep, DLRM) score candidates; sequential models (SASRec) use session history.
+pre: dom.recsys.implicit, dl.repr.embedding
+paper: Covington, Adams, Sargin | Deep Neural Networks for YouTube Recommendations | 2016
+st: dominant
+d: adv
+
+== dom.recsys.issues | Cold start, popularity bias & feedback loops
+def: New users and items lack data; recommenders amplify what is already popular and shape the data they later learn from.
+x: safe.fairness
+d: beg
+
+######## Tabular data
+== dom.tabular | Tabular learning
+def: Rows and columns of mixed numeric and categorical data, the most common data in business. Gradient-boosted trees still usually beat deep learning here.
+pre: ml.ensemble.xgboost
+paper: Grinsztajn, Oyallon, Varoquaux | Why Do Tree-Based Models Still Outperform Deep Learning on Typical Tabular Data? | 2022
+
+== dom.tabular.deep | Deep learning for tables (TabNet, FT-Transformer, TabPFN)
+def: Neural architectures and pretrained in-context models for tabular data; TabPFN can beat tuned trees on small datasets.
+pre: dl.arch.transformer
+st: active
+d: adv
+
+######## Anomaly detection applications
+== dom.anomaly | Anomaly detection applications
+def: Fraud detection, intrusion detection, predictive maintenance and quality control: rare events, heavy imbalance and adaptive adversaries.
+pre: ml.unsup.anomaly, ml.data.imbalance
+
+######## Code
+== dom.code | Code intelligence
+def: Models for writing, completing, explaining, translating, repairing and testing source code. Evaluated by functional correctness (pass@k); the basis of coding agents.
+pre: llm
+paper: Chen et al. | Evaluating Large Language Models Trained on Code | 2021
+to: sys.agents.coding
+st: dominant

@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site.config.mjs';
+---
+<Base title="About" description={`What ${site.name} is, who maintains it, and how to get in touch.`} section="guide" wide>
+  <div class="prose" style="max-width:760px">
+    <h1>About</h1>
+    <p class="lead">{site.name} is a free reference map of artificial intelligence. It shows how the topics in the field connect, so a reader who meets an unfamiliar term can see where it fits, what to learn first and where it leads.</p>
+    <p>It is a reference work, not a course. Each topic page links to the paper that introduced the topic; for learning materials, start there or with the textbooks listed in the <a href="/methodology/">methodology</a>.</p>
+    {site.editor && <p>The map is edited and maintained by {site.editor}.</p>}
+    <h2>Contact and corrections</h2>
+    <p>Use the "Suggest a correction" link on any topic page, or open an issue on <a href={`https://github.com/${site.repo}/issues`}>GitHub</a>.</p>
+    <h2>Licence</h2>
+    <p>Text and data are licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. The site's code is under the MIT licence.</p>
+  </div>
+</Base>

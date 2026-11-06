@@ -1,0 +1,611 @@
+# FIELD 1 — Foundations, part B: probability, statistics, information theory
+!defaults d=beg st=foundational
+
+######## L2: Probability
+== found.prob | Probability theory
+def: The mathematics of uncertainty. Models output probabilities, losses are negative log-probabilities, and LLMs are probability distributions over the next token.
+paper: Kolmogorov | Grundbegriffe der Wahrscheinlichkeitsrechnung (Foundations of the Theory of Probability) | 1933
+
+#### Basics
+== found.prob.basics | Probability basics
+def: Events, axioms and the rules for combining probabilities.
+
+== found.prob.basics.space | Sample space, events & axioms
+def: The sample space is every possible outcome; events are sets of outcomes. Kolmogorov's axioms: probabilities are non-negative, the whole space has probability 1, and disjoint events add.
+yr: 1933
+paper: Kolmogorov | Grundbegriffe der Wahrscheinlichkeitsrechnung (Foundations of the Theory of Probability) | 1933
+
+== found.prob.basics.interpretations | Frequentist vs Bayesian interpretation
+def: Probability as long-run frequency, or as degree of belief. The split runs through all of statistics and ML.
+pre: found.prob.basics.space
+to: found.stats.bayes
+d: int
+
+== found.prob.basics.conditional | Conditional probability
+def: The probability of A given that B happened. Every prediction a model makes is a conditional probability.
+f: P(A|B) = P(A∩B) / P(B)
+pre: found.prob.basics.space
+
+== found.prob.basics.sum-product | Sum rule & product rule
+def: The two rules all of probability inference is built from: marginalize by summing, factor by multiplying.
+f: P(x) = Σ_y P(x,y);  P(x,y) = P(y|x)P(x)
+pre: found.prob.basics.conditional
+
+== found.prob.basics.total | Law of total probability
+def: The probability of A is its probability under each case, weighted by how likely each case is.
+f: P(A) = Σᵢ P(A|Bᵢ)P(Bᵢ)
+pre: found.prob.basics.sum-product
+
+== found.prob.basics.bayes | Bayes' theorem
+def: Reverse a conditional: update a prior belief with evidence to get a posterior. The core of Bayesian ML, spam filters and diagnosis.
+f: P(H|E) = P(E|H)P(H) / P(E)
+pre: found.prob.basics.total
+paper: Bayes | An Essay towards Solving a Problem in the Doctrine of Chances | 1763
+to: found.stats.bayes, ml.sup.naive-bayes
+
+== found.prob.basics.independence | Independence
+def: A and B are independent if knowing one says nothing about the other.
+f: P(A∩B) = P(A)P(B)
+pre: found.prob.basics.conditional
+
+== found.prob.basics.cond-indep | Conditional independence
+def: A and B are independent once C is known. Graphical models are maps of conditional independencies; naive Bayes assumes them.
+f: P(A,B|C) = P(A|C)P(B|C)
+pre: found.prob.basics.independence
+to: prob.gm, ml.sup.naive-bayes
+d: int
+
+== found.prob.basics.chain | Chain rule of probability
+def: Any joint distribution factors as a product of conditionals. Autoregressive models (GPT) are exactly this, one token at a time.
+f: P(x₁,…,xₙ) = Πᵢ P(xᵢ | x₁,…,xᵢ₋₁)
+pre: found.prob.basics.sum-product
+to: llm.pretrain.ntp
+
+#### Random variables
+== found.prob.rv | Random variables
+def: Numbers whose values come from a random outcome, and how to describe them.
+pre: found.prob.basics
+
+== found.prob.rv.rv | Random variable (discrete & continuous)
+def: A function from outcomes to numbers. It is discrete if it takes countable values (dice, tokens), continuous if it takes real values (height, pixel intensity).
+pre: found.prob.basics.space
+
+== found.prob.rv.pmf | Probability mass function (PMF)
+def: The probability of each value of a discrete variable. A softmax output is a PMF over classes or tokens.
+pre: found.prob.rv.rv
+to: dl.basics.softmax
+
+== found.prob.rv.pdf | Probability density function (PDF)
+def: For continuous variables: probability is the area under the density, so a single point has probability zero and densities can exceed 1.
+f: P(a≤X≤b) = ∫ₐᵇ p(x)dx
+pre: found.prob.rv.rv, found.calc.single.integral
+
+== found.prob.rv.cdf | Cumulative distribution function (CDF)
+def: The probability that X ≤ x. It works for both discrete and continuous variables; its inverse gives quantiles.
+f: F(x) = P(X ≤ x)
+pre: found.prob.rv.pdf
+
+== found.prob.rv.joint | Joint, marginal & conditional distributions
+def: The joint describes several variables together; marginalize to drop variables, condition to fix some of them.
+pre: found.prob.rv.pmf, found.prob.basics.sum-product
+
+== found.prob.rv.expectation | Expectation
+def: The probability-weighted average value. Loss functions are expectations over the data distribution, estimated by averaging minibatches.
+f: E[X] = Σ x P(x)  or  ∫ x p(x) dx
+pre: found.prob.rv.pmf
+
+== found.prob.rv.linearity | Linearity of expectation
+def: The expectation of a sum is the sum of expectations, even for dependent variables. It makes many proofs and estimators simple.
+f: E[aX + bY] = aE[X] + bE[Y]
+pre: found.prob.rv.expectation
+
+== found.prob.rv.variance | Variance & standard deviation
+def: The expected squared deviation from the mean: how spread out a variable is. Weight-initialization schemes are designed to keep activation variance stable.
+f: Var(X) = E[(X − E[X])²]
+pre: found.prob.rv.expectation
+to: dl.basics.init
+
+== found.prob.rv.covariance | Covariance & correlation
+def: How two variables vary together. Correlation is covariance rescaled to [−1, 1].
+f: Cov(X,Y) = E[(X−μₓ)(Y−μᵧ)]
+pre: found.prob.rv.variance
+
+== found.prob.rv.cov-matrix | Covariance matrix
+def: All pairwise covariances of a random vector, which is symmetric PSD. Its eigenvectors are the principal components.
+pre: found.prob.rv.covariance, found.linalg.special.psd
+to: ml.unsup.pca
+d: int
+
+== found.prob.rv.moments | Moments, skewness & kurtosis
+def: Mean, variance and higher moments describe a distribution's shape: asymmetry (skewness) and tail weight (kurtosis).
+pre: found.prob.rv.variance
+d: int
+
+== found.prob.rv.change-of-vars | Change of variables (transforming random variables)
+def: If Y = g(X), its density is X's density times a Jacobian correction. Normalizing flows and the reparameterization trick depend on it.
+pre: found.prob.rv.pdf, found.calc.multi.integrals
+to: dl.gen.flow
+d: adv
+
+== found.prob.rv.iid | i.i.d. assumption
+def: Independent and identically distributed: each example is drawn separately from the same distribution. Most ML theory assumes it, and distribution shift is when it breaks.
+pre: found.prob.basics.independence
+to: ml.concepts.shift
+
+== found.prob.rv.measure | Measure-theoretic probability
+def: The rigorous foundation (σ-algebras, measures, Lebesgue integration) that resolves paradoxes with continuous variables. Needed for advanced theory only.
+pre: found.prob.rv.pdf
+d: adv
+
+#### Distributions
+== found.prob.dist | Common distributions
+def: The standard families used to model data, noise, priors and outputs.
+pre: found.prob.rv
+
+== found.prob.dist.bernoulli | Bernoulli & binomial
+def: Bernoulli: one yes/no trial with probability p. Binomial: the number of successes in n trials. Binary classifiers output a Bernoulli parameter.
+f: P(x) = pˣ(1−p)¹⁻ˣ
+pre: found.prob.rv.pmf
+to: ml.sup.logreg
+
+== found.prob.dist.categorical | Categorical & multinomial
+def: Categorical: one draw among K classes. Multinomial: counts over n draws. An LLM's next-token output is a categorical distribution over the vocabulary.
+pre: found.prob.dist.bernoulli
+to: dl.basics.softmax, llm.decode
+
+== found.prob.dist.uniform | Uniform
+def: Every value in a range is equally likely. The starting point for random sampling and some initializations.
+pre: found.prob.rv.pdf
+
+== found.prob.dist.gaussian | Gaussian (normal) distribution
+def: The bell curve, described by mean and variance. It is the default noise model, the limit of sums (CLT), and the noise in diffusion models.
+f: p(x) = (1/√(2πσ²)) exp(−(x−μ)²/2σ²)
+pre: found.prob.rv.pdf
+to: dl.gen.diffusion, ml.unsup.gmm
+
+== found.prob.dist.mvn | Multivariate Gaussian
+def: A Gaussian over vectors, described by a mean vector and a covariance matrix. Its marginals and conditionals are Gaussian too, which makes Gaussian processes and Kalman filters tractable.
+f: p(x) ∝ exp(−½(x−μ)ᵀΣ⁻¹(x−μ))
+pre: found.prob.dist.gaussian, found.prob.rv.cov-matrix
+to: prob.gp, prob.temporal.kalman
+d: int
+
+== found.prob.dist.poisson | Poisson
+def: The number of events in a fixed interval at a constant average rate, such as requests per second or clicks.
+pre: found.prob.rv.pmf
+d: int
+
+== found.prob.dist.exponential | Exponential & Laplace
+def: Exponential: waiting time between Poisson events. Laplace: a two-sided version with a sharp peak; a Laplace prior corresponds to L1 regularization.
+pre: found.prob.rv.pdf
+to: ml.concepts.regularization
+d: int
+
+== found.prob.dist.gamma-beta | Gamma & Beta
+def: Gamma: positive values such as rates and precisions. Beta: probabilities in [0, 1], and the conjugate prior for a Bernoulli parameter.
+pre: found.prob.dist.exponential
+to: found.stats.bayes.conjugate
+d: int
+
+== found.prob.dist.dirichlet | Dirichlet
+def: A distribution over probability vectors; the conjugate prior for categorical data. Used in topic models (LDA).
+pre: found.prob.dist.gamma-beta, found.prob.dist.categorical
+to: dom.nlp.lda
+d: adv
+
+== found.prob.dist.student-t | Student's t
+def: Like a Gaussian with heavier tails, so it is more robust to outliers. Used in t-tests and t-SNE.
+pre: found.prob.dist.gaussian
+to: found.stats.testing.t-test, ml.unsup.tsne
+d: int
+
+== found.prob.dist.dirac | Dirac delta & empirical distribution
+def: A point mass, and the distribution that puts equal mass on each training example. Training minimizes loss under the empirical distribution.
+pre: found.prob.rv.pdf
+to: ml.concepts.erm
+d: int
+
+== found.prob.dist.mixture | Mixture distributions
+def: A weighted combination of component distributions, generated by first picking a component and then sampling from it. Gaussian mixtures model clusters.
+f: p(x) = Σₖ πₖ pₖ(x)
+pre: found.prob.dist.gaussian, found.prob.dist.categorical
+to: ml.unsup.gmm
+d: int
+
+== found.prob.dist.expfamily | Exponential family
+def: The family containing Gaussian, Bernoulli, categorical, Poisson, gamma, beta and Dirichlet. It shares conjugate priors, sufficient statistics and GLMs.
+f: p(x|θ) = h(x) exp(θᵀT(x) − A(θ))
+pre: found.prob.dist.gaussian, found.prob.dist.categorical
+to: ml.sup.glm
+d: adv
+
+#### Limit theorems
+== found.prob.limits | Limit theorems & concentration
+def: Why averages of many samples are reliable, and how fast. This justifies estimating loss and gradients from minibatches.
+pre: found.prob.rv
+d: int
+
+== found.prob.limits.lln | Law of large numbers
+def: The sample mean converges to the true expectation as the sample grows.
+pre: found.prob.rv.expectation, found.prob.rv.iid
+d: int
+
+== found.prob.limits.clt | Central limit theorem
+def: Sums of many independent variables are approximately Gaussian, whatever their own distribution. This is why Gaussians are everywhere.
+f: √n(X̄ − μ) → N(0, σ²)
+pre: found.prob.limits.lln, found.prob.dist.gaussian
+d: int
+
+== found.prob.limits.concentration | Concentration inequalities (Markov, Chebyshev, Hoeffding)
+def: Bounds on how far a random quantity strays from its mean. These are the main tools of learning theory.
+f: P(|X̄ − μ| ≥ t) ≤ 2exp(−2nt²)  (Hoeffding, bounded in [0,1])
+pre: found.prob.limits.lln
+to: ml.theory
+d: adv
+
+#### Stochastic processes
+== found.prob.process | Stochastic processes
+def: Random quantities indexed by time or space, used for sequences, diffusion, RL environments and MCMC.
+pre: found.prob.rv
+d: int
+
+== found.prob.process.markov | Markov chain & Markov property
+def: The future depends only on the present state, not the history. Underlies MDPs in RL, HMMs, MCMC sampling and n-gram models.
+f: P(xₜ₊₁ | x₁…xₜ) = P(xₜ₊₁ | xₜ)
+pre: found.prob.basics.cond-indep
+paper: Markov | Extension of the Law of Large Numbers to Dependent Quantities | 1906
+to: rl.mdp, prob.inference.mcmc, prob.gm.hmm, dom.nlp.ngram
+d: int
+
+== found.prob.process.stationary | Stationary distribution & ergodicity
+def: The long-run distribution a Markov chain settles into. MCMC works by designing a chain whose stationary distribution is the one you want to sample. PageRank is one too.
+pre: found.prob.process.markov, found.linalg.decomp.eigen
+to: prob.inference.mcmc, dom.ir.pagerank
+d: adv
+
+== found.prob.process.random-walk | Random walk
+def: A path of successive random steps. Used in graph embeddings (DeepWalk, node2vec) and Brownian motion.
+pre: found.prob.process.markov
+to: dom.graph
+d: int
+
+== found.prob.process.brownian | Brownian motion (Wiener process)
+def: The continuous-time limit of a random walk, with independent Gaussian increments. It is the noise source in diffusion SDEs.
+pre: found.prob.process.random-walk, found.prob.dist.gaussian
+d: adv
+
+== found.prob.process.sde | Stochastic differential equations (SDEs)
+def: ODEs with a random noise term. Score-based diffusion models are defined as a forward noising SDE and a learned reverse SDE.
+f: dx = f(x,t)dt + g(t)dW
+pre: found.prob.process.brownian, found.calc.ode.ode
+to: dl.gen.diffusion
+d: adv
+
+== found.prob.process.poisson | Poisson process
+def: Events arriving randomly at a constant rate in continuous time. Used in queueing, event modelling and serving capacity planning.
+pre: found.prob.dist.poisson
+d: int
+
+#### Monte Carlo
+== found.prob.mc | Sampling & Monte Carlo
+def: Estimating quantities by drawing random samples. Used when exact sums or integrals are intractable, which is most of the time in ML.
+pre: found.prob.rv.expectation
+d: int
+
+== found.prob.mc.estimation | Monte Carlo estimation
+def: Approximate an expectation by the average over samples. The error shrinks as 1/√n regardless of dimension. SGD is a Monte Carlo estimate of the gradient.
+f: E[f(X)] ≈ (1/n) Σᵢ f(xᵢ)
+pre: found.prob.limits.lln
+paper: Metropolis, Ulam | The Monte Carlo Method | 1949
+to: found.opt.first.sgd
+d: int
+
+== found.prob.mc.prng | Pseudo-random number generation & seeds
+def: Deterministic algorithms that produce random-looking numbers from a seed. Fixing seeds makes experiments reproducible.
+pre: found.prob.dist.uniform
+to: infra.mlops.repro
+
+== found.prob.mc.inverse | Inverse transform sampling
+def: Sample uniformly, then push the value through the inverse CDF to get any 1D distribution.
+pre: found.prob.rv.cdf, found.prob.mc.prng
+d: int
+
+== found.prob.mc.rejection | Rejection sampling
+def: Sample from an easy proposal distribution and accept each sample with a probability that corrects toward the target.
+pre: found.prob.mc.inverse
+d: int
+
+== found.prob.mc.importance | Importance sampling
+def: Estimate expectations under p using samples from q, reweighted by p/q. It underlies off-policy RL corrections and PPO's ratio.
+f: E_p[f] = E_q[f·p/q]
+pre: found.prob.mc.estimation
+to: rl.policy.ppo, prob.inference
+d: adv
+
+== found.prob.mc.gumbel | Gumbel-max trick & sampling from logits
+def: Adding Gumbel noise to logits and taking the argmax samples exactly from the softmax. Gumbel-softmax makes this differentiable.
+pre: found.prob.dist.categorical
+to: llm.decode
+d: adv
+
+######## L2: Statistics
+== found.stats | Statistics
+def: Learning about the world from finite, noisy data: summarizing it, estimating parameters, quantifying uncertainty and testing claims. Machine learning grew out of statistics.
+pre: found.prob
+
+#### Descriptive
+== found.stats.desc | Descriptive statistics
+def: Summaries of a dataset: centre, spread, shape and relationships. This is the first step of any data work.
+
+== found.stats.desc.center | Mean, median, mode
+def: Three ways to describe a typical value. The median is robust to outliers; the mean is not.
+
+== found.stats.desc.spread | Variance, standard deviation, quantiles, IQR
+def: How spread out data is. Quantiles split sorted data (median = 50th percentile); the IQR covers the middle half.
+pre: found.stats.desc.center
+
+== found.stats.desc.standardize | Standardization (z-score) & normalization
+def: Rescale features to mean 0 and std 1, or to [0, 1]. Many models train badly without it.
+f: z = (x − μ) / σ
+pre: found.stats.desc.spread
+to: ml.data.scaling, dl.norm
+
+== found.stats.desc.correlation | Correlation coefficients (Pearson, Spearman)
+def: Pearson measures linear association; Spearman measures monotonic association using ranks. Correlation is not causation.
+pre: found.stats.desc.spread
+to: prob.causal
+
+== found.stats.desc.viz | Exploratory data analysis & plots
+def: Histograms, box plots, scatter plots and summaries used to understand data before modelling.
+pre: found.stats.desc.spread
+to: ml.data.eda
+
+#### Estimation
+== found.stats.est | Estimation
+def: Using data to estimate unknown parameters, and judging how good an estimator is.
+pre: found.stats.desc
+
+== found.stats.est.estimator | Estimator, bias & variance of an estimator
+def: An estimator is a rule from data to a parameter guess. Bias is its systematic error; variance is how much it changes across datasets. This is the root of the bias–variance tradeoff.
+pre: found.prob.rv.variance
+to: ml.concepts.bias-variance
+d: int
+
+== found.stats.est.consistency | Consistency
+def: An estimator is consistent if it converges to the true value as data grows.
+pre: found.stats.est.estimator, found.prob.limits.lln
+d: int
+
+== found.stats.est.likelihood | Likelihood
+def: How probable the observed data is under parameters θ, viewed as a function of θ. It is not a distribution over θ.
+f: L(θ) = Πᵢ p(xᵢ | θ)
+pre: found.prob.rv.pmf, found.prob.rv.iid
+
+== found.stats.est.mle | Maximum likelihood estimation (MLE)
+def: Pick the parameters that make the observed data most probable. Minimizing cross-entropy loss is MLE, and that includes LLM pretraining.
+f: θ̂ = argmax_θ Σᵢ log p(xᵢ | θ)
+pre: found.stats.est.likelihood, found.calc.single.explog
+paper: Fisher | On the Mathematical Foundations of Theoretical Statistics | 1922
+to: found.info.cross-entropy, ml.concepts.loss
+
+== found.stats.est.map | Maximum a posteriori (MAP)
+def: MLE plus a prior: pick the most probable parameters given the data. A Gaussian prior gives L2 regularization; a Laplace prior gives L1.
+f: θ̂ = argmax_θ [log p(D|θ) + log p(θ)]
+pre: found.stats.est.mle, found.prob.basics.bayes
+to: ml.concepts.regularization
+d: int
+
+== found.stats.est.mom | Method of moments
+def: Choose parameters so the model's moments match the sample's moments. Simple, but usually less efficient than MLE.
+pre: found.prob.rv.moments
+d: int
+
+== found.stats.est.sufficient | Sufficient statistics
+def: A summary of the data that keeps all information about a parameter, such as the sample mean for a Gaussian's mean.
+pre: found.stats.est.likelihood
+d: adv
+
+== found.stats.est.fisher | Fisher information & Cramér–Rao bound
+def: How much information data carries about a parameter; it sets the lowest possible variance for unbiased estimators. Basis of natural gradient methods.
+pre: found.stats.est.mle, found.calc.multi.hessian
+to: found.opt.second.natural
+d: adv
+
+== found.stats.est.bootstrap | Bootstrap
+def: Estimate uncertainty by resampling the data with replacement many times. The same idea gives bagging.
+pre: found.stats.est.estimator
+paper: Efron | Bootstrap Methods: Another Look at the Jackknife | 1979
+to: ml.ensemble.bagging
+d: int
+
+== found.stats.est.kde | Nonparametric density estimation (histograms, KDE)
+def: Estimate a density without assuming a family, by placing a small kernel at each data point.
+pre: found.stats.desc.viz, found.prob.rv.pdf
+d: int
+
+#### Bayesian statistics
+== found.stats.bayes | Bayesian statistics
+def: Treat parameters as random and update beliefs about them from data. Output is a full posterior distribution, not a single estimate.
+pre: found.prob.basics.bayes
+to: prob
+d: int
+
+== found.stats.bayes.prior-posterior | Prior, likelihood, posterior, evidence
+def: Posterior ∝ likelihood × prior. The evidence (marginal likelihood) normalizes it and is used to compare models.
+f: p(θ|D) = p(D|θ)p(θ) / p(D)
+pre: found.stats.est.likelihood
+d: int
+
+== found.stats.bayes.conjugate | Conjugate priors
+def: A prior that gives a posterior in the same family, so the update has a closed form (Beta–Bernoulli, Gaussian–Gaussian, Dirichlet–categorical).
+pre: found.stats.bayes.prior-posterior, found.prob.dist.gamma-beta
+d: int
+
+== found.stats.bayes.predictive | Posterior predictive distribution
+def: Predict new data by averaging predictions over all parameter values, weighted by the posterior. This accounts for model uncertainty.
+f: p(x*|D) = ∫ p(x*|θ) p(θ|D) dθ
+pre: found.stats.bayes.prior-posterior
+to: prob.bayesml
+d: adv
+
+== found.stats.bayes.credible | Credible intervals
+def: An interval that contains the parameter with a given posterior probability. It is the Bayesian counterpart of a confidence interval, with a more direct meaning.
+pre: found.stats.bayes.prior-posterior
+d: int
+
+#### Inference & testing
+== found.stats.testing | Hypothesis testing & confidence
+def: Deciding whether an observed effect is real or chance. This is how you know a new model is really better.
+pre: found.stats.est
+d: int
+
+== found.stats.testing.ci | Confidence intervals & standard error
+def: A range built by a procedure that captures the true value in, say, 95% of repeated experiments. Benchmark scores should report one.
+pre: found.stats.est.estimator, found.prob.limits.clt
+to: ml.eval
+d: int
+
+== found.stats.testing.hypothesis | Null hypothesis, p-value, significance
+def: Assume no effect (the null) and ask how surprising the data would be. A small p-value means surprising under the null. It does not mean the effect is large or important.
+paper: Fisher | Statistical Methods for Research Workers | 1925
+pre: found.stats.testing.ci
+d: int
+
+== found.stats.testing.errors | Type I/II errors & statistical power
+def: False positive vs false negative. Power is the chance of detecting a real effect, and it grows with sample size.
+pre: found.stats.testing.hypothesis
+paper: Neyman, Pearson | On the Problem of the Most Efficient Tests of Statistical Hypotheses | 1933
+d: int
+
+== found.stats.testing.t-test | t-test, chi-square & common tests
+def: Standard tests: t-test for comparing means, chi-square for counts and independence, McNemar for comparing two classifiers on the same data.
+pre: found.stats.testing.hypothesis, found.prob.dist.student-t
+d: int
+
+== found.stats.testing.multiple | Multiple comparisons correction
+def: Testing many hypotheses makes some look significant by chance. Bonferroni and false-discovery-rate corrections compensate. This is relevant to benchmark leaderboards.
+pre: found.stats.testing.errors
+d: adv
+
+== found.stats.testing.ab | A/B testing
+def: A randomized experiment comparing two versions on real users. It is how ML products are evaluated in production.
+pre: found.stats.testing.hypothesis
+to: infra.mlops.monitoring
+d: int
+
+== found.stats.testing.sampling | Sampling methods & bias
+def: How data was collected decides what it can tell you. Random, stratified and convenience samples differ; selection bias quietly breaks models.
+pre: found.stats.desc
+to: safe.fairness, infra.data
+d: int
+
+#### Decision theory
+== found.stats.decision | Statistical decision theory
+def: Choosing actions under uncertainty by minimizing expected loss. It connects probability to the losses and metrics used in ML.
+pre: found.stats.est, found.prob.rv.expectation
+to: prob.decision
+d: int
+
+== found.stats.decision.loss-risk | Loss, risk & Bayes risk
+def: A loss scores one decision; risk is its expected value. The Bayes-optimal decision minimizes expected loss under the posterior.
+f: R(δ) = E[L(θ, δ(X))]
+to: ml.concepts.loss, ml.concepts.erm
+d: int
+
+== found.stats.decision.threshold | Decision thresholds & asymmetric costs
+def: Turning probabilities into actions: the best threshold depends on the relative cost of each error type (medical screening vs spam filtering).
+pre: found.stats.decision.loss-risk
+to: ml.eval
+d: int
+
+######## L2: Information theory
+== found.info | Information theory
+def: Measures information, uncertainty and the difference between distributions. Gives ML its main loss (cross-entropy), LLMs their metric (perplexity), and VAEs and RLHF their KL terms.
+paper: Shannon | A Mathematical Theory of Communication | 1948
+pre: found.prob
+
+== found.info.self-info | Self-information (surprisal)
+def: How surprising an outcome is: rare events carry more information. Measured in bits (log base 2) or nats (natural log).
+f: I(x) = −log p(x)
+pre: found.calc.single.explog
+
+== found.info.entropy | Shannon entropy
+def: The average surprisal of a distribution, i.e. its uncertainty. Used for decision-tree splits and for measuring how uncertain a model is.
+f: H(X) = −Σ p(x) log p(x)
+pre: found.info.self-info, found.prob.rv.expectation
+to: ml.sup.trees
+
+== found.info.joint-cond | Joint & conditional entropy
+def: The uncertainty of several variables together, and what remains about one after observing another.
+f: H(Y|X) = H(X,Y) − H(X)
+pre: found.info.entropy
+d: int
+
+== found.info.cross-entropy | Cross-entropy
+def: The average surprisal when the true distribution is p but you encode with model q. It is the standard classification loss and the loss LLMs are pretrained on.
+f: H(p,q) = −Σ p(x) log q(x)
+pre: found.info.entropy
+to: ml.concepts.loss, llm.pretrain.ntp
+
+== found.info.kl | KL divergence
+def: The extra cost of using q instead of p; a non-symmetric "distance" between distributions. It appears in VAEs, RLHF (staying close to the reference model), distillation and variational inference.
+f: KL(p‖q) = Σ p(x) log[p(x)/q(x)] = H(p,q) − H(p)
+pre: found.info.cross-entropy
+paper: Kullback, Leibler | On Information and Sufficiency | 1951
+to: dl.gen.vae, llm.post.rlhf, prob.inference.vi, llm.eff.distill
+d: int
+
+== found.info.forward-reverse-kl | Forward vs reverse KL
+def: KL(p‖q) makes q cover all of p (mass-covering); KL(q‖p) makes q lock onto one mode (mode-seeking). The choice changes what a model learns.
+pre: found.info.kl
+d: adv
+
+== found.info.js | Jensen–Shannon divergence
+def: A symmetric, bounded version of KL. The original GAN objective minimizes it.
+f: JS(p,q) = ½KL(p‖m) + ½KL(q‖m),  m = ½(p+q)
+pre: found.info.kl
+to: dl.gen.gan
+d: adv
+
+== found.info.mi | Mutual information
+def: How much knowing one variable reduces uncertainty about another. Used in feature selection, contrastive learning objectives (InfoNCE) and the information bottleneck.
+f: I(X;Y) = H(X) − H(X|Y) = KL(p(x,y) ‖ p(x)p(y))
+pre: found.info.joint-cond, found.info.kl
+to: dl.repr.contrastive
+d: adv
+
+== found.info.perplexity | Perplexity
+def: The exponential of the average cross-entropy per token. Roughly, the number of tokens the model is choosing among; lower is better.
+f: PPL = exp(−(1/N) Σ log q(xᵢ))
+pre: found.info.cross-entropy
+to: llm.eval, dom.nlp.ngram
+
+== found.info.coding | Source coding & compression
+def: Entropy is the limit of lossless compression (Shannon's source coding theorem); Huffman and arithmetic coding approach it. A good predictor is a good compressor, and LLMs are both.
+pre: found.info.entropy
+paper: Huffman | A Method for the Construction of Minimum-Redundancy Codes | 1952
+d: int
+
+== found.info.channel | Channel capacity
+def: The maximum rate information can be sent reliably over a noisy channel. Classic theory, rarely used directly in ML.
+pre: found.info.mi
+d: adv
+
+== found.info.rate-distortion | Rate–distortion theory
+def: The tradeoff between compression rate and reconstruction error in lossy compression. It is the theoretical frame for VAEs and learned compression.
+pre: found.info.mi
+to: dl.gen.vae
+d: adv
+
+== found.info.mdl | Minimum description length (MDL)
+def: The best model is the one that most compresses the data plus the model. A formal Occam's razor and a link between learning and compression.
+pre: found.info.coding
+paper: Rissanen | Modeling by Shortest Data Description | 1978
+to: ml.theory
+d: adv
+
+== found.info.kolmogorov | Kolmogorov complexity
+def: The length of the shortest program that outputs a string. It is uncomputable, but it defines the ideal notion of simplicity behind Solomonoff induction and AIXI.
+pre: found.info.coding, found.cs.theory.computability
+to: front.aixi
+d: adv

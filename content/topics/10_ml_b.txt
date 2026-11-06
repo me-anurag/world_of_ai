@@ -1,0 +1,328 @@
+# FIELD 5 — Machine Learning, part B: unsupervised, evaluation, settings, AutoML, interpretation, theory
+!defaults d=int st=foundational
+
+######## L2: Unsupervised learning
+== ml.unsup | Unsupervised learning methods
+def: Algorithms that find structure without labels: clustering, dimensionality reduction, density estimation, anomaly detection, pattern mining.
+pre: ml.paradigms.unsupervised
+
+#### Clustering
+== ml.unsup.clustering | Clustering
+def: Group similar items together. Choice of algorithm depends on cluster shape, size, noise and whether you know how many clusters there are.
+pre: found.linalg.geom.distance
+d: beg
+
+== ml.unsup.kmeans | k-means
+def: Alternate between assigning points to the nearest centroid and moving centroids to the mean of their points. Fast; assumes round, similar-sized clusters. k-means++ chooses good starting centroids.
+f: min Σᵢ ‖xᵢ − μ_c(i)‖²
+pre: ml.unsup.clustering, found.opt.other.em
+paper: Lloyd | Least Squares Quantization in PCM | 1982
+d: beg
+
+== ml.unsup.hierarchical | Hierarchical clustering
+def: Merge (agglomerative) or split clusters step by step, producing a dendrogram; linkage (single, complete, average, Ward) decides cluster distance.
+pre: ml.unsup.clustering, found.discrete.graphs.trees
+d: beg
+
+== ml.unsup.dbscan | Density-based clustering (DBSCAN, HDBSCAN, OPTICS)
+def: Clusters are dense regions separated by sparse ones; finds arbitrary shapes and labels outliers as noise, without fixing the number of clusters.
+pre: ml.unsup.clustering
+paper: Ester, Kriegel, Sander, Xu | A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise | 1996
+
+== ml.unsup.meanshift | Mean shift & affinity propagation
+def: Mean shift moves points uphill on a density estimate to its modes; affinity propagation passes messages to choose exemplars.
+pre: ml.unsup.clustering, found.stats.est.kde
+d: adv
+
+== ml.unsup.spectral | Spectral clustering
+def: Embed points using eigenvectors of a similarity graph's Laplacian, then cluster in that space. Finds non-convex clusters.
+pre: ml.unsup.kmeans, found.discrete.graphs.adjacency
+paper: Ng, Jordan, Weiss | On Spectral Clustering: Analysis and an Algorithm | 2001
+x: dom.graph.spectral
+d: adv
+
+== ml.unsup.gmm | Gaussian mixture model
+def: Model data as a mix of Gaussians fitted by EM. A soft, probabilistic version of k-means that also gives a density.
+pre: ml.unsup.kmeans, found.prob.dist.mixture, prob.inference.em
+
+== ml.unsup.cluster-eval | Cluster evaluation (silhouette, ARI, elbow)
+def: Judge clusterings without labels (silhouette, Davies–Bouldin, elbow plots) or against known labels (adjusted Rand index, mutual information).
+pre: ml.unsup.clustering
+
+#### Dimensionality reduction
+== ml.unsup.dimred | Dimensionality reduction
+def: Represent high-dimensional data with fewer dimensions, for visualization, compression, denoising or as a preprocessing step.
+pre: ml.concepts.curse
+d: beg
+
+== ml.unsup.pca | PCA
+def: Find the orthogonal directions of greatest variance (eigenvectors of the covariance matrix, or via SVD) and project onto the top few.
+pre: ml.unsup.dimred, found.linalg.decomp.svd, found.prob.rv.cov-matrix
+paper: Pearson | On Lines and Planes of Closest Fit to Systems of Points in Space | 1901
+
+== ml.unsup.ica | Independent component analysis
+def: Separate mixed signals into statistically independent sources (the cocktail-party problem).
+pre: ml.unsup.pca, found.info.mi
+paper: Hyvärinen, Oja | Independent Component Analysis: Algorithms and Applications | 2000
+d: adv
+
+== ml.unsup.nmf | Non-negative matrix factorization & dictionary learning
+def: Factor data into non-negative (parts-based) or sparse components, giving interpretable building blocks for images and text.
+pre: ml.unsup.pca, found.linalg.decomp.lowrank
+paper: Lee, Seung | Learning the Parts of Objects by Non-negative Matrix Factorization | 1999
+x: safe.interp
+d: adv
+
+== ml.unsup.manifold | Manifold learning (MDS, Isomap, LLE, Laplacian eigenmaps)
+def: Assume data lies on a curved low-dimensional surface and unfold it while preserving distances or neighbourhoods.
+pre: ml.unsup.pca, found.discrete.graphs.adjacency
+paper: Tenenbaum, de Silva, Langford | A Global Geometric Framework for Nonlinear Dimensionality Reduction | 2000
+d: adv
+
+== ml.unsup.tsne | t-SNE
+def: Nonlinear embedding into 2D/3D that preserves local neighbourhoods, for visualizing clusters. Distances between clusters in the plot are not meaningful.
+pre: ml.unsup.manifold, found.info.kl, found.prob.dist.student-t
+paper: van der Maaten, Hinton | Visualizing Data using t-SNE | 2008
+
+== ml.unsup.umap | UMAP
+def: Faster neighbourhood-preserving embedding than t-SNE that keeps more global structure; the default for visualizing embeddings.
+pre: ml.unsup.tsne
+paper: McInnes, Healy, Melville | UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction | 2018
+st: dominant
+
+== ml.unsup.random-proj | Random projections (Johnson–Lindenstrauss)
+def: Multiplying by a random matrix approximately preserves pairwise distances in far fewer dimensions.
+pre: ml.unsup.dimred, found.prob.limits.concentration
+d: adv
+
+#### Density, anomalies, patterns
+== ml.unsup.anomaly | Anomaly & outlier detection
+def: Find rare, unusual points (fraud, faults, intrusions): isolation forest, one-class SVM, local outlier factor, density and reconstruction-error methods.
+paper: Liu, Ting, Zhou | Isolation Forest | 2008
+to: dom.anomaly
+
+== ml.unsup.density | Density estimation
+def: Estimate p(x) from data: histograms, kernel density estimation, mixtures, and deep generative models.
+pre: found.stats.est.kde
+to: dl.gen
+
+== ml.unsup.assoc | Association rule mining (Apriori)
+def: Find items that frequently occur together ("people who buy X buy Y") with support and confidence thresholds. Classic data mining.
+pre: found.discrete.combinatorics
+paper: Agrawal, Srikant | Fast Algorithms for Mining Association Rules | 1994
+st: classic
+d: beg
+
+######## L2: Evaluation
+== ml.eval | Model evaluation
+def: Measuring how well a model will do on new data, and comparing models fairly. Choosing the wrong metric or split silently misleads.
+pre: ml.concepts.generalization
+d: beg
+
+== ml.eval.cv | Cross-validation
+def: Rotate which part of the data is held out (k-fold, stratified, leave-one-out, grouped, time-series splits) to get a more reliable estimate with limited data.
+paper: Stone | Cross-Validatory Choice and Assessment of Statistical Predictions | 1974
+d: beg
+
+== ml.eval.cls-metrics | Classification metrics (confusion matrix, precision, recall, F1)
+def: Accuracy misleads on imbalanced data. Precision: of predicted positives, how many were right. Recall: of actual positives, how many were found. F1 balances them.
+f: P = TP/(TP+FP);  R = TP/(TP+FN);  F1 = 2PR/(P+R)
+d: beg
+
+== ml.eval.roc | ROC & precision–recall curves, AUC
+def: Sweep the decision threshold to trade true positives against false positives (ROC) or precision against recall (PR). AUC summarizes the whole curve.
+pre: ml.eval.cls-metrics, found.stats.decision.threshold
+
+== ml.eval.reg-metrics | Regression metrics (MSE, RMSE, MAE, R²)
+def: Squared error punishes large mistakes; absolute error is robust; R² compares against always predicting the mean.
+d: beg
+
+== ml.eval.calibration | Probability calibration
+def: A calibrated model's "70%" happens 70% of the time. Check with reliability diagrams and expected calibration error; fix with Platt scaling, isotonic regression or temperature scaling.
+pre: ml.eval.cls-metrics, found.prob.rv.pmf
+paper: Guo, Pleiss, Sun, Weinberger | On Calibration of Modern Neural Networks | 2017
+x: prob.bayesml.uncertainty
+
+== ml.eval.curves | Learning & validation curves
+def: Plot performance against training-set size or a hyperparameter to see whether more data or more capacity would help.
+pre: ml.concepts.bias-variance
+d: beg
+
+== ml.eval.baselines | Baselines & ablations
+def: Compare against trivial baselines (predict the majority class) and remove components one at a time (ablation) to see what actually helps.
+d: beg
+
+== ml.eval.selection | Model selection
+def: Choosing among models or hyperparameters using validation scores, cross-validation or information criteria (AIC, BIC) without touching the test set.
+pre: ml.eval.cv
+paper: Akaike | A New Look at the Statistical Model Identification | 1974
+
+== ml.eval.hpo | Hyperparameter optimization
+def: Search hyperparameters by grid search, random search (often better), successive halving/Hyperband or Bayesian optimization.
+pre: ml.eval.selection
+paper: Bergstra, Bengio | Random Search for Hyper-Parameter Optimization | 2012
+x: prob.bayesopt
+
+== ml.eval.comparison | Statistical comparison of models
+def: Is model A really better? Use confidence intervals, paired tests across folds or examples, and enough test data. Benchmark gains are often within noise.
+pre: ml.eval.cv, found.stats.testing.hypothesis
+d: adv
+
+######## L2: Learning settings
+== ml.settings | Learning settings beyond i.i.d. supervised learning
+def: Variants of the standard setup: learning across tasks, from little data, over time, across devices, or with the learner choosing what to label.
+pre: ml.concepts.generalization
+
+== ml.settings.transfer | Transfer learning & fine-tuning
+def: Reuse a model trained on one task or dataset as the starting point for another. The default way to use pretrained models.
+to: llm.post.sft, dl.repr
+st: dominant
+paper: Pan, Yang | A Survey on Transfer Learning | 2010
+
+== ml.settings.domain | Domain adaptation & generalization
+def: Make a model trained on one distribution work on a shifted one (synthetic → real, hospital A → hospital B).
+pre: ml.settings.transfer, ml.concepts.shift
+st: active
+d: adv
+
+== ml.settings.multitask | Multitask learning
+def: Train one model on several related tasks with shared representations, so each task helps the others.
+paper: Caruana | Multitask Learning | 1997
+
+== ml.settings.fewshot | Few-shot & meta-learning
+def: Learn new tasks from a handful of examples by "learning to learn" across many tasks (prototypical networks, MAML). In-context learning in LLMs achieves this without weight updates.
+pre: ml.settings.multitask
+paper: Finn, Abbeel, Levine | Model-Agnostic Meta-Learning for Fast Adaptation of Deep Networks | 2017
+to: sys.prompting.icl
+st: active
+d: adv
+
+== ml.settings.zeroshot | Zero-shot learning
+def: Recognize classes never seen in training using side information (attributes, text descriptions); CLIP and LLMs made this routine.
+pre: ml.settings.fewshot
+to: dom.mm.clip
+d: adv
+
+== ml.settings.continual | Continual (lifelong) learning
+def: Learn a sequence of tasks without forgetting earlier ones. Neural nets suffer catastrophic forgetting; fixes include replay, regularization (EWC) and modular parameters.
+pre: ml.paradigms.online
+paper: Kirkpatrick et al. | Overcoming Catastrophic Forgetting in Neural Networks | 2017
+st: active
+d: adv
+
+== ml.settings.federated | Federated learning
+def: Train across many devices or organizations while data stays local; only model updates are shared and averaged (FedAvg).
+paper: McMahan, Moore, Ramage, Hampson, Agüera y Arcas | Communication-Efficient Learning of Deep Networks from Decentralized Data | 2017
+to: safe.privacy
+d: adv
+
+== ml.settings.ltr | Learning to rank
+def: Learn to order items by relevance (pointwise, pairwise, listwise losses). Powers search engines and recommenders.
+pre: ml.paradigms.tasks
+paper: Burges | From RankNet to LambdaRank to LambdaMART: An Overview | 2010
+to: dom.ir
+
+== ml.settings.noisy | Learning with noisy labels & PU learning
+def: Robust training when some labels are wrong, or when only positive and unlabelled examples exist.
+pre: ml.paradigms.weak
+d: adv
+
+== ml.settings.curriculum | Curriculum learning
+def: Present training examples from easy to hard, as in human teaching.
+paper: Bengio, Louradour, Collobert, Weston | Curriculum Learning | 2009
+d: adv
+
+== ml.active | Active learning
+def: The model chooses which unlabelled examples to send for labelling (most uncertain, most informative), cutting labelling cost.
+pre: ml.paradigms.semisup, prob.decision.voi
+paper: Settles | Active Learning Literature Survey | 2009
+
+######## L2: AutoML
+== ml.automl | AutoML
+def: Automating the ML pipeline: preprocessing, model choice, hyperparameters and architecture.
+pre: ml.eval.hpo
+paper: Hutter, Kotthoff, Vanschoren | Automated Machine Learning: Methods, Systems, Challenges | 2019
+
+== ml.automl.nas | Neural architecture search
+def: Search over network architectures with RL, evolution or differentiable relaxations (DARTS). Produced EfficientNet; less central since Transformers standardized architectures.
+pre: evo.neuro
+paper: Zoph, Le | Neural Architecture Search with Reinforcement Learning | 2017
+d: adv
+
+== ml.automl.meta | Meta-learning for AutoML & warm starting
+def: Use results from past datasets to pick good starting configurations for new ones.
+pre: ml.settings.fewshot
+d: adv
+
+######## L2: Interpreting models
+== ml.interp | Interpreting & explaining models
+def: Understanding why a model predicts what it does: global feature importance, local explanations, and inherently interpretable models.
+pre: ml.sup.trees, ml.eval
+to: safe.interp
+
+== ml.interp.importance | Feature importance (impurity, permutation)
+def: How much each feature matters: impurity reduction in trees (biased), or the score drop when a feature is shuffled (permutation importance).
+pre: ml.ensemble.rf
+d: beg
+
+== ml.interp.pdp | Partial dependence & ICE plots
+def: Show how predictions change as one feature varies, on average (PDP) or per example (ICE).
+
+== ml.interp.shap | SHAP & Shapley values
+def: Attribute a prediction to features fairly using Shapley values from cooperative game theory. The most used local explanation method for tabular models.
+pre: ml.ensemble.gbm
+paper: Lundberg, Lee | A Unified Approach to Interpreting Model Predictions | 2017
+x: rl.multiagent
+
+== ml.interp.lime | LIME & local surrogates
+def: Explain one prediction by fitting a simple model to the black box's behaviour around that input.
+paper: Ribeiro, Singh, Guestrin | "Why Should I Trust You?": Explaining the Predictions of Any Classifier | 2016
+
+== ml.interp.counterfactual | Counterfactual explanations
+def: The smallest change to the input that would flip the decision ("approved if income were $5k higher").
+x: prob.causal.counterfactual
+d: adv
+
+######## L2: Learning theory
+== ml.theory | Learning theory
+def: Mathematical answers to: when can a model learn from finite data, how much data is enough, and why does it generalize?
+pre: ml.concepts.erm, found.prob.limits.concentration
+paper: Shalev-Shwartz, Ben-David | Understanding Machine Learning: From Theory to Algorithms | 2014
+d: adv
+
+== ml.theory.pac | PAC learning
+def: Probably Approximately Correct: a concept class is learnable if, with enough samples, a learner returns a hypothesis with error ≤ ε with probability ≥ 1 − δ.
+paper: Valiant | A Theory of the Learnable | 1984
+d: adv
+
+== ml.theory.vc | VC dimension
+def: The largest set of points a hypothesis class can label in every possible way. It bounds how much data is needed to generalize.
+pre: ml.theory.pac
+paper: Vapnik, Chervonenkis | On the Uniform Convergence of Relative Frequencies of Events to Their Probabilities | 1971
+d: adv
+
+== ml.theory.bounds | Generalization bounds (uniform convergence, Rademacher, stability)
+def: Bounds on test error in terms of training error, sample size and model complexity, measured by VC dimension, Rademacher complexity, margins or algorithmic stability.
+pre: ml.theory.vc
+d: adv
+
+== ml.theory.nfl | No free lunch & the need for priors
+def: Averaged over all possible problems, no learner beats any other. Learning works only because real problems have structure that inductive biases exploit.
+pre: ml.concepts.inductive-bias
+paper: Wolpert | The Lack of A Priori Distinctions Between Learning Algorithms | 1996
+x: evo.core.theory
+d: adv
+
+== ml.theory.regret | Online learning & regret
+def: For adversarial data streams, compare cumulative loss to the best fixed expert in hindsight; algorithms like multiplicative weights achieve sublinear regret.
+pre: ml.paradigms.online
+x: rl.bandits
+d: adv
+
+== ml.theory.deep | Theory of deep learning (double descent, implicit bias, NTK)
+def: Why do huge overparameterized networks generalize? Double descent (test error falls again past the interpolation point), SGD's implicit regularization, and the neural tangent kernel regime.
+pre: ml.theory.bounds, ml.concepts.bias-variance
+paper: Belkin, Hsu, Ma, Mandal | Reconciling Modern Machine-Learning Practice and the Classical Bias–Variance Trade-off | 2019
+to: dl
+st: active
+d: adv

@@ -1,0 +1,194 @@
+# FIELD 12 — Infrastructure & Practice
+# Audit: Huyen "Designing Machine Learning Systems", Sculley et al. "Hidden Technical Debt in ML Systems", Google "Rules of ML", Stanford CS329S, Hugging Face Ultra-Scale Playbook, NVIDIA/Google accelerator docs, Gebru et al. "Datasheets for Datasets".
+!defaults d=int st=dominant
+
+######## L2: Data
+== infra.data | Data
+def: The raw material of every model: collecting, labelling, cleaning, documenting, versioning and governing datasets. Data quality caps model quality.
+pre: ml.data
+paper: Sambasivan et al. | "Everyone wants to do the model work, not the data work": Data Cascades in High-Stakes AI | 2021
+st: foundational
+
+== infra.data.collection | Data collection & web crawling
+def: Gathering data from logs, sensors, APIs, public datasets and web crawls, within licensing, consent and privacy limits.
+d: beg
+
+== infra.data.labeling | Annotation & labelling
+def: Human labelling with guidelines, quality control and inter-annotator agreement; crowdsourcing; increasingly assisted or replaced by models.
+x: ml.paradigms.weak
+d: beg
+
+== infra.data.quality | Data quality, validation & cleaning at scale
+def: Automated checks for schema, ranges, duplicates, label noise and drift before data reaches training.
+pre: ml.data.cleaning
+
+== infra.data.docs | Dataset documentation (datasheets, data cards)
+def: Record how data was collected, what it covers, known biases and intended uses.
+paper: Gebru et al. | Datasheets for Datasets | 2018
+to: safe.ethics.accountability
+d: beg
+
+== infra.data.pipelines | Data pipelines, versioning & feature stores
+def: Reproducible ETL pipelines, dataset versioning, and feature stores that serve the same features in training and production.
+pre: ml.data.pipelines
+
+== infra.data.licensing | Licensing, copyright & consent
+def: Who owns training data and what uses are allowed; an unsettled legal area for web-scraped data used to train generative models.
+to: safe.governance
+st: debate
+d: beg
+
+######## L2: Hardware
+== infra.hw | AI hardware
+def: The chips and systems that make modern AI possible. Deep learning's progress tracks hardware: memory bandwidth and interconnects matter as much as raw FLOPs.
+pre: found.cs.prog.systems, found.numerics.parallel
+paper: Hennessy, Patterson | A New Golden Age for Computer Architecture | 2019
+st: foundational
+
+== infra.hw.gpu | GPUs
+def: Thousands of parallel cores plus tensor cores for matrix multiplication and high-bandwidth memory. Became the default AI hardware after AlexNet; NVIDIA dominates.
+pre: found.linalg.mat.matmul
+x: hist.timeline.deep.alexnet
+
+== infra.hw.cuda | CUDA & GPU programming
+def: NVIDIA's platform for writing GPU kernels; the software moat behind GPU dominance. Triton offers a higher-level way to write fast kernels in Python.
+pre: infra.hw.gpu, found.cs.prog.python
+paper: Tillet, Kung, Cox | Triton: An Intermediate Language and Compiler for Tiled Neural Network Computations | 2019
+d: adv
+
+== infra.hw.tpu | TPUs & other accelerators
+def: Google's TPUs (systolic arrays for matrix math), plus AWS Trainium/Inferentia, AMD Instinct, and specialized inference chips.
+pre: infra.hw.gpu
+paper: Jouppi et al. | In-Datacenter Performance Analysis of a Tensor Processing Unit | 2017
+
+== infra.hw.memory | Memory bandwidth, HBM & the roofline model
+def: Many AI workloads are limited by moving data, not computing; the roofline model shows whether a kernel is compute- or memory-bound.
+pre: infra.hw.gpu, found.cs.prog.systems
+d: adv
+
+== infra.hw.interconnect | Interconnects & clusters (NVLink, InfiniBand)
+def: Fast links between GPUs and nodes so thousands of accelerators can train one model; topology shapes which parallelism strategies work.
+pre: infra.hw.gpu
+d: adv
+
+== infra.hw.energy | Compute, energy & data centres
+def: Frontier training runs use enormous compute and electricity; power, chips and data-centre capacity are now strategic constraints.
+to: safe.ethics.environment
+st: active
+d: beg
+
+######## L2: Frameworks
+== infra.frameworks | Deep learning frameworks
+def: Libraries providing tensors on GPUs, automatic differentiation and neural network building blocks.
+pre: found.cs.prog.numpy, found.calc.autodiff
+d: beg
+
+== infra.frameworks.pytorch | PyTorch
+def: Eager, Pythonic framework with dynamic graphs; dominant in research and most industry work, with torch.compile for speed.
+paper: Paszke et al. | PyTorch: An Imperative Style, High-Performance Deep Learning Library | 2019
+d: beg
+
+== infra.frameworks.jax | JAX, TensorFlow & Keras
+def: JAX offers composable function transformations (grad, jit, vmap) with XLA compilation, popular for large-scale research; TensorFlow/Keras remain common in production and education.
+paper: Abadi et al. | TensorFlow: A System for Large-Scale Machine Learning | 2016
+st: foundational
+
+== infra.frameworks.hf | Hugging Face ecosystem
+def: Hubs of pretrained models and datasets plus libraries (Transformers, Datasets, PEFT, TRL) that made using pretrained models routine.
+pre: infra.frameworks.pytorch
+paper: Wolf et al. | Transformers: State-of-the-Art Natural Language Processing | 2020
+d: beg
+
+== infra.frameworks.compilers | Compilers & exchange formats (XLA, ONNX, TensorRT)
+def: Compile models into optimized kernels and portable formats for different hardware.
+d: adv
+
+######## L2: Training at scale
+== infra.train | Training at scale
+def: Training models too large for one GPU, on datasets too large for one machine, reliably over weeks.
+pre: infra.hw.interconnect, dl.opt
+
+== infra.train.distributed | Distributed training
+def: Split the work across devices: copy the model and split the data, or split the model itself.
+paper: Shoeybi et al. | Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism | 2019
+d: adv
+
+== infra.train.data-parallel | Data parallelism, ZeRO & FSDP
+def: Each device processes different data and gradients are averaged (all-reduce); ZeRO/FSDP also shard optimizer states, gradients and weights to save memory.
+pre: infra.train.distributed
+paper: Rajbhandari, Rasley, Ruwase, He | ZeRO: Memory Optimizations Toward Training Trillion Parameter Models | 2019
+d: adv
+
+== infra.train.model-parallel | Tensor, pipeline, sequence & expert parallelism
+aka: tensor parallelism; pipeline parallelism; 3D parallelism
+def: Split layers' matrices across devices (tensor), layers into stages (pipeline), long sequences (sequence/context), or MoE experts (expert); combined as "3D/4D parallelism".
+pre: infra.train.distributed
+paper: Huang et al. | GPipe: Efficient Training of Giant Neural Networks using Pipeline Parallelism | 2018
+d: adv
+
+== infra.train.mixed-precision | Mixed-precision training
+aka: mixed precision; AMP
+def: Compute in FP16/BF16 (or FP8) while keeping a master copy of weights in FP32 and scaling the loss to avoid underflow; nearly doubles speed and halves memory.
+pre: found.numerics.formats
+paper: Micikevicius et al. | Mixed Precision Training | 2017
+d: adv
+
+== infra.train.checkpointing | Checkpointing & fault tolerance
+def: Save training state regularly and recover from hardware failures, which are routine on large clusters.
+d: adv
+
+######## L2: MLOps
+== infra.mlops | MLOps
+def: Engineering practice for taking models from notebook to reliable production and keeping them healthy: tracking, testing, deployment, monitoring and retraining.
+pre: ml.data.pipelines, found.cs.prog.git
+paper: Sculley et al. | Hidden Technical Debt in Machine Learning Systems | 2015
+d: beg
+
+== infra.mlops.tracking | Experiment tracking
+def: Log code version, data, hyperparameters, metrics and artefacts for every run (MLflow, Weights & Biases) so results can be compared and reproduced.
+d: beg
+
+== infra.mlops.repro | Reproducibility
+aka: containers; Docker
+def: Being able to recreate a result: fixed seeds, pinned environments (containers), versioned data and code, and documented configuration.
+pre: infra.mlops.tracking, found.prob.mc.prng
+d: beg
+
+== infra.mlops.registry | Model registry & CI/CD for ML
+def: Version models with metadata and approvals, and automatically test and deploy them (including data and model tests) like software.
+pre: infra.mlops.tracking
+
+== infra.mlops.serving | Model serving (batch, online, streaming)
+def: Expose models through APIs or batch jobs with autoscaling, latency targets and A/B or canary rollouts. LLM serving uses specialized engines.
+pre: infra.mlops.registry
+x: llm.inference.batching
+
+== infra.mlops.monitoring | Monitoring
+def: Watch live inputs, predictions and outcomes for drift, data-quality issues, latency and errors, and trigger alerts or retraining.
+pre: infra.mlops.serving, ml.concepts.shift
+
+== infra.mlops.cards | Model documentation (model cards)
+def: Short documents describing a model's intended use, evaluation across groups, limitations and ethical considerations.
+paper: Mitchell et al. | Model Cards for Model Reporting | 2019
+to: safe.ethics.accountability
+d: beg
+
+######## L2: Deployment targets
+== infra.deploy | Deployment targets
+def: Where models run: cloud APIs, on-premise servers, browsers, phones and embedded devices, each with different constraints.
+pre: infra.mlops.serving
+d: beg
+
+== infra.deploy.api | Hosted model APIs
+def: Calling models through a provider's API, paying per token or request; the most common way LLMs are used in products.
+d: beg
+
+== infra.deploy.edge | Edge deployment
+def: Running models on phones, microcontrollers and embedded devices with compact formats and runtimes (TFLite/LiteRT, Core ML, ONNX Runtime, llama.cpp), after quantization and pruning.
+pre: llm.eff.quant
+paper: Warden, Situnayake | TinyML: Machine Learning with TensorFlow Lite on Arduino and Ultra-Low-Power Microcontrollers | 2019
+
+== infra.deploy.browser | In-browser ML (WebGPU, Transformers.js, ONNX Runtime Web)
+def: Run models client-side in the browser with WebGPU or WebAssembly: private, offline-capable and serverless.
+pre: infra.deploy.edge
+st: active

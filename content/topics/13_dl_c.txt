@@ -1,0 +1,178 @@
+# FIELD 6 — Deep Learning, part C: generative models, representation learning
+!defaults d=adv st=foundational
+
+######## L2: Deep generative models
+== dl.gen | Deep generative models
+def: Networks that learn a data distribution so they can generate new samples (images, audio, text, molecules) or evaluate likelihoods.
+pre: ml.unsup.density, ml.paradigms.gen-disc, dl.basics.backprop
+paper: Kingma, Welling | Auto-Encoding Variational Bayes | 2013
+d: int
+
+== dl.gen.taxonomy | Families & trade-offs (likelihood, sample quality, speed)
+def: Autoregressive models and flows give exact likelihoods; VAEs give a bound; GANs give sharp samples but no likelihood; diffusion gives top quality at more sampling cost.
+d: int
+
+== dl.gen.autoregressive | Autoregressive models (PixelCNN, WaveNet)
+def: Generate one element at a time, each conditioned on everything before it, using the chain rule of probability. GPT-style LLMs are autoregressive models over tokens.
+pre: found.prob.basics.chain, dl.arch.transformer.causal-mask
+paper: van den Oord et al. | WaveNet: A Generative Model for Raw Audio | 2016
+to: llm.pretrain.ntp
+
+== dl.gen.vae | Variational autoencoder
+def: An autoencoder whose encoder outputs a distribution over latent codes, trained by maximizing the ELBO: reconstruction quality minus KL to a prior. Gives a smooth latent space you can sample from.
+f: ELBO = E_q[log p(x|z)] − KL(q(z|x) ‖ p(z))
+pre: dl.arch.autoencoder, prob.inference.vi.amortized, found.info.kl
+paper: Kingma, Welling | Auto-Encoding Variational Bayes | 2013
+
+== dl.gen.vae.vqvae | VQ-VAE & discrete latents
+def: Quantize latents to a learned codebook of discrete tokens. Image and audio tokenizers for multimodal models and latent diffusion build on this.
+paper: van den Oord, Vinyals, Kavukcuoglu | Neural Discrete Representation Learning | 2017
+to: dom.mm
+
+== dl.gen.gan | GAN
+def: A generator tries to fool a discriminator that tries to tell real from fake; the two are trained as a minimax game. Sharp images but unstable training.
+f: min_G max_D E[log D(x)] + E[log(1 − D(G(z)))]
+pre: found.info.js
+x: hist.timeline.deep.gan
+paper: Goodfellow et al. | Generative Adversarial Nets | 2014
+st: classic
+
+== dl.gen.gan.training | GAN training problems & fixes (mode collapse, WGAN)
+def: Generators can collapse onto a few outputs and training can oscillate. Wasserstein loss, gradient penalties and spectral normalization stabilize it.
+pre: found.opt.basics.lipschitz
+paper: Arjovsky, Chintala, Bottou | Wasserstein GAN | 2017
+
+== dl.gen.gan.archs | DCGAN, conditional GANs, CycleGAN, StyleGAN
+def: Convolutional GANs; GANs conditioned on labels or images (pix2pix); unpaired translation (CycleGAN); style-based high-resolution faces (StyleGAN).
+pre: dl.gen.gan.training, dl.arch.cnn
+paper: Karras, Laine, Aila | A Style-Based Generator Architecture for Generative Adversarial Networks | 2019
+st: classic
+
+== dl.gen.flow | Normalizing flows
+def: Transform a simple distribution through a chain of invertible layers; the change-of-variables formula gives exact likelihoods (RealNVP, Glow).
+f: log p(x) = log p(z) + log |det ∂z/∂x|
+pre: found.prob.rv.change-of-vars, found.linalg.mat.determinant
+paper: Dinh, Sohl-Dickstein, Bengio | Density Estimation using Real NVP | 2016
+
+== dl.gen.diffusion | Diffusion models
+def: Learn to reverse a gradual noising process: train a network to remove a little noise at each step, then generate by starting from pure noise and denoising. The leading method for images, video and audio.
+pre: found.prob.dist.gaussian, dl.arch.cnn.unet
+x: hist.timeline.fm.diffusion
+paper: Ho, Jain, Abbeel | Denoising Diffusion Probabilistic Models | 2020
+st: dominant
+d: int
+
+== dl.gen.diffusion.score | Score-based models & the SDE view
+def: Learn the gradient of the log-density (the score) at many noise levels and sample with Langevin dynamics or a reverse SDE; unifies DDPM and score matching.
+pre: found.prob.process.sde, prob.inference.mcmc.langevin
+paper: Song et al. | Score-Based Generative Modeling through Stochastic Differential Equations | 2020
+
+== dl.gen.diffusion.sampling | Fast sampling (DDIM, ODE solvers, distillation)
+def: Cut sampling from hundreds of steps to a few using deterministic ODE samplers, better solvers and distillation.
+pre: dl.gen.diffusion.score, found.calc.ode.solvers
+paper: Song, Meng, Ermon | Denoising Diffusion Implicit Models | 2020
+
+== dl.gen.diffusion.guidance | Conditioning & classifier-free guidance
+def: Condition generation on text or other inputs, and strengthen it by mixing conditional and unconditional predictions (classifier-free guidance). How text-to-image prompts steer images.
+pre: dl.arch.attention.cross
+paper: Ho, Salimans | Classifier-Free Diffusion Guidance | 2022
+
+== dl.gen.diffusion.latent | Latent diffusion (Stable Diffusion)
+def: Run diffusion in the compressed latent space of an autoencoder instead of pixels, making high-resolution generation affordable.
+pre: dl.gen.diffusion.guidance, dl.gen.vae
+paper: Rombach, Blattmann, Lorenz, Esser, Ommer | High-Resolution Image Synthesis with Latent Diffusion Models | 2022
+st: dominant
+
+== dl.gen.diffusion.dit | Diffusion Transformers (DiT)
+def: Replace the U-Net denoiser with a Transformer over latent patches. Scales better and underlies modern image and video generators.
+pre: dl.gen.diffusion.latent, dl.arch.vit
+paper: Peebles, Xie | Scalable Diffusion Models with Transformers | 2022
+st: dominant
+
+== dl.gen.flowmatching | Flow matching & rectified flow
+def: Learn a velocity field that transports noise to data along simple (often straight) paths; generalizes diffusion and trains simply. Used in recent image and audio models.
+pre: dl.gen.diffusion.sampling, dl.arch.neural-ode
+paper: Lipman, Chen, Ben-Hamu, Nickel, Le | Flow Matching for Generative Modeling | 2022
+st: active
+
+== dl.gen.consistency | Consistency models & one-step generation
+def: Train models that map any point on a noising trajectory straight to the clean sample, enabling one- or few-step generation.
+pre: dl.gen.diffusion.sampling
+paper: Song, Dhariwal, Chen, Sutskever | Consistency Models | 2023
+st: active
+
+== dl.gen.eval | Evaluating generative models (FID, IS, likelihood)
+def: Fréchet Inception Distance and Inception Score compare feature statistics of generated and real images; likelihood (bits/dim) for explicit models; human preference studies for the rest.
+pre: dl.gen.taxonomy
+paper: Heusel et al. | GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium | 2017
+d: int
+
+######## L2: Representation learning
+== dl.repr | Representation learning
+def: Learning features or embeddings that make downstream tasks easy. The real product of pretraining: one good representation serves many tasks.
+pre: dl.basics.mlp, ml.settings.transfer
+paper: Bengio, Courville, Vincent | Representation Learning: A Review and New Perspectives | 2013
+d: int
+
+== dl.repr.embedding | Embeddings
+def: Dense vectors representing items (words, tokens, images, users) so that similar items are close. Learned lookup tables or encoder outputs; the currency of retrieval and RAG.
+pre: found.linalg.geom.cosine, ml.data.encoding
+x: hist.timeline.deep.word2vec
+d: beg
+
+== dl.repr.distributed | Distributed representations & disentanglement
+def: Concepts are spread across many units and each unit takes part in many concepts. Disentanglement seeks separate factors (pose, colour, identity) in separate directions.
+pre: dl.repr.embedding
+paper: Hinton | Learning Distributed Representations of Concepts | 1986
+
+== dl.repr.ssl | Self-supervised representation learning
+def: Pretrain encoders with labels derived from the data itself: predict masked parts, predict the next element, or match different views of the same input.
+pre: ml.paradigms.selfsup
+st: dominant
+d: int
+
+== dl.repr.contrastive | Contrastive learning
+def: Pull embeddings of matching pairs (two augmentations of one image, an image and its caption, a query and its document) together and push non-matching ones apart.
+f: InfoNCE = −log [e^(sim(q,k⁺)/τ) / Σ_k e^(sim(q,k)/τ)]
+pre: dl.repr.ssl, dl.arch.siamese, found.info.mi
+paper: Chen, Kornblith, Norouzi, Hinton | A Simple Framework for Contrastive Learning of Visual Representations | 2020
+st: dominant
+d: int
+
+== dl.repr.moco | Momentum contrast (MoCo) & memory banks
+def: Keep a large queue of negative examples encoded by a slowly updated momentum encoder, decoupling the number of negatives from batch size.
+pre: dl.repr.contrastive
+paper: He, Fan, Wu, Xie, Girshick | Momentum Contrast for Unsupervised Visual Representation Learning | 2019
+
+== dl.repr.noncontrastive | Non-contrastive self-distillation (BYOL, DINO)
+def: Learn without negatives by having a student match a slowly averaged teacher on different views. DINO features show emergent object segmentation; DINOv2 is a leading general vision backbone.
+pre: dl.repr.moco
+paper: Caron et al. | Emerging Properties in Self-Supervised Vision Transformers | 2021
+st: dominant
+
+== dl.repr.masked | Masked modelling (BERT, MAE)
+def: Hide part of the input and train the model to reconstruct it: masked words (BERT) or masked image patches (MAE).
+pre: dl.repr.ssl, dl.arch.transformer
+paper: He et al. | Masked Autoencoders Are Scalable Vision Learners | 2021
+to: llm.models.bert
+d: int
+
+== dl.repr.jepa | Joint-embedding predictive architectures (JEPA)
+def: Predict the representation of missing parts rather than their pixels, aiming for more abstract features. LeCun's proposed path toward world models.
+pre: dl.repr.masked, dl.repr.noncontrastive
+paper: Assran et al. | Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture | 2023
+to: front.worldmodels
+st: active
+
+== dl.repr.multimodal | Aligned multimodal embeddings
+def: A shared embedding space for different modalities (image–text, audio–text), learned contrastively so text can retrieve images and vice versa.
+pre: dl.repr.contrastive
+to: dom.mm.clip
+st: dominant
+d: int
+
+== dl.repr.probing | Probing & linear evaluation
+def: Judge a representation by training a simple (often linear) classifier on frozen features; also used to test what a network encodes.
+pre: ml.sup.logreg
+x: safe.interp
+d: int

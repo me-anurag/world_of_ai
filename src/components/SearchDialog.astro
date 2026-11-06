@@ -1,0 +1,75 @@
+---
+---
+<dialog class="search-dialog" id="search-dialog" aria-label="Search">
+  <div class="search-box">
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <input id="search-input" type="search" placeholder="Search topics, abbreviations and papers" autocomplete="off" spellcheck="false" aria-controls="search-results" />
+    <button class="icon-btn" type="button" id="search-close" aria-label="Close search">
+      <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <ul class="search-results" id="search-results" role="listbox"></ul>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('search-dialog') as HTMLDialogElement;
+  const input = document.getElementById('search-input') as HTMLInputElement;
+  const list = document.getElementById('search-results') as HTMLUListElement;
+  let pagefind: any = null;
+  let active = 0;
+  let seq = 0;
+
+  async function load() {
+    if (pagefind) return pagefind;
+    try {
+      // Built by Pagefind after the site is generated.
+      const src = '/pagefind/' + 'pagefind.js';
+      pagefind = await import(/* @vite-ignore */ src);
+      await pagefind.options({ excerptLength: 18 });
+    } catch (e) {
+      pagefind = { search: async () => ({ results: [] }), failed: true };
+    }
+    return pagefind;
+  }
+  function open() {
+    if (!dialog.open) dialog.showModal();
+    input.focus(); input.select();
+    load();
+  }
+  function setActive(i: number) {
+    const items = list.querySelectorAll('a');
+    if (!items.length) return;
+    active = (i + items.length) % items.length;
+    items.forEach((a, j) => a.classList.toggle('on', j === active));
+    items[active].scrollIntoView({ block: 'nearest' });
+  }
+  async function run() {
+    const q = input.value.trim();
+    const mine = ++seq;
+    if (q.length < 2) { list.innerHTML = ''; return; }
+    const pf = await load();
+    if (pf.failed) { list.innerHTML = '<li class="search-empty">Search is available on the published site.</li>'; return; }
+    const res = await pf.search(q);
+    const data = await Promise.all(res.results.slice(0, 12).map((r: any) => r.data()));
+    if (mine !== seq) return;
+    if (!data.length) { list.innerHTML = '<li class="search-empty">No topics match. Try another name or an abbreviation.</li>'; return; }
+    list.innerHTML = data.map((d: any) =>
+      `<li><a href="${d.url}"><span class="t">${d.meta.title || ''}</span><span class="s">${d.meta.trail || ''}</span><span class="s">${d.excerpt}</span></a></li>`
+    ).join('');
+    setActive(0);
+  }
+  document.getElementById('search-open')?.addEventListener('click', open);
+  document.getElementById('search-close')?.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
+  input.addEventListener('input', run);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+    if (e.key === 'Enter') { const a = list.querySelectorAll('a')[active] as HTMLAnchorElement | undefined; if (a) { e.preventDefault(); location.href = a.href; } }
+  });
+  document.addEventListener('keydown', (e) => {
+    const t = e.target as HTMLElement;
+    const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+    if (e.key === '/' && !typing) { e.preventDefault(); open(); }
+  });
+</script>

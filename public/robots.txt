@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://world-of-ai.pages.dev/sitemap-index.xml

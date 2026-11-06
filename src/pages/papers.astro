@@ -1,0 +1,33 @@
+---
+import Base from '../layouts/Base.astro';
+import { papers, get, scholarLink } from '../lib/data.js';
+const groups = [];
+for (const p of papers) {
+  const d = p.year < 1900 ? 'Before 1900' : `${Math.floor(p.year / 10) * 10}s`;
+  if (!groups.length || groups.at(-1).d !== d) groups.push({ d, items: [] });
+  groups.at(-1).items.push(p);
+}
+---
+<Base title="Key papers" description="The papers, books and reports that introduced or shaped each topic on the map, by year." section="papers" wide>
+  <h1>Key papers</h1>
+  <p class="lead">{papers.length} papers, books and reports. A work is listed when it introduced a topic on the map or changed the direction of the field.</p>
+  {groups.map(g => (
+    <section>
+      <h2>{g.d}</h2>
+      <div class="table-wrap">
+        <table class="data">
+          <thead><tr><th scope="col" style="width:4em">Year</th><th scope="col">Title and authors</th><th scope="col">Topic</th></tr></thead>
+          <tbody>
+            {g.items.map(p => (
+              <tr>
+                <td class="num" style="text-align:left">{p.year}</td>
+                <td><i>{p.title}</i><span class="sub">{p.authors} · <a href={scholarLink(p)} rel="noopener">Find it</a></span></td>
+                <td>{p.topics.map(get).map((t, i) => <>{i > 0 && ', '}<a href={t.url}>{t.name}</a></>)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  ))}
+</Base>

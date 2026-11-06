@@ -1,0 +1,244 @@
+# FIELD 9 — Large Language Models, part B: efficiency, inference, decoding, long context, evaluation, behaviour, model families
+!defaults d=int st=foundational
+
+######## L2: Efficiency & adaptation
+== llm.eff | Efficiency & adaptation
+def: Making LLMs cheaper to fine-tune, store and run: fewer trainable parameters, fewer bits per weight, smaller models.
+pre: llm.basics.params
+
+== llm.eff.peft | Parameter-efficient fine-tuning (PEFT)
+def: Train a tiny number of new parameters while freezing the model: adapters, prefix/prompt tuning, LoRA. Lets one base model serve many tasks.
+pre: dl.train.finetune
+paper: Houlsby et al. | Parameter-Efficient Transfer Learning for NLP | 2019
+
+== llm.eff.lora | LoRA
+def: Learn a low-rank update ΔW = BA for chosen weight matrices; cheap to train, small to store, mergeable into the weights afterwards.
+f: W' = W + BA,  rank r ≪ d
+pre: llm.eff.peft, found.linalg.decomp.lowrank
+paper: Hu et al. | LoRA: Low-Rank Adaptation of Large Language Models | 2021
+st: dominant
+
+== llm.eff.qlora | QLoRA
+def: LoRA on top of a 4-bit quantized base model, so large models can be fine-tuned on a single GPU.
+pre: llm.eff.lora, llm.eff.quant
+paper: Dettmers, Pagnoni, Holtzman, Zettlemoyer | QLoRA: Efficient Finetuning of Quantized LLMs | 2023
+st: dominant
+
+== llm.eff.quant | Quantization
+def: Store and compute weights (and sometimes activations and KV cache) in 8, 4 or fewer bits. Post-training methods (GPTQ, AWQ) keep accuracy close; formats like GGUF run models on laptops.
+pre: found.numerics.formats
+paper: Frantar, Ashkboos, Hoefler, Alistarh | GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers | 2022
+st: dominant
+
+== llm.eff.distill | Knowledge distillation
+def: Train a small student to match a large teacher's output distributions (soft labels), transferring much of its ability.
+pre: found.info.kl
+paper: Hinton, Vinyals, Dean | Distilling the Knowledge in a Neural Network | 2015
+st: dominant
+
+== llm.eff.pruning | Pruning & sparsity
+def: Remove unimportant weights, heads or layers (unstructured or structured) to shrink models; structured pruning gives real speedups.
+paper: Frankle, Carbin | The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks | 2018
+d: adv
+
+== llm.eff.slm | Small language models
+def: Models of roughly 1–15B parameters trained on curated and synthetic data, good enough for many tasks and able to run on-device.
+pre: llm.eff.distill, llm.pretrain.synthetic
+st: active
+
+######## L2: Inference & serving
+== llm.inference | Inference & serving
+def: Running LLMs fast and cheaply: memory management, batching and tricks that cut the cost of generating each token.
+pre: llm.basics.params, found.cs.prog.systems
+
+== llm.inference.phases | Prefill vs decode; latency & throughput
+def: Prefill processes the prompt in parallel (compute-bound); decode generates one token at a time (memory-bound). Key metrics: time to first token, tokens per second, cost per million tokens.
+
+== llm.inference.kvcache | KV cache
+def: Store each layer's keys and values for past tokens so each new token only computes its own. Its memory grows with context length and batch size, and dominates serving cost.
+pre: llm.inference.phases, dl.arch.attention.qkv
+
+== llm.inference.batching | Continuous batching & PagedAttention
+def: Add and remove requests from a running batch at every step, and store the KV cache in pages like virtual memory (vLLM) to serve many users efficiently.
+pre: llm.inference.kvcache
+paper: Kwon et al. | Efficient Memory Management for Large Language Model Serving with PagedAttention | 2023
+st: dominant
+d: adv
+
+== llm.inference.prefix-cache | Prompt (prefix) caching
+def: Reuse the KV cache for repeated prompt prefixes (system prompts, documents, tools), cutting cost and latency for agents and RAG.
+pre: llm.inference.kvcache
+st: dominant
+
+== llm.inference.speculative | Speculative decoding
+def: A small draft model proposes several tokens and the large model verifies them in one pass, producing identical outputs faster.
+pre: llm.inference.phases
+paper: Leviathan, Kalman, Matias | Fast Inference from Transformers via Speculative Decoding | 2022
+d: adv
+
+######## L2: Decoding
+== llm.decode | Decoding strategies
+def: How the next token is picked from the predicted distribution. Trades determinism, diversity and quality.
+pre: llm.basics.context, found.prob.dist.categorical
+
+== llm.decode.greedy | Greedy & beam search
+def: Always take the most likely token (greedy) or keep the best few partial sequences (beam). Good for short deterministic outputs; repetitive in open-ended text.
+pre: sym.search.informed.beam
+d: beg
+
+== llm.decode.temperature | Temperature
+def: Divide logits by T before softmax: T < 1 sharpens toward the top token, T > 1 flattens toward randomness.
+f: pᵢ ∝ exp(zᵢ / T)
+d: beg
+
+== llm.decode.topk-topp | Top-k, top-p (nucleus) & min-p sampling
+def: Sample only from the k most likely tokens, the smallest set whose probability sums to p, or tokens above a fraction of the top probability. Avoids the incoherent tail.
+pre: llm.decode.temperature
+paper: Holtzman, Buys, Du, Forbes, Choi | The Curious Case of Neural Text Degeneration | 2019
+d: beg
+
+== llm.decode.penalties | Repetition & frequency penalties, stop sequences
+def: Down-weight tokens already used and stop generation at chosen strings.
+d: beg
+
+== llm.decode.constrained | Constrained decoding (JSON schema, grammars)
+def: Mask out tokens that would violate a schema, regular expression or grammar at each step, guaranteeing valid structured output for tools and programs.
+pre: found.cs.theory.automata
+to: sys.prompting.structured
+st: dominant
+
+######## L2: Long context
+== llm.longctx | Long context
+def: Making models read hundreds of thousands to millions of tokens. Needs position schemes that extrapolate, efficient attention and enough training on long documents.
+pre: llm.basics.context, dl.arch.transformer.rope
+
+== llm.longctx.extension | Context extension (position interpolation, YaRN)
+def: Rescale rotary positions so a model trained on short contexts works on longer ones after brief fine-tuning.
+paper: Peng, Quesnelle, Fan, Shippole | YaRN: Efficient Context Window Extension of Large Language Models | 2023
+d: adv
+
+== llm.longctx.usage | How well long context is used (lost in the middle)
+def: Models often use information at the start and end of the context better than the middle; needle-in-a-haystack tests are easy, multi-step use of long context is harder.
+paper: Liu et al. | Lost in the Middle: How Language Models Use Long Contexts | 2023
+to: sys.context
+st: active
+
+######## L2: Evaluation
+== llm.eval | LLM evaluation
+def: Measuring what models can do: static benchmarks, human and model-judged comparisons, and task-specific evals. Benchmarks saturate and leak, so evaluation keeps moving.
+pre: llm.basics, ml.eval
+
+== llm.eval.benchmarks | Knowledge & reasoning benchmarks (MMLU, GPQA, MATH, HLE)
+def: Multiple-choice knowledge (MMLU), graduate-level science (GPQA), competition math (MATH, AIME) and very hard expert questions (Humanity's Last Exam).
+paper: Hendrycks et al. | Measuring Massive Multitask Language Understanding | 2020
+
+== llm.eval.code | Code & agent benchmarks (HumanEval, SWE-bench)
+def: Generate functions that pass unit tests (HumanEval, pass@k) or resolve real GitHub issues in full repositories (SWE-bench).
+pre: dom.code
+paper: Jimenez et al. | SWE-bench: Can Language Models Resolve Real-World GitHub Issues? | 2023
+
+== llm.eval.arena | Human preference arenas
+def: Users compare anonymous model answers side by side and an Elo/Bradley–Terry rating ranks models (Chatbot Arena / LMArena).
+paper: Chiang et al. | Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference | 2024
+
+== llm.eval.judge | LLM-as-a-judge
+def: Use a strong model to grade outputs against a rubric. Scales evaluation, but judges have biases (position, length, self-preference).
+paper: Zheng et al. | Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena | 2023
+to: sys.eval
+
+== llm.eval.contamination | Contamination & benchmark validity
+def: Test questions leaking into training data inflate scores; mitigations are held-out, fresh or private test sets.
+pre: ml.concepts.leakage
+d: adv
+
+######## L2: Behaviour & failure modes
+== llm.behavior | Behaviour & failure modes
+def: Characteristic ways LLMs fail, which every application has to design around.
+pre: llm.basics
+
+== llm.behavior.hallucination | Hallucination
+def: Fluent, confident statements that are false or unsupported. Reduced by retrieval, citations, calibration training and abstaining; not eliminated.
+pre: llm.basics.knowledge
+paper: Ji et al. | Survey of Hallucination in Natural Language Generation | 2023
+to: sys.rag
+
+== llm.behavior.sycophancy | Sycophancy
+def: Telling users what they want to hear, agreeing with mistaken claims, a side effect of optimizing for human approval.
+pre: llm.post.rlhf
+paper: Sharma et al. | Towards Understanding Sycophancy in Language Models | 2023
+to: safe.alignment
+
+== llm.behavior.sensitivity | Prompt sensitivity & position biases
+def: Small wording or ordering changes can change answers; models favour certain positions and formats.
+
+== llm.behavior.icl-mechanism | How in-context learning works (induction heads)
+def: Attention circuits that find earlier occurrences of the current token and copy what followed explain much of in-context learning.
+pre: dl.arch.transformer.block
+paper: Olsson et al. | In-context Learning and Induction Heads | 2022
+to: safe.interp
+d: adv
+
+== llm.behavior.memorization | Memorization & data extraction
+def: Models can reproduce training text verbatim, raising privacy and copyright issues.
+paper: Carlini et al. | Extracting Training Data from Large Language Models | 2020
+to: safe.privacy
+d: adv
+
+######## L2: Model families
+== llm.models | Model families
+def: The major LLM lineages. Versions change monthly; families and their design choices change slowly. Dated, recent: re-check yearly.
+pre: llm.basics
+st: active
+d: beg
+
+== llm.models.bert | BERT & encoder models
+def: Bidirectional encoders pretrained with masked language modelling (BERT, RoBERTa, DeBERTa, ModernBERT). Still used for classification, NER and embeddings, not for generation.
+pre: dl.repr.masked
+x: hist.timeline.fm.bert-gpt
+paper: Devlin, Chang, Lee, Toutanova | BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding | 2018
+yr: 2018
+
+== llm.models.t5 | T5 & encoder–decoder models
+def: Cast every NLP task as text-to-text with an encoder–decoder Transformer; widely used for fine-tuned seq2seq tasks.
+paper: Raffel et al. | Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer | 2019
+yr: 2019
+st: classic
+
+== llm.models.gpt | GPT family (OpenAI)
+def: GPT-1 (2018), GPT-2 (2019), GPT-3 (2020), ChatGPT/GPT-3.5 (2022), GPT-4 (2023), GPT-4o (2024), the o-series reasoning models (from 2024), GPT-5 (2025). Defined the decoder-only scaling path.
+x: hist.timeline.fm.gpt3
+paper: Brown et al. | Language Models are Few-Shot Learners | 2020
+yr: 2018
+st: dominant
+
+== llm.models.claude | Claude family (Anthropic)
+def: Claude (2023) through the Claude 3 (2024), Claude 4 (2025) and later generations; known for long context, coding and agentic use, trained with Constitutional AI methods.
+x: llm.post.cai
+yr: 2023
+st: dominant
+
+== llm.models.gemini | Gemini family (Google)
+def: Google DeepMind's natively multimodal models (from December 2023), successors to PaLM and LaMDA, with very long context windows.
+yr: 2023
+st: dominant
+
+== llm.models.llama | LLaMA & open-weight models
+def: Meta's LLaMA (2023) made strong open weights common; Mistral/Mixtral, Qwen, DeepSeek, Gemma and others followed, letting anyone run and fine-tune capable models.
+pre: llm.arch.recipe
+paper: Touvron et al. | LLaMA: Open and Efficient Foundation Language Models | 2023
+yr: 2023
+st: dominant
+
+== llm.models.deepseek | DeepSeek & efficient frontier training
+def: DeepSeek-V3 (December 2024) and R1 (January 2025) showed frontier-level open models trained at low cost with MoE, multi-head latent attention, FP8 training and RL-based reasoning.
+pre: llm.models.llama, llm.arch.moe
+paper: DeepSeek-AI | DeepSeek-V3 Technical Report | 2024
+yr: 2024
+st: dominant
+d: adv
+
+== llm.models.embedding | Embedding models
+def: Encoders trained contrastively to output one vector per text for search, clustering and RAG; compared on the MTEB benchmark.
+pre: llm.models.bert, dom.nlp.sentence-emb
+paper: Muennighoff, Tazi, Magne, Reimers | MTEB: Massive Text Embedding Benchmark | 2022
+st: dominant

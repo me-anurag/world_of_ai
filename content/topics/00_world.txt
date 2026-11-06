@@ -1,0 +1,52 @@
+# WORLD + all continents (L0, L1). Unmapped continents are stubs until built.
+!defaults d=beg st=foundational
+
+== ai | Artificial Intelligence
+def: The field of building machines that perceive, reason, learn and act to achieve goals. It contains symbolic AI, probabilistic AI, evolutionary computing and machine learning, and machine learning contains deep learning.
+yr: 1956
+paper: McCarthy, Minsky, Rochester, Shannon | A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence | 1955
+
+== hist | History, Philosophy & Framing
+def: Where AI came from, what "intelligence" and "agent" mean, the big debates, and the schools of thought that shaped every other field.
+
+== found | Foundations
+def: The math and computer science everything else stands on: linear algebra, calculus, probability, statistics, information theory, optimization, numerics, signals, discrete math and CS.
+
+== sym | Symbolic & Classical AI
+def: AI by explicit representation and reasoning: search, logic, knowledge representation, planning, constraint satisfaction, expert systems, fuzzy logic.
+
+== prob | Probabilistic & Bayesian AI
+def: Reasoning and learning under uncertainty: graphical models, Bayesian inference, sampling and variational methods, Gaussian processes, causal inference, decision theory.
+
+== evo | Evolutionary & Nature-Inspired Computing
+def: Optimization by simulated evolution and collective behaviour: genetic algorithms, genetic programming, evolution strategies, swarm intelligence.
+
+== ml | Machine Learning
+def: Learning functions from data: paradigms, classical algorithms, learning settings, evaluation and learning theory.
+
+== dl | Deep Learning
+def: Machine learning with multi-layer neural networks: training machinery, architectures (CNN, RNN, Transformer, GNN), generative models, representation learning.
+
+== rl | Reinforcement Learning, Games & Multi-Agent Systems
+def: Learning to act from reward, plus game theory and multi-agent systems.
+
+== dom | Domains
+def: Territories where the methods are applied: NLP, computer vision, speech & audio, information retrieval, multimodal, robotics, time series, graphs, recommenders.
+
+== llm | Large Language Models
+def: Transformer language models trained at scale: pretraining, post-training, reasoning, efficiency, model families.
+
+== sys | LLM Systems
+def: Systems built on top of LLMs: prompting, RAG, agents, tool use, evaluation, guardrails.
+
+== front | Frontier & AGI
+def: Open research territory: AGI, world models, neuro-symbolic AI, cognitive architectures, brain-inspired computing.
+
+== infra | Infrastructure & Practice
+def: Data, hardware, frameworks, training at scale, deployment and MLOps.
+
+== safe | Safety, Security, Ethics & Governance
+def: Making AI robust, secure, fair, private, interpretable, aligned and governed.
+
+== apps | Application Verticals
+def: Where the other fields are applied: medicine, science, finance, games, autonomous driving, industry.

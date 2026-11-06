@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import { stats, papers, nodes } from '../lib/data.js';
+const reviewed = nodes.filter(n => n.review).length;
+---
+<Base title="Methodology" description="How the map was drafted, audited, checked and reviewed, and what has not been reviewed yet." section="guide" wide>
+  <div class="prose" style="max-width:760px">
+    <h1>Methodology</h1>
+    <p class="lead">The map was drafted with AI assistance, audited against standard textbooks and course syllabi, checked by software for consistency, and is being reviewed by a person topic by topic. This page sets out each step and what is still incomplete.</p>
+
+    <h2>1. Structure</h2>
+    <p>The field was divided into fifteen fields, then areas, topics and subtopics. The structure of each field was taken from the chapter and section structure of its standard references, merged and checked for gaps:</p>
+    <ul>
+      <li>Russell and Norvig, <i>Artificial Intelligence: A Modern Approach</i>, 4th edition (all chapters)</li>
+      <li>Deisenroth, Faisal and Ong, <i>Mathematics for Machine Learning</i>; Goodfellow, Bengio and Courville, <i>Deep Learning</i>; Murphy, <i>Probabilistic Machine Learning</i></li>
+      <li>Koller and Friedman, <i>Probabilistic Graphical Models</i>; Hastie, Tibshirani and Friedman, <i>The Elements of Statistical Learning</i>; the scikit-learn user guide</li>
+      <li>Prince, <i>Understanding Deep Learning</i>; Zhang et al., <i>Dive into Deep Learning</i>; Sutton and Barto, <i>Reinforcement Learning: An Introduction</i></li>
+      <li>Jurafsky and Martin, <i>Speech and Language Processing</i> (3rd edition draft); Szeliski, <i>Computer Vision: Algorithms and Applications</i>; Eiben and Smith, <i>Introduction to Evolutionary Computing</i></li>
+      <li>Stanford course syllabi CS221, CS229, CS231n, CS224n, CS285 and CS336, and the ACM Computing Classification System</li>
+    </ul>
+    <p>A final check compared the map against about 330 terms drawn from these syllabi and classifications. Every term is present as a topic or an alternative name.</p>
+
+    <h2>2. Drafting</h2>
+    <p>Definitions, connections and status labels were drafted with an AI model (Anthropic's Claude) working from the structure above. Each definition was written fresh; no text was copied from the sources.</p>
+
+    <h2>3. Consistency checks</h2>
+    <p>Every build runs a checker that refuses to publish if any link points to a topic that does not exist, any topic lacks a parent, prerequisite links form a loop, a required field is missing, or two topics share a name or alternative name. The current map has {nodes.length.toLocaleString('en')} topics and {stats.edges.toLocaleString('en')} connections with no checker errors.</p>
+
+    <h2>4. Key papers</h2>
+    <p>{papers.length} papers, books and reports are cited. A sample of the citations the drafting process was least sure of was checked against publisher and archive records, and one title was corrected. Automated verification of every citation against arXiv, DOI and Semantic Scholar records is in progress; until it is complete, treat dates and titles as unverified.</p>
+
+    <h2>5. Human review</h2>
+    <p>{reviewed === 0 ? 'No topics have been reviewed line by line yet.' : `${reviewed} topics have been reviewed line by line.`} Review starts with the 150 most used topics. Each topic page says whether it has been reviewed, by whom and when.</p>
+
+    <h2>6. Corrections</h2>
+    <p>Every topic page has a link to suggest a correction. Reports are public, and fixes are listed in the <a href="/changelog/">changelog</a>.</p>
+  </div>
+</Base>

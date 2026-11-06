@@ -1,0 +1,310 @@
+# FIELD 10 — LLM Systems
+# Audit: SLP3 ch.11 (IR & RAG) and ch.12 (agents), Stanford CS329A/CS25 agent lectures, Anthropic "Building effective agents" (2024), Huyen "AI Engineering" (2025), Lewis et al. 2020 RAG, Gao et al. RAG survey (2023), Wang et al. "A Survey on LLM-based Autonomous Agents" (2023).
+!defaults d=int st=dominant
+
+######## L2: Prompting
+== sys.prompting | Prompting
+def: Getting the behaviour you want from a model by what you put in its input: instructions, examples, context and output format. The cheapest lever on an LLM system.
+pre: llm.basics.base-vs-chat
+paper: Brown et al. | Language Models are Few-Shot Learners | 2020
+d: beg
+
+== sys.prompting.basics | Clear instructions, roles & examples
+def: State the task, audience, constraints and format explicitly; give the model a role; show good (and bad) examples; separate instructions from data with delimiters or tags.
+pre: llm.post.chat-format
+d: beg
+
+== sys.prompting.icl | In-context learning (zero-shot & few-shot)
+def: The model performs a new task from instructions alone (zero-shot) or from a few examples in the prompt (few-shot), with no weight updates.
+x: hist.timeline.fm.gpt3, llm.behavior.icl-mechanism
+paper: Brown et al. | Language Models are Few-Shot Learners | 2020
+d: beg
+
+== sys.prompting.cot | Chain-of-thought prompting
+def: Ask the model to reason step by step before answering; large gains on multi-step problems. Reasoning models now do this by default.
+pre: sys.prompting.icl
+paper: Wei et al. | Chain-of-Thought Prompting Elicits Reasoning in Large Language Models | 2022
+to: llm.reasoning
+
+== sys.prompting.self-consistency | Self-consistency & sampling-based voting
+def: Sample several reasoning paths and take the majority answer.
+pre: sys.prompting.cot
+paper: Wang et al. | Self-Consistency Improves Chain of Thought Reasoning in Language Models | 2022
+to: llm.reasoning.test-time
+
+== sys.prompting.decomposition | Decomposition, prompt chaining & least-to-most
+def: Break a hard task into steps, each handled by its own prompt, passing outputs forward. Easier to debug and evaluate than one giant prompt.
+pre: sys.prompting.cot
+paper: Zhou et al. | Least-to-Most Prompting Enables Complex Reasoning in Large Language Models | 2022
+to: sys.agents.workflows
+
+== sys.prompting.tot | Tree of thoughts & search over reasoning
+def: Explore several partial reasoning paths, evaluate them, and backtrack, i.e., classic search over the model's thoughts.
+pre: sys.prompting.self-consistency, sym.search.informed.beam
+paper: Yao et al. | Tree of Thoughts: Deliberate Problem Solving with Large Language Models | 2023
+st: active
+d: adv
+
+== sys.prompting.structured | Structured outputs
+def: Make the model return JSON or another schema reliably, using format instructions, examples, function-calling interfaces or constrained decoding. Essential when code consumes the output.
+pre: sys.prompting.basics, llm.decode.constrained
+
+== sys.prompting.optimization | Automatic prompt optimization (DSPy)
+def: Treat prompts and few-shot examples as parameters and optimize them against an evaluation metric instead of hand-tuning.
+pre: sys.prompting.basics, sys.eval
+paper: Khattab et al. | DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines | 2023
+st: active
+d: adv
+
+######## L2: Context engineering
+== sys.context | Context engineering
+def: Deciding exactly what goes into the model's limited context window at each step: instructions, retrieved documents, tool results, memory and history. The core design problem of agents and RAG.
+pre: sys.prompting.basics, llm.longctx.usage
+st: active
+
+== sys.context.compaction | History management, summarization & compaction
+def: Keep long conversations and agent runs within the window by trimming, summarizing older turns or offloading details to files and memory.
+
+== sys.context.caching | Designing for prompt caching
+def: Put stable content (system prompt, tools, documents) first so it can be cached, cutting cost and latency.
+pre: llm.inference.prefix-cache
+d: beg
+
+######## L2: Retrieval-augmented generation
+== sys.rag | RAG
+def: Retrieve relevant documents for a query and put them in the prompt so the model answers from them. Gives fresh, private and citable knowledge without retraining; the most common LLM application pattern.
+pre: llm.basics.knowledge, dom.ir, dom.nlp.sentence-emb
+paper: Lewis et al. | Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks | 2020
+yr: 2020
+x: sym.expert.cbr
+
+== sys.rag.pipeline | The RAG pipeline (index → retrieve → augment → generate)
+def: Offline: load, parse, chunk, embed and index documents. Online: embed the query, retrieve, optionally rerank, assemble context, generate an answer with citations.
+d: beg
+
+== sys.rag.ingest | Document ingestion & parsing
+def: Extract clean text and structure from PDFs, HTML, slides, tables and scans (OCR, layout parsing). Bad parsing silently ruins retrieval.
+pre: sys.rag.pipeline, dom.cv.ocr
+d: beg
+
+== sys.rag.chunking | Chunking
+def: Split documents into retrievable pieces: fixed-size with overlap, by structure (headings, paragraphs), or semantically; add context (titles, summaries) to each chunk.
+pre: sys.rag.ingest
+d: beg
+
+== sys.rag.embedding | Embedding documents & queries
+def: Encode chunks and queries with the same embedding model; choice of model, dimension and normalization shapes retrieval quality.
+pre: sys.rag.chunking, llm.models.embedding
+d: beg
+
+== sys.rag.ann | Approximate nearest neighbor search
+def: Find the most similar vectors among millions in milliseconds by giving up exactness: graph indexes (HNSW), inverted file clusters (IVF), product quantization, locality-sensitive hashing.
+pre: sys.rag.embedding, ml.sup.knn.index, found.cs.algo.hashing
+paper: Malkov, Yashunin | Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs | 2016
+d: adv
+
+== sys.rag.vectordb | Vector databases & libraries
+def: Systems that store embeddings with metadata and serve ANN search with filtering and updates (FAISS, pgvector, Qdrant, Weaviate, Milvus, Pinecone).
+pre: sys.rag.ann
+paper: Johnson, Douze, Jégou | Billion-scale Similarity Search with GPUs | 2017
+
+== sys.rag.retrieval | Dense retrieval
+def: Retrieve by embedding similarity rather than keyword overlap, so paraphrases match.
+pre: sys.rag.embedding, dom.ir.neural
+
+== sys.rag.hybrid | Hybrid search & fusion
+def: Combine keyword (BM25) and dense results, typically with reciprocal rank fusion, to catch both exact terms and meaning.
+pre: sys.rag.retrieval, dom.ir.bm25
+paper: Cormack, Clarke, Büttcher | Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods | 2009
+
+== sys.rag.rerank | Reranking retrieved chunks
+def: Re-score the top results with a cross-encoder or an LLM before building the prompt.
+pre: sys.rag.hybrid, dom.ir.rerank
+
+== sys.rag.query | Query transformation (rewriting, HyDE, multi-query)
+def: Improve retrieval by rewriting the question, splitting it, or generating a hypothetical answer and retrieving with its embedding.
+pre: sys.rag.retrieval, dom.ir.query
+paper: Gao, Ma, Lin, Callan | Precise Zero-Shot Dense Retrieval without Relevance Labels | 2022
+
+== sys.rag.generation | Grounded generation & citations
+def: Instruct the model to answer only from retrieved context, cite sources, and say when the context doesn't contain the answer.
+pre: sys.rag.rerank, llm.behavior.hallucination
+
+== sys.rag.graphrag | GraphRAG
+def: Build a knowledge graph or community summaries from the corpus with an LLM, then retrieve over that structure; helps questions about whole collections or multi-hop relations.
+pre: sys.rag.retrieval, sym.kr.kg
+paper: Edge et al. | From Local to Global: A Graph RAG Approach to Query-Focused Summarization | 2024
+st: active
+d: adv
+
+== sys.rag.agentic | Agentic & adaptive RAG
+def: Let the model decide when and what to retrieve, iterate searches, and critique its own use of evidence (Self-RAG, deep-research agents).
+pre: sys.rag.generation, sys.agents.tools
+paper: Asai, Wu, Wang, Sil, Hajishirzi | Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection | 2023
+st: active
+d: adv
+
+== sys.rag.eval | Evaluating RAG
+def: Score retrieval (recall@k, context precision) and generation (faithfulness to context, answer relevance, citation accuracy) separately, often with LLM judges.
+pre: sys.rag.generation, dom.ir.eval
+paper: Es, James, Espinosa-Anke, Schockaert | RAGAS: Automated Evaluation of Retrieval Augmented Generation | 2023
+
+== sys.rag.tradeoffs | RAG vs long context vs fine-tuning
+def: RAG for changing or large knowledge with citations; long context for a few whole documents; fine-tuning for behaviour, style and format rather than facts.
+pre: sys.rag.generation, llm.longctx, llm.eff.lora
+d: beg
+
+== sys.rag.history | Retrieval-augmented language models (REALM, RETRO)
+def: Models trained jointly with a retriever, the research line that RAG pipelines grew out of.
+paper: Borgeaud et al. | Improving Language Models by Retrieving from Trillions of Tokens | 2021
+st: classic
+d: adv
+
+######## L2: Agents
+== sys.agents | LLM agents
+def: Systems where an LLM decides, step by step, which actions to take (calling tools, reading results, planning, revising) until a goal is met. The classic agent framework with an LLM as the decision-maker.
+pre: hist.agents, sys.prompting.cot, llm.post.agentic
+x: hist.timeline.genai.agents
+paper: Wang et al. | A Survey on Large Language Model based Autonomous Agents | 2023
+
+== sys.agents.loop | The agent loop (ReAct)
+def: Interleave reasoning ("thought"), action (a tool call) and observation (the result) in a loop until done.
+paper: Yao et al. | ReAct: Synergizing Reasoning and Acting in Language Models | 2022
+d: beg
+
+== sys.agents.tools | Tool use & function calling
+def: The model emits a structured call (name + JSON arguments) for a function you define, your code runs it and returns the result. How LLMs search, compute, query databases and act in software.
+pre: sys.agents.loop, sys.prompting.structured
+paper: Schick et al. | Toolformer: Language Models Can Teach Themselves to Use Tools | 2023
+d: beg
+
+== sys.agents.tool-design | Designing tools for agents
+def: Clear names and descriptions, few well-scoped tools, helpful error messages, and outputs sized for the context window decide agent quality as much as the model does.
+pre: sys.agents.tools
+
+== sys.agents.mcp | Model Context Protocol
+def: An open standard for connecting models to tools, data and prompts through servers, so any client can use any integration.
+pre: sys.agents.tools
+x: hist.timeline.genai.mcp
+yr: 2024
+
+== sys.agents.workflows | Agent workflows
+def: Predefined compositions of LLM calls: prompt chaining, routing, parallelization, orchestrator–workers and evaluator–optimizer loops. Often more reliable than open-ended agents.
+pre: sys.prompting.decomposition, found.discrete.graphs.dag
+paper: Schluntz, Zhang | Building Effective Agents | 2024
+
+== sys.agents.planning | Agent planning
+def: Decompose a goal into steps before or while acting: plan-and-execute, task lists, hierarchical decomposition and replanning on failure.
+pre: sys.agents.loop, sym.planning.htn
+st: active
+
+== sys.agents.reflection | Self-reflection & self-correction
+def: Agents critique their own outputs or failed attempts and retry with the lessons in context (Reflexion).
+pre: sys.agents.loop
+paper: Shinn et al. | Reflexion: Language Agents with Verbal Reinforcement Learning | 2023
+st: active
+
+== sys.agents.memory | Agent memory
+def: Short-term memory is the context window; long-term memory stores facts, past episodes and preferences outside the model (files, vector stores, databases) and retrieves them when relevant.
+pre: sys.agents.loop, sys.context.compaction, sys.rag.retrieval
+paper: Packer et al. | MemGPT: Towards LLMs as Operating Systems | 2023
+st: active
+
+== sys.agents.multi | Multi-agent LLM systems
+def: Several LLM agents with different roles, tools or contexts that hand off, debate or work in parallel under an orchestrator. Helps with breadth and context limits; adds cost and coordination failures.
+pre: sys.agents.workflows, rl.multiagent.mas
+paper: Park et al. | Generative Agents: Interactive Simulacra of Human Behavior | 2023
+st: active
+
+== sys.agents.coding | Coding agents
+def: Agents that read a codebase, edit files, run tests and commands in a loop to fix issues or build features. The breakout agent use case of 2025.
+pre: sys.agents.tools, dom.code
+paper: Yang et al. | SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering | 2024
+x: llm.eval.code
+
+== sys.agents.computer-use | Computer-use & browser agents
+def: Agents that operate graphical interfaces by looking at screenshots and clicking and typing, or by driving a browser.
+pre: sys.agents.tools, dom.mm.vlm, dom.mm.grounding
+paper: Zhou et al. | WebArena: A Realistic Web Environment for Building Autonomous Agents | 2023
+st: active
+d: adv
+
+== sys.agents.research | Deep-research agents
+def: Agents that plan searches, read many sources, and synthesize a cited report over minutes to hours.
+pre: sys.rag.agentic, sys.agents.planning
+st: active
+
+== sys.agents.frameworks | Agent frameworks & SDKs
+def: Libraries for building agents and workflows (LangChain/LangGraph, LlamaIndex, AutoGen, CrewAI, vendor agent SDKs). Useful scaffolding; understanding the plain loop underneath matters more.
+pre: sys.agents.loop
+d: beg
+
+== sys.agents.hitl | Human-in-the-loop, permissions & sandboxing
+def: Require approval for risky actions, limit what tools can touch, run code in sandboxes, and keep humans able to inspect and stop agents.
+pre: sys.agents.tools
+to: safe.llm.injection
+d: beg
+
+== sys.agents.eval | Evaluating agents
+def: Task success on realistic environments, trajectory analysis, cost and step counts, reliability across repeated runs (pass^k), and safety of actions.
+pre: sys.agents.loop, llm.eval.code
+d: adv
+
+######## L2: Evaluation & observability
+== sys.eval | Evaluating LLM applications
+def: Treat quality as something you test: build a representative evaluation set, define rubrics and metrics, run evals on every change, and inspect real traces.
+pre: llm.eval, ml.eval.baselines
+paper: Shankar et al. | Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM Outputs with Human Preferences | 2024
+
+== sys.eval.datasets | Golden datasets, rubrics & error analysis
+def: Collect real inputs, write expected behaviours, label failures by category and fix the most common ones first.
+d: beg
+
+== sys.eval.judges | Automated graders (code checks & LLM judges)
+def: Deterministic assertions where possible (format, tests, exact match), LLM judges with rubrics where not, validated against human labels.
+pre: sys.eval.datasets, llm.eval.judge
+
+== sys.eval.observability | Tracing & observability
+def: Log every prompt, tool call, retrieval and output with latency and cost so failures can be reproduced and analysed.
+to: infra.mlops.monitoring
+d: beg
+
+######## L2: Guardrails
+== sys.guardrails | Guardrails & safety layers
+def: Checks around the model: input and output classifiers for harmful content, PII detection and redaction, topic restrictions, and policy enforcement.
+pre: sys.eval
+to: safe.llm
+paper: Inan et al. | Llama Guard: LLM-based Input-Output Safeguard for Human-AI Conversations | 2023
+
+== sys.guardrails.injection-defense | Defending against prompt injection
+def: Treat retrieved and tool content as untrusted data, isolate privileges, require confirmation for consequential actions and filter instructions in data.
+pre: sys.agents.hitl
+to: safe.llm.injection
+st: active
+d: adv
+
+######## L2: Building & operating LLM apps
+== sys.app | Building LLM applications
+def: Engineering an LLM product end to end: picking models, controlling cost and latency, handling failures and iterating with evals.
+pre: sys.prompting, sys.eval
+d: beg
+
+== sys.app.choice | Choosing an approach (prompt → RAG → fine-tune) & model
+def: Start with prompting and evals, add retrieval for knowledge, fine-tune for behaviour or cost; pick the smallest model that passes your evals.
+pre: sys.rag.tradeoffs
+d: beg
+
+== sys.app.cost | Cost, latency & routing
+def: Count tokens, cache prompts, stream outputs, route easy requests to cheap models and hard ones to strong models, batch offline work.
+pre: llm.inference.phases
+d: beg
+
+== sys.app.reliability | Reliability engineering (retries, fallbacks, validation)
+def: Validate outputs against schemas, retry with feedback, fall back to other models, set timeouts and rate-limit handling.
+pre: sys.prompting.structured
+d: beg
+
+== sys.app.llmops | LLMOps
+def: Versioning prompts and models, offline and online evaluation, monitoring drift and regressions in production.
+pre: sys.eval.observability
+to: infra.mlops

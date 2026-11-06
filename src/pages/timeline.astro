@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import { nodes, get } from '../lib/data.js';
+const items = [];
+for (const n of nodes) {
+  if (n.status === 'milestone' && n.year) items.push({ y: n.year, title: n.name, url: n.url, sub: get(n.parent).name, kind: 'event' });
+  else if (n.paper) items.push({ y: n.paper.year, title: n.paper.title, url: n.url, sub: `${n.paper.authors} · ${n.name}`, kind: 'paper' });
+}
+const seen = new Set();
+const list = items.filter(i => { const k = i.kind + i.title; if (seen.has(k)) return false; seen.add(k); return true; })
+  .sort((a, b) => a.y - b.y || a.title.localeCompare(b.title));
+const groups = [];
+for (const i of list) {
+  const d = i.y < 1900 ? 'Before 1900' : `${Math.floor(i.y / 10) * 10}s`;
+  if (!groups.length || groups.at(-1).d !== d) groups.push({ d, items: [] });
+  groups.at(-1).items.push(i);
+}
+---
+<Base title="Timeline" description="Events and key papers in the history of artificial intelligence, by decade." section="timeline" wide>
+  <h1>Timeline</h1>
+  <p class="lead">{list.filter(i => i.kind === 'event').length} events and {list.filter(i => i.kind === 'paper').length} key papers, oldest first. Each entry links to its topic.</p>
+  {groups.map(g => (
+    <section class="decade">
+      <h2>{g.d}</h2>
+      <div>
+        {g.items.map(i => (
+          <div class="event">
+            <span class="y">{i.y}</span>
+            <span>{i.kind === 'paper' ? <a href={i.url}><i>{i.title}</i></a> : <a href={i.url}>{i.title}</a>}<span class="sub">{i.kind === 'paper' ? 'Paper · ' : ''}{i.sub}</span></span>
+          </div>
+        ))}
+      </div>
+    </section>
+  ))}
+</Base>

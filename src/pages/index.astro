@@ -1,0 +1,51 @@
+---
+import Base from '../layouts/Base.astro';
+import { fields, stats, nodes, papers, mostRequired, get } from '../lib/data.js';
+import { site } from '../site.config.mjs';
+const topicCount = nodes.length - 1;
+const starts = mostRequired(12);
+const jsonld = { '@context': 'https://schema.org', '@type': 'WebSite', name: site.name, url: site.url,
+  potentialAction: undefined };
+---
+<Base title={site.name} description={`A reference map of artificial intelligence with ${topicCount.toLocaleString('en')} topics in 15 fields. Each topic has a definition, prerequisites, connections and its key paper.`} current="ai" jsonld={jsonld}>
+  <h1>{site.name}</h1>
+  <p class="lead">A reference map of artificial intelligence. It covers {topicCount.toLocaleString('en')} topics in {fields.length} fields, and shows for each one what it is, what to learn first, what it leads to, and the paper that introduced it.</p>
+  <div class="actions" style="margin-top:8px">
+    <button class="btn" type="button" onclick="document.getElementById('search-open').click()">Search the map</button>
+    <a class="btn secondary" href="/guide/">How to read the map</a>
+  </div>
+
+  <h2>Fields</h2>
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th scope="col">Field</th><th scope="col" style="text-align:right">Topics</th></tr></thead>
+      <tbody>
+        {fields.map(f => (
+          <tr>
+            <td><a href={f.url}>{f.name}</a><span class="sub">{f.def}</span></td>
+            <td class="num">{f.descendants}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Topics the most other topics depend on</h2>
+  <p class="small muted" style="margin-top:-4px">Counted from the prerequisite links in the map. A common place to start.</p>
+  <ul class="list-plain cols">
+    {starts.map(t => <li><a href={t.url}>{t.name}</a><span class="sub">{get(t.field).name} · required for {t.requiredFor.length} topics</span></li>)}
+  </ul>
+
+  <h2>In numbers</h2>
+  <div class="table-wrap">
+    <table class="data" style="max-width:420px">
+      <tbody>
+        <tr><td>Topics</td><td class="num">{topicCount.toLocaleString('en')}</td></tr>
+        <tr><td>Fields</td><td class="num">{fields.length}</td></tr>
+        <tr><td>Connections between topics</td><td class="num">{stats.edges.toLocaleString('en')}</td></tr>
+        <tr><td>Key papers</td><td class="num">{papers.length}</td></tr>
+        <tr><td>Last updated</td><td class="num">{site.updated}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</Base>

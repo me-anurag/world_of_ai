@@ -1,0 +1,520 @@
+# FIELD 1 — Foundations, part A: linear algebra, calculus
+!defaults d=beg st=foundational
+
+######## L2: Linear algebra
+== found.linalg | Linear algebra
+def: The language of data and models. Inputs, weights, embeddings and activations are vectors, matrices and tensors; most computation in AI is matrix multiplication.
+paper: Strang | Introduction to Linear Algebra | 1993
+
+#### Vectors & spaces
+== found.linalg.vec | Vectors & vector spaces
+def: Vectors as lists of numbers and as points/directions in space, plus the rules that make a set of vectors a "space".
+
+== found.linalg.vec.vector | Scalar, vector
+def: A scalar is one number; a vector is an ordered list of numbers (a point or arrow in ℝⁿ). Every data point and every embedding is a vector.
+to: dl.repr.embedding
+
+== found.linalg.vec.ops | Vector addition & scalar multiplication
+def: Add component-wise; scale every component. These two operations define linearity.
+pre: found.linalg.vec.vector
+
+== found.linalg.vec.lincomb | Linear combination & span
+def: A weighted sum of vectors; the span is every vector reachable that way.
+f: a₁v₁ + a₂v₂ + … + aₖvₖ
+pre: found.linalg.vec.ops
+
+== found.linalg.vec.independence | Linear independence
+def: No vector in the set is a linear combination of the others, so each adds a new direction.
+pre: found.linalg.vec.lincomb
+
+== found.linalg.vec.basis | Basis & dimension
+def: A basis is an independent set that spans the space; the number of basis vectors is the dimension. Embedding size is a dimension.
+pre: found.linalg.vec.independence
+
+== found.linalg.vec.space | Vector space & subspace
+def: A set closed under addition and scaling. A subspace is a vector space inside another, such as a line or plane through the origin.
+pre: found.linalg.vec.basis
+d: int
+
+== found.linalg.vec.affine | Affine spaces
+def: Shifted subspaces (lines or planes not through the origin). A neural layer Wx + b is an affine map.
+pre: found.linalg.vec.space
+d: int
+
+#### Analytic geometry
+== found.linalg.geom | Analytic geometry: length, angle, distance
+def: Inner products and norms turn vectors into geometry. This is how similarity search, attention and k-NN measure "closeness".
+
+== found.linalg.geom.dot | Dot product (inner product)
+def: Multiply matching components and sum. It measures how much two vectors point the same way, and is the core operation of attention and similarity search.
+f: a·b = Σᵢ aᵢbᵢ = ‖a‖‖b‖cos θ
+pre: found.linalg.vec.ops
+to: dl.arch.attention, sys.rag
+
+== found.linalg.geom.inner | General inner product spaces
+def: Any symmetric positive-definite bilinear form ⟨x,y⟩ defines lengths and angles. Kernels are inner products in feature spaces.
+pre: found.linalg.geom.dot
+to: ml.kernel
+d: int
+
+== found.linalg.geom.norms | Vector norms (L1, L2, Lp, L∞)
+def: Ways to measure a vector's size. L2 is Euclidean length, L1 the sum of absolute values, L∞ the largest component. They also define L1/L2 regularization.
+f: ‖x‖ₚ = (Σ|xᵢ|ᵖ)^(1/p)
+pre: found.linalg.vec.vector
+to: ml.concepts.regularization
+
+== found.linalg.geom.distance | Distances (Euclidean, Manhattan)
+def: Distance is the norm of the difference vector. Euclidean (L2) and Manhattan (L1) are the most used.
+f: d(x,y) = ‖x − y‖
+pre: found.linalg.geom.norms
+to: ml.sup.knn, ml.unsup.kmeans
+
+== found.linalg.geom.cosine | Cosine similarity
+def: The cosine of the angle between two vectors. It ignores length and is the standard similarity measure for text embeddings in retrieval.
+f: cos θ = a·b / (‖a‖‖b‖)
+pre: found.linalg.geom.dot, found.linalg.geom.norms
+to: sys.rag.retrieval
+
+== found.linalg.geom.orthogonal | Orthogonality & orthonormal bases
+def: Vectors are orthogonal when their dot product is zero. An orthonormal basis has unit-length, mutually orthogonal vectors, which makes coordinates easy to compute.
+pre: found.linalg.geom.dot, found.linalg.vec.basis
+
+== found.linalg.geom.projection | Orthogonal projection
+def: The closest point to a vector inside a subspace. It underlies least squares and PCA.
+f: proj_u(v) = (v·u / u·u) u
+pre: found.linalg.geom.orthogonal
+to: ml.unsup.pca
+
+== found.linalg.geom.gram-schmidt | Gram–Schmidt
+def: Turns any basis into an orthonormal one by subtracting projections step by step. It leads to QR decomposition.
+pre: found.linalg.geom.projection
+to: found.linalg.decomp.qr
+d: int
+
+== found.linalg.geom.complement | Orthogonal complement
+def: All vectors orthogonal to a subspace. It splits the space into two perpendicular parts.
+pre: found.linalg.geom.orthogonal
+d: int
+
+#### Matrices
+== found.linalg.mat | Matrices & operations
+def: Rectangular arrays of numbers that represent linear maps, datasets (rows = examples) and network weights.
+
+== found.linalg.mat.matrix | Matrix
+def: An m×n grid of numbers. A dataset is a matrix of examples × features; a layer's weights are a matrix.
+pre: found.linalg.vec.vector
+
+== found.linalg.mat.matmul | Matrix multiplication
+def: Each output entry is a dot product of a row with a column. It composes linear maps and is the operation GPUs are built to accelerate.
+f: (AB)ᵢⱼ = Σₖ AᵢₖBₖⱼ
+pre: found.linalg.mat.matrix, found.linalg.geom.dot
+to: infra.hw.gpu, dl.basics.mlp
+
+== found.linalg.mat.transpose | Transpose
+def: Flip rows and columns. It appears in nearly every formula, for example QKᵀ in attention.
+f: (Aᵀ)ᵢⱼ = Aⱼᵢ
+pre: found.linalg.mat.matrix
+
+== found.linalg.mat.identity-inverse | Identity & inverse
+def: The identity leaves vectors unchanged; A⁻¹ undoes A. Only square, full-rank matrices have inverses.
+f: A A⁻¹ = I
+pre: found.linalg.mat.matmul
+
+== found.linalg.mat.systems | Systems of linear equations & Gaussian elimination
+def: Solve Ax = b by row reduction. The system has one, none or infinitely many solutions depending on rank.
+pre: found.linalg.mat.identity-inverse
+d: beg
+
+== found.linalg.mat.rank | Rank
+def: The number of independent columns (or rows), i.e. the dimension of the output space. Low-rank structure is what LoRA exploits.
+pre: found.linalg.vec.independence, found.linalg.mat.matrix
+to: llm.eff.lora
+
+== found.linalg.mat.subspaces | Column space, null space (four fundamental subspaces)
+def: Column space: every output Ax can reach. Null space: every input sent to zero. With the row and left-null spaces they describe a matrix completely.
+pre: found.linalg.mat.rank, found.linalg.vec.space
+d: int
+
+== found.linalg.mat.determinant | Determinant
+def: How much a square matrix scales volume (sign = orientation). Zero means the matrix is not invertible. Used in Gaussian densities and normalizing flows.
+pre: found.linalg.mat.identity-inverse
+to: dl.gen.flow
+d: int
+
+== found.linalg.mat.trace | Trace
+def: The sum of the diagonal, which equals the sum of the eigenvalues. It appears in matrix-calculus identities.
+f: tr(A) = Σᵢ Aᵢᵢ
+pre: found.linalg.mat.matrix
+
+== found.linalg.mat.least-squares | Least squares & normal equations
+def: When Ax = b has no exact solution, find the x minimizing ‖Ax − b‖². The solution is the projection onto the column space. This is linear regression.
+f: x̂ = (AᵀA)⁻¹Aᵀb
+pre: found.linalg.geom.projection, found.linalg.mat.identity-inverse
+to: ml.sup.linreg
+
+== found.linalg.mat.pinv | Moore–Penrose pseudoinverse
+def: The generalized inverse for any matrix, computed via SVD. It gives the least-squares (minimum-norm) solution.
+f: A⁺ = VΣ⁺Uᵀ
+pre: found.linalg.mat.least-squares, found.linalg.decomp.svd
+d: int
+
+== found.linalg.mat.norms | Matrix norms (Frobenius, spectral)
+def: The size of a matrix. Frobenius is the L2 norm of all entries; spectral is the largest singular value (maximum stretch). Used in weight decay and spectral normalization.
+pre: found.linalg.geom.norms
+d: int
+
+== found.linalg.mat.blocks | Block & batched matrices
+def: Matrices partitioned into sub-blocks; batched matmul runs many multiplications at once. This is how attention heads and minibatches are computed.
+pre: found.linalg.mat.matmul
+d: int
+
+#### Special matrices
+== found.linalg.special | Special matrices
+def: Matrix families with structure that makes computation cheaper or guarantees properties.
+
+== found.linalg.special.diagonal | Diagonal matrix
+def: Nonzero entries only on the diagonal. Multiplying by it scales each coordinate.
+pre: found.linalg.mat.matrix
+
+== found.linalg.special.symmetric | Symmetric matrix
+def: Equal to its own transpose. Covariance matrices, Hessians and kernel matrices are symmetric.
+f: A = Aᵀ
+pre: found.linalg.mat.transpose
+
+== found.linalg.special.orthogonal | Orthogonal matrix
+def: Columns form an orthonormal basis; the matrix rotates or reflects without stretching.
+f: QᵀQ = I
+pre: found.linalg.geom.orthogonal
+d: int
+
+== found.linalg.special.psd | Positive (semi-)definite matrix
+def: A symmetric matrix with xᵀAx ≥ 0 for all x (> 0 for definite). Covariances and kernels are PSD; a PSD Hessian means a convex function.
+pre: found.linalg.special.symmetric
+to: found.opt.convex
+d: int
+
+== found.linalg.special.triangular | Triangular matrix
+def: All entries are zero above (lower) or below (upper) the diagonal. Easy to solve by substitution. Causal attention masks are lower-triangular.
+pre: found.linalg.mat.matrix
+to: dl.arch.transformer.causal-mask
+
+== found.linalg.special.sparse | Sparse matrix
+def: Mostly zeros, stored by only its nonzeros. Graphs, bag-of-words matrices and recommender data are sparse.
+pre: found.linalg.mat.matrix
+to: dom.graph
+d: int
+
+== found.linalg.special.circulant | Toeplitz & circulant matrices
+def: Matrices with constant diagonals. A 1D convolution is a multiplication by a Toeplitz matrix, the bridge between linear algebra and CNNs.
+pre: found.linalg.mat.matmul
+x: found.signal.convolution
+d: adv
+
+#### Linear maps
+== found.linalg.maps | Linear maps & geometric transformations
+def: A matrix is a function that maps vectors to vectors, preserving lines and the origin. Seeing matrices as transformations makes deep learning intuitive.
+
+== found.linalg.maps.linear | Linear transformation
+def: A function f with f(ax + by) = af(x) + bf(y). Every linear map between finite-dimensional spaces is a matrix.
+pre: found.linalg.mat.matmul
+
+== found.linalg.maps.basis-change | Change of basis
+def: The same vector has different coordinates in different bases. Diagonalization and PCA are changes of basis.
+pre: found.linalg.maps.linear, found.linalg.vec.basis
+d: int
+
+== found.linalg.maps.geometric | Rotation, scaling, shear, reflection
+def: The basic geometric actions of 2D/3D matrices. Used in data augmentation and image transforms.
+pre: found.linalg.maps.linear
+to: dom.cv.geometry
+
+== found.linalg.maps.homogeneous | Homogeneous coordinates & affine transforms
+def: Add an extra coordinate so translations become matrix multiplications too. It is standard in graphics and camera models.
+pre: found.linalg.maps.geometric, found.linalg.vec.affine
+to: dom.cv.geometry
+d: int
+
+#### Decompositions
+== found.linalg.decomp | Matrix decompositions
+def: Factor a matrix into simpler pieces that reveal structure or make computation cheap.
+d: int
+
+== found.linalg.decomp.eigen | Eigenvalues & eigenvectors
+def: Directions that a matrix only stretches, and the stretch factors. They describe a linear map's long-run behaviour and the curvature of loss surfaces.
+f: Av = λv
+pre: found.linalg.maps.linear, found.linalg.mat.determinant
+to: ml.unsup.pca, dom.graph.spectral
+d: int
+
+== found.linalg.decomp.eigendecomp | Eigendecomposition & diagonalization
+def: Write A as a change of basis to its eigenvectors, scaled by eigenvalues.
+f: A = VΛV⁻¹
+pre: found.linalg.decomp.eigen, found.linalg.maps.basis-change
+d: int
+
+== found.linalg.decomp.spectral | Spectral theorem
+def: Every real symmetric matrix has real eigenvalues and orthonormal eigenvectors. This is why PCA's components are perpendicular.
+f: A = QΛQᵀ
+pre: found.linalg.decomp.eigendecomp, found.linalg.special.symmetric
+d: int
+
+== found.linalg.decomp.svd | Singular value decomposition (SVD)
+def: Every matrix is a rotation, then an axis scaling, then a rotation. It is the most general and useful decomposition: PCA, low-rank approximation, pseudoinverse, LSA.
+f: A = UΣVᵀ
+pre: found.linalg.decomp.spectral, found.linalg.special.orthogonal
+to: ml.unsup.pca, dom.nlp.lsa
+paper: Eckart, Young | The Approximation of One Matrix by Another of Lower Rank | 1936
+d: int
+
+== found.linalg.decomp.lowrank | Low-rank approximation (Eckart–Young)
+def: Keeping the top k singular values gives the best rank-k approximation. This is the basis of compression, recommender factorization and LoRA.
+f: A_k = Σᵢ₌₁ᵏ σᵢuᵢvᵢᵀ
+pre: found.linalg.decomp.svd
+to: llm.eff.lora, dom.recsys.mf
+paper: Eckart, Young | The Approximation of One Matrix by Another of Lower Rank | 1936
+d: int
+
+== found.linalg.decomp.lu | LU decomposition
+def: Lower- times upper-triangular factors. It is Gaussian elimination stored for reuse in solving many systems.
+pre: found.linalg.mat.systems, found.linalg.special.triangular
+d: int
+
+== found.linalg.decomp.qr | QR decomposition
+def: An orthogonal times an upper-triangular matrix. It is the numerically stable route to least squares and eigenvalue algorithms.
+pre: found.linalg.geom.gram-schmidt
+d: int
+
+== found.linalg.decomp.cholesky | Cholesky decomposition
+def: A PSD matrix equals LLᵀ. The fast way to sample multivariate Gaussians and solve Gaussian-process systems.
+f: A = LLᵀ
+pre: found.linalg.special.psd, found.linalg.special.triangular
+to: prob.gp
+d: int
+
+#### Tensors
+== found.linalg.tensor | Tensors & array operations
+def: N-dimensional arrays, the data structure of every deep learning framework. An image batch is a 4D tensor (batch, channels, height, width).
+pre: found.linalg.mat.matrix
+to: infra.frameworks
+
+== found.linalg.tensor.shape | Tensor shape, rank & axes
+def: The size of each dimension. Most deep learning bugs are shape bugs; reading shapes is a core skill.
+
+== found.linalg.tensor.broadcast | Broadcasting
+def: Rules that stretch smaller arrays to match larger ones without copying, such as adding a bias vector to every row.
+pre: found.linalg.tensor.shape
+
+== found.linalg.tensor.elementwise | Element-wise (Hadamard) product
+def: Multiply matching entries. Used in gating (LSTM, GLU) and masking.
+f: (A ⊙ B)ᵢⱼ = AᵢⱼBᵢⱼ
+pre: found.linalg.tensor.shape
+to: dl.arch.rnn.lstm
+
+== found.linalg.tensor.outer | Outer & Kronecker products
+def: An outer product builds a matrix from two vectors (uvᵀ); the Kronecker product builds block matrices. Low-rank updates are sums of outer products.
+pre: found.linalg.mat.matmul
+d: int
+
+== found.linalg.tensor.einsum | Tensor contraction & einsum
+def: A general notation for summing over shared indices. It expresses matmul, batched matmul, attention and traces in one line.
+f: Cᵢₖ = Σⱼ AᵢⱼBⱼₖ  (einsum 'ij,jk->ik')
+pre: found.linalg.tensor.shape, found.linalg.mat.matmul
+d: int
+
+== found.linalg.tensor.reshape | Reshape, transpose/permute, view
+def: Rearranging the same numbers into a different shape. Splitting a vector into attention heads is a reshape plus a permute.
+pre: found.linalg.tensor.shape
+to: dl.arch.transformer.mha
+
+######## L2: Calculus
+== found.calc | Calculus
+def: The mathematics of change. Learning is adjusting parameters in the direction that decreases loss; calculus computes that direction.
+
+#### Single-variable
+== found.calc.single | Single-variable calculus
+def: Limits, derivatives and integrals of functions of one variable.
+
+== found.calc.single.functions | Functions & their graphs
+def: Mappings from inputs to outputs. Know the shapes of linear, polynomial, exponential, logarithmic and piecewise functions (ReLU is piecewise linear).
+to: dl.basics.activations
+
+== found.calc.single.explog | Exponentials & logarithms
+def: eˣ and its inverse ln x. Logs turn products into sums, which is why likelihoods, softmax and cross-entropy are written in log space.
+f: ln(ab) = ln a + ln b
+pre: found.calc.single.functions
+to: found.numerics.logsumexp, found.info.entropy
+
+== found.calc.single.limits | Limits & continuity
+def: What a function approaches as its input approaches a point. The basis for defining derivatives.
+pre: found.calc.single.functions
+
+== found.calc.single.derivative | Derivative
+def: The instantaneous rate of change: the slope of the tangent line. It says how the output responds to a tiny change in the input.
+f: f'(x) = lim_{h→0} [f(x+h) − f(x)] / h
+pre: found.calc.single.limits
+
+== found.calc.single.rules | Differentiation rules
+def: Power, sum, product, quotient rules and the derivatives of exp, log and common functions. With these you can differentiate any formula in ML.
+pre: found.calc.single.derivative
+
+== found.calc.single.chain | Chain rule
+def: The derivative of a composition is the product of the derivatives. Backpropagation is the chain rule applied systematically through a network.
+f: (f∘g)'(x) = f'(g(x))·g'(x)
+pre: found.calc.single.rules
+to: found.calc.autodiff, dl.basics.backprop
+
+== found.calc.single.extrema | Critical points, maxima & minima
+def: Where f'(x) = 0. The second derivative tells minimum (f'' > 0) from maximum. Training searches for minima of the loss.
+pre: found.calc.single.derivative
+to: found.opt.basics
+
+== found.calc.single.integral | Integral
+def: Area under a curve; the inverse of differentiation. Probabilities and expectations of continuous variables are integrals.
+f: ∫ₐᵇ f(x) dx
+pre: found.calc.single.derivative
+to: found.prob.rv.pdf
+
+== found.calc.single.ftc | Fundamental theorem of calculus
+def: Integration and differentiation undo each other. It connects a CDF to its density.
+pre: found.calc.single.integral
+
+== found.calc.single.taylor | Taylor series
+def: Approximate a function near a point by a polynomial built from its derivatives. First order gives gradient descent; second order gives Newton's method.
+f: f(x+h) ≈ f(x) + f'(x)h + ½f''(x)h²
+pre: found.calc.single.rules
+to: found.opt.second.newton
+d: int
+
+#### Multivariable
+== found.calc.multi | Multivariable & vector calculus
+def: Derivatives of functions with many inputs and outputs. A network's loss is a function of millions of parameters.
+pre: found.calc.single
+
+== found.calc.multi.partial | Partial derivative
+def: The derivative with respect to one input while the others are held fixed.
+f: ∂f/∂xᵢ
+pre: found.calc.single.derivative
+
+== found.calc.multi.gradient | Gradient
+def: The vector of all partial derivatives. It points in the direction of steepest increase, so stepping against it decreases the loss.
+f: ∇f = (∂f/∂x₁, …, ∂f/∂xₙ)
+pre: found.calc.multi.partial, found.linalg.vec.vector
+to: found.opt.first.gd
+
+== found.calc.multi.directional | Directional derivative
+def: The rate of change along a chosen direction, equal to ∇f·u. Shows why the gradient is the steepest direction.
+pre: found.calc.multi.gradient, found.linalg.geom.dot
+d: int
+
+== found.calc.multi.jacobian | Jacobian
+def: The matrix of partial derivatives of a vector-valued function: how every output responds to every input. Backprop multiplies Jacobians (as vector–Jacobian products).
+f: Jᵢⱼ = ∂fᵢ/∂xⱼ
+pre: found.calc.multi.gradient, found.linalg.mat.matrix
+to: found.calc.autodiff.reverse
+d: int
+
+== found.calc.multi.hessian | Hessian
+def: The matrix of second partial derivatives, describing the curvature of the loss surface. Its eigenvalues reveal minima, maxima and saddle points.
+f: Hᵢⱼ = ∂²f/∂xᵢ∂xⱼ
+pre: found.calc.multi.jacobian
+to: found.opt.second.newton, found.opt.basics.saddle
+d: int
+
+== found.calc.multi.chain | Multivariable chain rule
+def: Derivatives through compositions of multi-input functions add up along every path. This is the exact rule backprop implements.
+f: ∂z/∂x = Σⱼ (∂z/∂yⱼ)(∂yⱼ/∂x)
+pre: found.calc.single.chain, found.calc.multi.partial
+to: dl.basics.backprop
+d: int
+
+== found.calc.multi.taylor | Multivariate Taylor expansion & linearization
+def: Locally, any smooth function looks linear (gradient) plus quadratic (Hessian). This is the basis of the theory of optimization methods.
+f: f(x+δ) ≈ f(x) + ∇fᵀδ + ½δᵀHδ
+pre: found.calc.single.taylor, found.calc.multi.hessian
+d: adv
+
+== found.calc.multi.integrals | Multiple integrals & change of variables
+def: Integrating over several dimensions. The Jacobian determinant corrects for stretching when variables change, as used in normalizing flows.
+f: p_y(y) = p_x(x) |det ∂x/∂y|
+pre: found.calc.single.integral, found.calc.multi.jacobian, found.linalg.mat.determinant
+to: dl.gen.flow, found.prob.rv.change-of-vars
+d: adv
+
+#### Matrix calculus
+== found.calc.matrix | Matrix calculus
+def: Derivatives with respect to vectors and matrices, written compactly. It is how gradients of losses w.r.t. weight matrices are derived by hand.
+pre: found.calc.multi.gradient, found.linalg.mat.matmul
+d: int
+
+== found.calc.matrix.identities | Common matrix-derivative identities
+def: The handful of rules that cover most ML derivations.
+f: ∂(aᵀx)/∂x = a;  ∂(xᵀAx)/∂x = (A + Aᵀ)x;  ∂tr(AB)/∂A = Bᵀ
+d: int
+
+== found.calc.matrix.layout | Numerator vs denominator layout
+def: Two conventions for arranging matrix derivatives (transposed relative to each other). Mixing them is a classic source of derivation errors.
+d: int
+
+#### Automatic differentiation
+== found.calc.autodiff | Automatic differentiation
+def: Computing exact derivatives of a program by applying the chain rule to each elementary operation. It is the engine inside PyTorch, JAX and TensorFlow.
+pre: found.calc.multi.chain
+to: dl.basics.backprop, infra.frameworks
+paper: Baydin, Pearlmutter, Radul, Siskind | Automatic Differentiation in Machine Learning: a Survey | 2018
+d: int
+
+== found.calc.autodiff.graph | Computational graph
+def: A program as a directed acyclic graph of operations. Forward pass computes values; backward pass computes gradients along the same graph.
+pre: found.discrete.graphs.dag
+d: int
+
+== found.calc.autodiff.three-ways | Numerical vs symbolic vs automatic differentiation
+def: Numerical (finite differences) is approximate and slow; symbolic gives formulas that can blow up; automatic is exact and efficient. Finite differences are still used to check gradients.
+d: int
+
+== found.calc.autodiff.forward | Forward-mode AD
+def: Propagates derivatives alongside values from inputs to outputs. Efficient when there are few inputs and many outputs. Dual numbers are one implementation.
+pre: found.calc.autodiff.graph
+paper: Wengert | A Simple Automatic Derivative Evaluation Program | 1964
+d: adv
+
+== found.calc.autodiff.reverse | Reverse-mode AD
+def: Run forward, then propagate gradients from the output back to every input in one pass. With one scalar loss and millions of parameters, this is exactly backpropagation.
+pre: found.calc.autodiff.graph, found.calc.multi.jacobian
+to: dl.basics.backprop
+paper: Linnainmaa | The Representation of the Cumulative Rounding Error of an Algorithm as a Taylor Expansion of the Local Rounding Errors (MSc thesis) | 1970
+d: int
+
+== found.calc.autodiff.vjp | Vector–Jacobian & Jacobian–vector products
+def: Reverse mode computes vᵀJ and forward mode computes Jv without ever building J. Frameworks expose these as primitives.
+pre: found.calc.autodiff.forward, found.calc.autodiff.reverse
+d: adv
+
+== found.calc.autodiff.checkpoint | Gradient checkpointing
+def: Trade compute for memory: store only some activations in the forward pass and recompute the rest during backprop. Essential for training large models.
+pre: found.calc.autodiff.reverse
+to: infra.train
+d: adv
+
+#### Differential equations
+== found.calc.ode | Differential equations
+def: Equations relating a function to its rates of change. Used by diffusion models, neural ODEs, physics-informed networks and control.
+pre: found.calc.single.derivative
+d: int
+
+== found.calc.ode.ode | Ordinary differential equations (ODEs)
+def: dx/dt = f(x, t): how a state evolves over time. Diffusion sampling can be written as solving an ODE (the probability-flow ODE).
+to: dl.gen.diffusion, dl.arch.neural-ode
+d: int
+
+== found.calc.ode.solvers | Numerical ODE solvers (Euler, Runge–Kutta)
+def: Step-by-step approximate solutions. Euler takes one slope per step; Runge–Kutta samples several. Diffusion samplers are ODE/SDE solvers.
+pre: found.calc.ode.ode
+to: dl.gen.diffusion
+d: int
+
+== found.calc.ode.pde | Partial differential equations (PDEs)
+def: Equations over several variables (heat, wave, fluid flow). Physics-informed neural networks and neural operators learn their solutions.
+pre: found.calc.ode.ode, found.calc.multi.partial
+to: apps.science
+d: adv

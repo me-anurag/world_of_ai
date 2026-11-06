@@ -1,0 +1,184 @@
+# FIELD 7 — Reinforcement Learning, part A: foundations to deep RL
+# Audit: Sutton & Barto 2nd ed. (bandits, finite MDPs, DP, MC, TD, n-step, planning & learning, approximation, eligibility traces, policy gradient, psychology/neuroscience, applications), AIMA ch.17, 22; OpenAI Spinning Up taxonomy; Levine CS285 syllabus.
+!defaults d=int st=foundational
+
+######## L2: RL foundations
+== rl.basics | RL foundations
+def: An agent acts in an environment, receives rewards, and learns a policy that maximizes long-run reward. Learning from consequences rather than from correct answers.
+pre: hist.agents, found.prob.rv.expectation
+paper: Sutton, Barto | Reinforcement Learning: An Introduction | 1998
+d: beg
+
+== rl.basics.loop | Agent–environment loop, reward & return
+def: At each step the agent sees a state, takes an action, gets a reward and a new state. The return is the (discounted) sum of future rewards; the reward hypothesis says any goal can be framed this way.
+f: Gₜ = rₜ₊₁ + γrₜ₊₂ + γ²rₜ₊₃ + …
+d: beg
+
+== rl.basics.policy | Policy
+def: The agent's behaviour: a mapping from states to actions, deterministic or stochastic π(a|s).
+pre: rl.basics.loop
+d: beg
+
+== rl.basics.value | Value functions (V and Q)
+def: V(s) is the expected return from state s; Q(s, a) is the expected return after taking action a in s. Most RL methods estimate one of these.
+f: Q^π(s,a) = E_π[Gₜ | sₜ=s, aₜ=a]
+pre: rl.basics.policy, found.prob.rv.expectation
+d: beg
+
+== rl.basics.explore | Exploration vs exploitation
+def: Try new actions to learn about them, or use the best known one? The dilemma at the heart of RL; ε-greedy is the simplest answer.
+pre: rl.basics.policy
+d: beg
+
+== rl.basics.taxonomy | Model-free vs model-based, on- vs off-policy, value vs policy methods
+def: The main axes that classify RL algorithms: whether a model of the environment is learned or used, whether the data comes from the policy being learned, and whether a value function or the policy itself is optimized.
+pre: rl.basics.value
+
+######## L2: Markov decision processes
+== rl.mdp | Markov decision process
+def: The formal model of sequential decisions: states, actions, transition probabilities, rewards and a discount factor, with the Markov property.
+f: (S, A, P(s'|s,a), R, γ)
+pre: rl.basics.loop, found.prob.process.markov
+paper: Bellman | A Markovian Decision Process | 1957
+
+== rl.mdp.bellman | Bellman equations
+def: A state's value equals the immediate reward plus the discounted value of what comes next. The optimality version uses a max over actions. Nearly every RL algorithm is built on these.
+f: V*(s) = max_a Σ_{s'} P(s'|s,a)[R + γV*(s')]
+pre: rl.basics.value
+
+== rl.mdp.optimal | Optimal policies & values
+def: In a finite MDP there is a deterministic optimal policy; acting greedily with respect to Q* gives it.
+pre: rl.mdp.bellman
+
+== rl.mdp.discount | Discounting, horizons & average reward
+def: γ < 1 values near rewards more and keeps returns finite; alternatives are finite horizons and the average-reward formulation.
+d: adv
+
+######## L2: Dynamic programming
+== rl.dp | Dynamic programming in RL
+def: Compute optimal policies when the full MDP model is known, by repeatedly applying Bellman updates.
+pre: rl.mdp.bellman, found.cs.algo.dp
+
+== rl.dp.eval | Policy evaluation
+def: Compute V^π for a fixed policy by iterating the Bellman expectation equation until it converges.
+
+== rl.dp.policy-iteration | Policy iteration
+def: Alternate full policy evaluation with greedy policy improvement; converges in few iterations.
+pre: rl.dp.eval
+paper: Howard | Dynamic Programming and Markov Processes | 1960
+
+== rl.dp.value-iteration | Value iteration
+def: Apply the Bellman optimality update repeatedly until values converge, then act greedily.
+pre: rl.dp.eval
+
+== rl.dp.gpi | Generalized policy iteration
+def: The common pattern behind almost all RL: evaluation and improvement interacting, each pushing the other toward optimality.
+pre: rl.dp.policy-iteration, rl.dp.value-iteration
+
+######## L2: Bandits
+== rl.bandits | Multi-armed bandits
+def: Repeatedly pick one of several options with unknown payoffs to maximize total reward. RL with a single state; used for A/B testing, ads and recommendations.
+pre: rl.basics.explore, found.prob.dist.bernoulli
+paper: Robbins | Some Aspects of the Sequential Design of Experiments | 1952
+
+== rl.bandits.ucb | Upper confidence bound (UCB)
+def: Pick the arm with the highest optimistic estimate: mean plus an uncertainty bonus that shrinks as the arm is tried.
+f: aₜ = argmax [Q(a) + c√(ln t / N(a))]
+pre: found.prob.limits.concentration
+paper: Auer, Cesa-Bianchi, Fischer | Finite-time Analysis of the Multiarmed Bandit Problem | 2002
+
+== rl.bandits.thompson | Thompson sampling
+def: Sample a plausible payoff for each arm from its posterior and pick the best sample. Simple and near-optimal.
+pre: found.stats.bayes.conjugate
+paper: Thompson | On the Likelihood that One Unknown Probability Exceeds Another in View of the Evidence of Two Samples | 1933
+
+== rl.bandits.contextual | Contextual bandits
+def: Choose actions based on side information (user features) as well as past rewards (LinUCB). Powers personalization.
+pre: rl.bandits.ucb
+paper: Li, Chu, Langford, Schapire | A Contextual-Bandit Approach to Personalized News Article Recommendation | 2010
+to: dom.recsys
+
+######## L2: Model-free prediction & control
+== rl.mc | Monte Carlo methods
+def: Learn values by averaging the actual returns of complete episodes. No model needed, but must wait until the episode ends.
+pre: rl.basics.value, found.prob.mc.estimation
+
+== rl.td | Temporal-difference learning
+def: Update a value estimate toward the reward plus the estimate of the next state (bootstrapping), learning after every step. The central idea of RL.
+f: V(s) ← V(s) + α[r + γV(s') − V(s)]
+pre: rl.mc, rl.mdp.bellman
+x: hist.timeline.stat.td
+paper: Sutton | Learning to Predict by the Methods of Temporal Differences | 1988
+
+== rl.td.sarsa | SARSA
+def: On-policy TD control: update Q(s, a) toward r + γQ(s', a') using the action actually taken next.
+
+== rl.td.nstep | n-step returns & TD(λ)
+def: Interpolate between one-step TD and Monte Carlo by looking n steps ahead, or blend all n with eligibility traces.
+d: adv
+
+== rl.td.dopamine | TD learning & dopamine
+def: Dopamine neurons fire in proportion to reward prediction error, matching the TD error. A striking link between RL and neuroscience.
+x: hist.roots.neuro
+paper: Schultz, Dayan, Montague | A Neural Substrate of Prediction and Reward | 1997
+d: beg
+
+== rl.qlearning | Q-learning
+def: Off-policy TD control: update Q(s, a) toward r + γ max Q(s', ·), learning the optimal policy while behaving exploratorily.
+f: Q(s,a) ← Q(s,a) + α[r + γ max_a' Q(s',a') − Q(s,a)]
+pre: rl.td.sarsa
+x: hist.timeline.stat.qlearning
+paper: Watkins, Dayan | Q-Learning | 1992
+
+== rl.qlearning.double | Maximization bias & double Q-learning
+def: Taking the max over noisy estimates overestimates values; double Q-learning uses one estimate to choose and another to evaluate.
+paper: van Hasselt | Double Q-learning | 2010
+d: adv
+
+######## L2: Function approximation
+== rl.approx | Value function approximation
+def: Represent values with a parameterized function (linear or a neural net) so learning generalizes across huge or continuous state spaces.
+pre: rl.td, ml.sup.linreg
+
+== rl.approx.semigradient | Semi-gradient methods & linear TD
+def: Apply gradient updates to TD targets while treating the target as fixed; convergent in the linear on-policy case.
+d: adv
+
+== rl.approx.triad | The deadly triad
+def: Function approximation + bootstrapping + off-policy learning together can diverge. Explains why deep Q-learning needed stabilizing tricks.
+pre: rl.approx.semigradient, rl.qlearning
+d: adv
+
+######## L2: Deep RL (value-based)
+== rl.deep | Deep reinforcement learning
+def: RL with deep neural networks as function approximators, learning from raw inputs like pixels.
+pre: rl.approx, dl.basics.mlp
+x: hist.timeline.deep.dqn
+
+== rl.deep.dqn | DQN
+def: Q-learning with a CNN, stabilized by experience replay and a slowly updated target network. Learned dozens of Atari games from pixels.
+pre: rl.approx.triad, dl.arch.cnn
+paper: Mnih et al. | Human-level Control through Deep Reinforcement Learning | 2015
+st: classic
+
+== rl.deep.replay | Experience replay & prioritized replay
+def: Store past transitions and train on random samples to break correlations; prioritize surprising ones.
+pre: rl.deep.dqn
+paper: Schaul, Quan, Antonoglou, Silver | Prioritized Experience Replay | 2015
+
+== rl.deep.dqn-ext | DQN extensions (double, dueling, Rainbow)
+def: Double DQN, dueling value/advantage heads, noisy nets, n-step returns and distributional RL, combined in Rainbow.
+pre: rl.deep.replay, rl.qlearning.double
+paper: Hessel et al. | Rainbow: Combining Improvements in Deep Reinforcement Learning | 2017
+d: adv
+
+== rl.deep.distributional | Distributional RL
+def: Learn the full distribution of returns, not just its mean (C51, QR-DQN).
+pre: rl.deep.dqn
+paper: Bellemare, Dabney, Munos | A Distributional Perspective on Reinforcement Learning | 2017
+d: adv
+
+== rl.deep.benchmarks | Environments & benchmarks (Gym, Atari, MuJoCo)
+def: Standard testbeds: the Arcade Learning Environment, Gymnasium's API, MuJoCo continuous control, procedurally generated games for generalization.
+paper: Bellemare, Naddaf, Veness, Bowling | The Arcade Learning Environment: An Evaluation Platform for General Agents | 2013
+d: beg

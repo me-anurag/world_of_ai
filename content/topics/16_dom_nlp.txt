@@ -1,0 +1,231 @@
+# FIELD 8 — Domains, part A: NLP
+# Audit: Jurafsky & Martin SLP3 (all 26 chapters + appendices A–K), Eisenstein "Introduction to NLP", Stanford CS224n.
+!defaults d=int st=foundational
+
+== dom.nlp | Natural language processing
+def: Getting computers to read, understand and generate human language. Moved from rules (1950s–80s) to statistics (1990s–2000s) to neural networks (2010s) to LLMs (2020s), which now handle most NLP tasks in one model.
+pre: found.prob.basics, ml.paradigms.supervised
+paper: Jurafsky, Martin | Speech and Language Processing | 2000
+x: hist.roots.linguistics
+
+#### Text processing
+== dom.nlp.text | Text processing basics
+def: Turning raw text into units a model can use: normalization, sentence splitting, words and subwords.
+pre: found.cs.algo.string
+d: beg
+
+== dom.nlp.text.normalize | Normalization (case, Unicode, stemming, lemmatization)
+def: Make variants match: lowercasing, Unicode normalization, stripping affixes (stemming) or reducing words to dictionary forms (lemmatization). Also stop-word removal.
+d: beg
+
+== dom.nlp.regex | Regular expressions
+def: Pattern languages for finding and extracting text; still the fastest tool for many cleaning and extraction jobs.
+pre: dom.nlp.text, found.cs.theory.automata
+d: beg
+
+== dom.nlp.tokenization | Tokenization
+def: Splitting text into tokens, the units a model reads and writes. Modern models use subword tokenizers so any string can be represented with a fixed vocabulary.
+pre: dom.nlp.text
+d: beg
+
+== dom.nlp.tokenization.bpe | Byte-pair encoding (BPE) & byte-level BPE
+def: Start from characters (or bytes) and repeatedly merge the most frequent adjacent pair into a new token. Used by GPT models.
+pre: found.cs.algo.greedy
+paper: Sennrich, Haddow, Birch | Neural Machine Translation of Rare Words with Subword Units | 2015
+st: dominant
+
+== dom.nlp.tokenization.wordpiece | WordPiece, Unigram LM & SentencePiece
+def: Alternative subword schemes: WordPiece (BERT) merges by likelihood; the Unigram model prunes a large vocabulary; SentencePiece works on raw text including spaces.
+pre: dom.nlp.tokenization.bpe
+paper: Kudo, Richardson | SentencePiece: A Simple and Language Independent Subword Tokenizer and Detokenizer for Neural Text Processing | 2018
+
+== dom.nlp.tokenization.effects | Tokenizer effects (multilingual cost, arithmetic, glitch tokens)
+def: Tokenization shapes model behaviour: some languages need many more tokens per word, numbers split oddly, and rare tokens cause strange outputs.
+pre: dom.nlp.tokenization.bpe
+st: active
+d: adv
+
+== dom.nlp.edit-distance | Edit distance & spelling correction
+def: The minimum number of insertions, deletions and substitutions between two strings, computed by dynamic programming; the basis of spell checking with the noisy-channel model.
+pre: found.cs.algo.dp
+d: beg
+
+#### Language models
+== dom.nlp.lm | Language modelling
+def: Assigning probabilities to sequences of words by predicting each next word from what came before. The task that, scaled up, became LLMs.
+pre: dom.nlp.tokenization, found.prob.basics.chain
+
+== dom.nlp.ngram | N-gram language models
+def: Predict the next word from the previous n−1 words using counts. Fast and simple; ruled speech recognition and translation for decades.
+pre: dom.nlp.lm, found.prob.process.markov
+paper: Shannon | A Mathematical Theory of Communication | 1948
+st: classic
+
+== dom.nlp.ngram.smoothing | Smoothing (Laplace, backoff, Kneser–Ney)
+def: Give unseen n-grams some probability: add-one, interpolation and backoff to shorter contexts, Kneser–Ney (the best classical method).
+paper: Kneser, Ney | Improved Backing-off for M-gram Language Modeling | 1995
+st: classic
+d: adv
+
+== dom.nlp.lm.eval | Evaluating language models (perplexity, held-out data)
+def: Measure how surprised a model is by unseen text; lower perplexity is better, comparable only with the same tokenizer.
+pre: found.info.perplexity
+
+== dom.nlp.neural-lm | Neural language models
+def: Predict the next word with a neural network over word embeddings: feed-forward (Bengio 2003), then RNN/LSTM, then Transformer.
+pre: dom.nlp.lm, dl.basics.mlp
+paper: Bengio, Ducharme, Vincent, Jauvin | A Neural Probabilistic Language Model | 2003
+to: llm
+
+#### Representations
+== dom.nlp.vector | Vector semantics
+def: "You shall know a word by the company it keeps": represent words by the contexts they appear in. Underlies all word and sentence embeddings.
+pre: found.linalg.geom.cosine
+paper: Firth | A Synopsis of Linguistic Theory 1930–1955 | 1957
+
+== dom.nlp.lsa | Latent semantic analysis
+def: Apply truncated SVD to a term–document matrix to get dense word and document vectors that capture synonymy.
+pre: dom.nlp.vector, found.linalg.decomp.svd, ml.data.text
+paper: Deerwester, Dumais, Furnas, Landauer, Harshman | Indexing by Latent Semantic Analysis | 1990
+st: classic
+
+== dom.nlp.ppmi | PPMI & co-occurrence matrices
+def: Weight word–context co-occurrence counts by positive pointwise mutual information before factorizing; count-based embeddings.
+pre: dom.nlp.vector, found.info.mi
+st: classic
+d: adv
+
+== dom.nlp.word2vec | word2vec
+def: Learn word vectors by predicting context words from a word (skip-gram) or the word from its context (CBOW) with negative sampling. Vector arithmetic captures analogies.
+pre: dom.nlp.vector, dl.repr.embedding
+x: hist.timeline.deep.word2vec
+paper: Mikolov, Sutskever, Chen, Corrado, Dean | Distributed Representations of Words and Phrases and their Compositionality | 2013
+st: classic
+
+== dom.nlp.glove | GloVe & fastText
+def: GloVe factorizes global co-occurrence statistics; fastText adds character n-grams so it can embed unseen words.
+pre: dom.nlp.word2vec
+paper: Pennington, Socher, Manning | GloVe: Global Vectors for Word Representation | 2014
+st: classic
+
+== dom.nlp.contextual | Contextual embeddings (ELMo → BERT)
+def: The same word gets different vectors in different sentences. ELMo used bi-LSTMs; BERT used Transformers, ending the era of static word vectors.
+pre: dom.nlp.word2vec, dl.arch.rnn.bidir
+paper: Peters et al. | Deep Contextualized Word Representations | 2018
+to: llm.models.bert
+
+== dom.nlp.sentence-emb | Sentence & document embeddings
+def: One vector per sentence or passage, trained so semantically similar texts are close (Sentence-BERT, modern embedding models). The engine of semantic search and RAG.
+pre: dom.nlp.contextual, dl.repr.contrastive
+paper: Reimers, Gurevych | Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks | 2019
+to: sys.rag.retrieval
+st: dominant
+
+== dom.nlp.lda | Latent Dirichlet allocation
+def: The classic topic model: documents as mixtures of topics, topics as distributions over words. Used for exploring large text collections.
+pre: prob.bayesml.topic
+paper: Blei, Ng, Jordan | Latent Dirichlet Allocation | 2003
+st: classic
+
+#### Core tasks
+== dom.nlp.tasks | Core NLP tasks
+def: The standard problems NLP solves. Most now use fine-tuned Transformers or are done directly by prompting LLMs.
+
+== dom.nlp.classification | Text classification & sentiment analysis
+def: Assign labels to text: spam, topic, intent, sentiment. Baselines: naive Bayes and logistic regression on TF-IDF; today, fine-tuned encoders or zero-shot LLMs.
+pre: dom.nlp.tasks, ml.sup.logreg
+d: beg
+
+== dom.nlp.sequence-labeling | Sequence labelling (POS tagging, NER)
+aka: named entity recognition; NER; part-of-speech tagging
+def: Label every token: parts of speech, or named entities (people, places, organizations) with BIO tags. HMMs → CRFs → BiLSTM-CRF → Transformers.
+pre: dom.nlp.tasks, prob.gm.crf
+paper: Lample et al. | Neural Architectures for Named Entity Recognition | 2016
+
+== dom.nlp.parsing | Parsing
+aka: dependency parsing; constituency parsing; CKY
+def: Recover sentence structure: constituency parsing builds phrase trees from a grammar (CKY algorithm); dependency parsing links each word to its head (transition- or graph-based).
+pre: dom.nlp.tasks, found.cs.theory.automata, found.cs.algo.dp
+paper: Chen, Manning | A Fast and Accurate Dependency Parser using Neural Networks | 2014
+st: classic
+
+== dom.nlp.semantics | Semantic analysis (SRL, semantic parsing, logical form)
+def: Recover meaning: who did what to whom (semantic role labelling), or map text to an executable form such as SQL or logic (semantic parsing).
+pre: dom.nlp.parsing, sym.logic.fol
+to: sys.agents.tools
+d: adv
+
+== dom.nlp.wsd | Word senses & word sense disambiguation
+def: Decide which meaning of an ambiguous word is meant ("bank" of a river vs a bank), using WordNet senses or contextual embeddings.
+pre: dom.nlp.contextual, sym.kr.lexical
+st: classic
+d: adv
+
+== dom.nlp.coref | Coreference resolution & entity linking
+def: Work out which mentions refer to the same entity ("Marie… she… the physicist") and link entities to a knowledge base entry.
+pre: dom.nlp.sequence-labeling, sym.kr.kg
+d: adv
+
+== dom.nlp.ie | Information extraction (relations, events, time)
+def: Pull structured facts from text: relations between entities, events, and temporal expressions. Feeds knowledge graphs.
+pre: dom.nlp.sequence-labeling
+to: sym.kr.kg
+
+== dom.nlp.mt | Machine translation
+def: Translate between languages: rule-based, then statistical phrase-based (IBM models, Moses), then neural seq2seq with attention, then Transformers and LLMs. Measured by BLEU, chrF, COMET.
+pre: dom.nlp.tasks, dl.arch.seq2seq
+paper: Brown, Della Pietra, Della Pietra, Mercer | The Mathematics of Statistical Machine Translation: Parameter Estimation | 1993
+x: hist.timeline.reality.alpac
+
+== dom.nlp.summarization | Summarization
+def: Shorten text while keeping key content: extractive (select sentences) or abstractive (generate new text). Evaluated with ROUGE and human or LLM judgment.
+pre: dom.nlp.tasks, dl.arch.seq2seq
+
+== dom.nlp.qa | Question answering & reading comprehension
+def: Answer questions from a given passage (extractive QA, SQuAD), from a knowledge base, or from a large collection (open-domain QA, the precursor of RAG).
+pre: dom.nlp.tasks
+paper: Rajpurkar, Zhang, Lopyrev, Liang | SQuAD: 100,000+ Questions for Machine Comprehension of Text | 2016
+to: sys.rag
+
+== dom.nlp.nli | Natural language inference
+def: Decide whether a hypothesis follows from, contradicts or is neutral to a premise. A benchmark task and a tool for checking factual consistency.
+pre: dom.nlp.tasks
+paper: Bowman, Angeli, Potts, Manning | A Large Annotated Corpus for Learning Natural Language Inference | 2015
+d: adv
+
+== dom.nlp.dialogue | Dialogue systems & chatbots
+def: Task-oriented systems with intent detection, slot filling and dialogue state tracking, versus open-domain chatbots. LLM assistants merged both.
+pre: dom.nlp.classification, dom.nlp.sequence-labeling
+x: hist.timeline.enthusiasm.eliza
+to: sys.agents
+
+== dom.nlp.discourse | Discourse, pragmatics & conversation structure
+def: How sentences connect into coherent text, and what speakers mean beyond literal words (implicature, speech acts, turn-taking).
+pre: dom.nlp.coref
+d: adv
+
+== dom.nlp.affect | Lexicons, sentiment & affect
+def: Resources and methods for emotion, sentiment and connotation, from hand-built lexicons to learned classifiers.
+pre: dom.nlp.classification
+d: beg
+
+== dom.nlp.nlg | Natural language generation & its evaluation
+aka: BLEU; ROUGE; BERTScore
+def: Producing fluent text and judging it: BLEU, ROUGE, METEOR, BERTScore, and increasingly LLM-as-judge and human preference.
+pre: dom.nlp.lm
+paper: Papineni, Roukos, Ward, Zhu | BLEU: a Method for Automatic Evaluation of Machine Translation | 2002
+to: llm.eval
+
+== dom.nlp.multilingual | Multilingual & low-resource NLP
+def: Shared models across many languages with cross-lingual transfer, and methods for languages with little data (including most Indian languages).
+pre: dom.nlp.contextual, ml.settings.transfer
+paper: Conneau et al. | Unsupervised Cross-lingual Representation Learning at Scale | 2019
+st: active
+d: adv
+
+== dom.nlp.benchmarks | NLP benchmarks (GLUE, SuperGLUE)
+def: Benchmark suites that drove progress from 2018 to 2020 and then saturated, pushing evaluation toward harder LLM benchmarks.
+pre: dom.nlp.tasks
+paper: Wang et al. | GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding | 2018
+to: llm.eval
+st: classic

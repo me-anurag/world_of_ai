@@ -1,0 +1,19 @@
+---
+import Base from '../../layouts/Base.astro';
+import Entry from '../../components/Entry.astro';
+import { topics, get } from '../../lib/data.js';
+import { site } from '../../site.config.mjs';
+export function getStaticPaths() {
+  return topics.map(n => ({ params: { slug: n.slug }, props: { id: n.id } }));
+}
+const node = get(Astro.props.id);
+const field = get(node.field);
+const jsonld = {
+  '@context': 'https://schema.org', '@type': 'DefinedTerm', name: node.name, description: node.def,
+  url: new URL(node.url, site.url).href, alternateName: node.aka.length ? node.aka : undefined,
+  inDefinedTermSet: { '@type': 'DefinedTermSet', name: `${site.name}: ${field.name}`, url: new URL(field.url, site.url).href },
+};
+---
+<Base title={node.name} description={node.def.split('. ')[0].replace(/\.$/, '') + '.'} current={node.id} section="fields" jsonld={jsonld}>
+  <Entry node={node} />
+</Base>

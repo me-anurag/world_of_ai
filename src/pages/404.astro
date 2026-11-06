@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Page not found" description="This page does not exist." wide noindex>
+  <h1>Page not found</h1>
+  <p class="lead">There is no page at this address. It may have been renamed, or the link may be mistyped.</p>
+  <div class="actions">
+    <button class="btn" type="button" onclick="document.getElementById('search-open').click()">Search the map</button>
+    <a class="btn secondary" href="/fields/">Browse the fields</a>
+  </div>
+</Base>

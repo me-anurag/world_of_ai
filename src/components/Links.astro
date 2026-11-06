@@ -1,0 +1,6 @@
+---
+import { get } from '../lib/data.js';
+interface Props { ids: string[] }
+const items = Astro.props.ids.map(get).filter(Boolean);
+---
+<ul class="inline-list">{items.map(n => <li><a href={n.url}>{n.name}</a></li>)}</ul>

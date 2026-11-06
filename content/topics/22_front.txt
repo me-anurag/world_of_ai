@@ -1,0 +1,148 @@
+# FIELD 11 — Frontier & AGI
+# Audit: AIMA ch.28 (future of AI: general AI, architectures), Legg & Hutter, Hutter "Universal AI", Morris et al. "Levels of AGI" (2023), Kotseruba & Tsotsos cognitive-architecture survey, LeCun "A Path Towards Autonomous Machine Intelligence" (2022), neuro-symbolic surveys, neuromorphic computing surveys.
+!defaults d=adv st=active
+
+== front.agi | AGI
+def: Artificial general intelligence: systems matching or exceeding humans across most cognitive tasks. There is no agreed definition, test or timeline; frontier labs state it as their goal and estimates range from years to never.
+pre: hist.define.scope, hist.philosophy.measure
+paper: Morris et al. | Levels of AGI for Operationalizing Progress on the Path to AGI | 2023
+st: debate
+d: int
+
+== front.agi.levels | Definitions & levels of AGI
+def: Frameworks grade generality and performance separately (emerging, competent, expert, virtuoso, superhuman) and distinguish capability from autonomy.
+d: int
+st: debate
+
+== front.agi.timelines | Forecasting AI progress & timelines
+def: Trend extrapolation from compute, algorithms and benchmarks, expert surveys and forecasting markets. Forecasts have shortened sharply since 2020 and remain widely spread.
+pre: llm.pretrain.scaling
+paper: Grace et al. | Thousands of AI Authors on the Future of AI | 2024
+st: debate
+d: int
+
+== front.agi.task-horizon | Measuring autonomy (task length horizons)
+def: Track how long a task (measured in human time) an AI agent can complete reliably; this horizon has been growing exponentially.
+pre: sys.agents.eval
+paper: Kwa et al. | Measuring AI Ability to Complete Long Tasks | 2025
+
+== front.aixi | AIXI & universal AI
+def: Hutter's theoretical optimal agent: Bayesian prediction over all computable environments (Solomonoff induction) plus expected-reward planning. Uncomputable, but a formal reference point for general intelligence.
+pre: hist.philosophy.measure.legg-hutter, found.info.kolmogorov, rl.mdp
+paper: Hutter | Universal Artificial Intelligence: Sequential Decisions Based on Algorithmic Probability | 2005
+st: foundational
+
+== front.aixi.solomonoff | Solomonoff induction
+def: Predict by weighting every program consistent with the data by 2^(−length); the ideal, uncomputable form of Occam's razor.
+paper: Solomonoff | A Formal Theory of Inductive Inference | 1964
+st: foundational
+
+== front.worldmodels | World models
+def: Internal models that predict how the world evolves under actions, so an agent can plan and imagine. Approaches: learned latent dynamics (Dreamer), joint-embedding predictive models (JEPA), and generative video/interactive environment models.
+pre: rl.model.dreamer, dl.repr.jepa
+x: hist.philosophy.llm.worldmodel
+paper: Ha, Schmidhuber | World Models | 2018
+d: int
+
+== front.worldmodels.video | Generative interactive environments
+def: Video models that generate controllable, playable worlds frame by frame from actions (e.g., Genie), used as simulators for training agents.
+pre: dom.cv.generation.video
+paper: Bruce et al. | Genie: Generative Interactive Environments | 2024
+
+== front.worldmodels.lecun | Autonomous machine intelligence architecture
+def: LeCun's proposal: perception, a predictive world model, a cost module and an actor, trained largely by self-supervised prediction in representation space rather than by next-token prediction.
+paper: LeCun | A Path Towards Autonomous Machine Intelligence | 2022
+st: debate
+
+== front.neurosym | Neuro-symbolic AI
+def: Combining neural learning (perception, intuition) with symbolic reasoning (logic, programs, search) to get generalization, data efficiency and verifiability that neither gives alone.
+pre: hist.schools.hybrid, sym.logic, dl.basics
+paper: Garcez, Lamb | Neurosymbolic AI: The 3rd Wave | 2020
+d: int
+
+== front.neurosym.llm-solvers | LLMs with formal tools (solvers, provers, code)
+def: Language models that translate problems into code, logic or proof assistants and let exact tools do the reasoning; AlphaGeometry and AlphaProof are examples.
+pre: sym.logic.provers, sys.agents.tools
+paper: Trinh, Wu, Le, He, Luong | Solving Olympiad Geometry without Human Demonstrations | 2024
+
+== front.neurosym.differentiable | Differentiable logic & reasoning
+def: Make logical rules, programs or reasoning steps differentiable so they can be learned end to end (neural theorem provers, logic tensor networks).
+pre: prob.ppl.srl
+
+== front.neurosym.synthesis | Neural program synthesis & library learning
+def: Learn to write programs from examples and build up reusable abstractions (DreamCoder); ARC-style problems are a testbed.
+pre: sym.learning.synthesis
+paper: Ellis et al. | DreamCoder: Bootstrapping Inductive Program Synthesis with Wake-Sleep Library Learning | 2021
+
+== front.cogarch | Cognitive architectures
+def: Complete blueprints of a mind (memory types, attention, learning, control) implemented as programs: SOAR, ACT-R, CLARION, LIDA. Now inspiring designs for LLM agents.
+pre: hist.define.four.think-human, sym.expert.rules
+paper: Kotseruba, Tsotsos | 40 Years of Cognitive Architectures: Core Cognitive Abilities and Practical Applications | 2020
+st: classic
+d: int
+
+== front.cogarch.soar-actr | SOAR & ACT-R
+def: SOAR models problem solving as search in problem spaces with chunking; ACT-R models human memory and timing with declarative and procedural modules.
+paper: Laird, Newell, Rosenbloom | SOAR: An Architecture for General Intelligence | 1987
+st: classic
+
+== front.cogarch.gwt | Global workspace theory
+def: Consciousness as a limited "workspace" that broadcasts selected content to many specialized processes; used both as a theory of mind and as an AI design pattern.
+paper: Baars | A Cognitive Theory of Consciousness | 1988
+st: debate
+
+== front.cogarch.llm | Cognitive architectures for language agents
+def: Organizing LLM agents with explicit memory modules, action spaces and decision procedures borrowed from cognitive science.
+pre: sys.agents.memory
+paper: Sumers, Yao, Narasimhan, Griffiths | Cognitive Architectures for Language Agents | 2023
+
+== front.brain | Brain-inspired AI
+def: Ideas from neuroscience for new models and hardware: spiking neurons, local learning rules, predictive coding and neuromorphic chips. Border region with computational neuroscience.
+pre: hist.roots.neuro, dl.basics.backprop
+paper: Hassabis, Kumaran, Summerfield, Botvinick | Neuroscience-Inspired Artificial Intelligence | 2017
+d: int
+
+== front.brain.snn | Spiking neural networks
+def: Neurons communicate with discrete spikes over time, like biological neurons; potentially very energy-efficient on neuromorphic hardware, but harder to train.
+paper: Maass | Networks of Spiking Neurons: The Third Generation of Neural Network Models | 1997
+
+== front.brain.neuromorphic | Neuromorphic hardware
+def: Chips that implement spiking, event-driven computation with memory next to compute (e.g., IBM TrueNorth, Intel Loihi).
+pre: front.brain.snn, infra.hw
+paper: Davies et al. | Loihi: A Neuromorphic Manycore Processor with On-Chip Learning | 2018
+
+== front.brain.local-learning | Biologically plausible learning (Hebbian, predictive coding, forward-forward)
+def: Learning rules that use only local signals, as brains seem to, instead of backpropagated errors.
+pre: hist.timeline.inception.hebb
+paper: Hinton | The Forward-Forward Algorithm: Some Preliminary Investigations | 2022
+
+== front.embodied | Embodied AI
+def: Intelligence developed through a body acting in physical or simulated worlds: navigation, manipulation and interaction, now pursued with large multimodal models and humanoid robots.
+pre: hist.schools.embodied, dom.robotics
+paper: Savva et al. | Habitat: A Platform for Embodied AI Research | 2019
+d: int
+
+== front.discovery | Automated scientific discovery
+def: AI systems that generate hypotheses, design and run experiments, and write up results: LLM-driven program search, autonomous labs and "AI scientist" agents.
+pre: sys.agents.research, evo.llm
+paper: Lu et al. | The AI Scientist: Towards Fully Automated Open-Ended Scientific Discovery | 2024
+to: apps.science
+d: int
+
+== front.open-ended | Open-endedness & continual self-improvement
+def: Systems that keep generating new, increasingly complex tasks and skills without a fixed objective (open-ended evolution, POET, self-play curricula).
+pre: evo.neuro.qd, rl.multiagent.selfplay
+paper: Wang, Lehman, Clune, Stanley | Paired Open-Ended Trailblazer (POET): Endlessly Generating Increasingly Complex and Diverse Learning Environments and Their Solutions | 2019
+
+== front.self-improve | Recursive self-improvement & automated AI research
+def: AI that improves AI: models generating training data, designing algorithms, or doing ML research. The mechanism behind intelligence-explosion arguments.
+pre: front.discovery
+x: hist.philosophy.future.explosion
+to: safe.xrisk
+st: debate
+
+== front.quantum | Quantum machine learning
+def: Using quantum computers for ML subroutines (kernels, variational circuits). Theoretical speedups exist for narrow problems; no practical advantage has been demonstrated on real ML tasks.
+pre: ml.kernel
+paper: Biamonte et al. | Quantum Machine Learning | 2017
+st: debate

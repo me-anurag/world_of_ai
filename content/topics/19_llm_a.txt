@@ -1,0 +1,210 @@
+# FIELD 9 — Large Language Models, part A: fundamentals, architecture, pretraining, post-training, reasoning
+# Audit: SLP3 vol. I–II (ch.7–11), Stanford CS336 & CS324 syllabi, Raschka "Build a Large Language Model (From Scratch)", Zhao et al. "A Survey of Large Language Models" (2023, updated), Llama 3 and DeepSeek-V3 technical reports.
+!defaults d=int st=foundational
+
+######## L2: Fundamentals
+== llm.basics | What an LLM is
+def: A Transformer trained to predict the next token on trillions of tokens of text, then tuned to follow instructions. Prompted with text, it generates text one token at a time by sampling from its predicted distribution.
+pre: dl.arch.transformer.variants, dom.nlp.lm, dom.nlp.tokenization.bpe
+paper: Zhao et al. | A Survey of Large Language Models | 2023
+d: beg
+
+== llm.basics.context | Tokens, context window & logits
+def: The model sees a window of tokens (its context), outputs logits over the whole vocabulary for the next token, and appends the chosen token to the context. Everything the model "knows" in a conversation is in that window.
+pre: dl.basics.softmax
+d: beg
+
+== llm.basics.base-vs-chat | Base models vs instruction-tuned (chat) models
+def: A base model continues text; an instruction-tuned model answers requests in a conversation format with roles (system, user, assistant). Most applications use the latter.
+to: llm.post
+d: beg
+
+== llm.basics.params | Parameters, FLOPs & memory arithmetic
+def: Training compute is about 6 × parameters × tokens; inference needs about 2 × parameters FLOPs per token; weights take parameters × bytes per parameter of memory. Back-of-envelope maths for every LLM decision.
+f: C ≈ 6ND
+pre: found.numerics.formats
+paper: Kaplan et al. | Scaling Laws for Neural Language Models | 2020
+
+== llm.basics.knowledge | Parametric knowledge & knowledge cutoff
+def: Facts are stored implicitly in the weights from pretraining data, so they stop at a cutoff date and can be wrong or outdated. Retrieval and tools supply fresh or private knowledge.
+to: sys.rag
+d: beg
+
+######## L2: Architecture
+== llm.arch | LLM architecture
+def: The modern decoder-only Transformer recipe and its variants for scale and efficiency.
+pre: dl.arch.transformer.variants
+
+== llm.arch.recipe | The modern decoder-only recipe
+def: Pre-norm RMSNorm, SwiGLU feed-forward blocks, rotary position embeddings, no biases, tied or untied embeddings, and a big vocabulary. Shared with small variations by most open models.
+pre: dl.norm.rms, dl.basics.gated, dl.arch.transformer.rope
+paper: Touvron et al. | LLaMA: Open and Efficient Foundation Language Models | 2023
+
+== llm.arch.gqa | Multi-query & grouped-query attention
+def: Share key and value heads across query heads to shrink the KV cache and speed up inference with little quality loss. Multi-head latent attention (DeepSeek) compresses it further.
+pre: dl.arch.transformer.mha
+paper: Ainslie et al. | GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints | 2023
+to: llm.inference.kvcache
+d: adv
+
+== llm.arch.moe | Mixture-of-experts LLMs
+def: Replace each feed-forward block with many expert blocks and a router that sends each token to only a few. Huge parameter count at the compute cost of a much smaller model (Mixtral, DeepSeek-V3, many frontier models).
+pre: ml.ensemble.moe
+paper: Fedus, Zoph, Shazeer | Switch Transformers: Scaling to Trillion Parameter Models with Simple and Efficient Sparsity | 2021
+st: dominant
+d: adv
+
+== llm.arch.hybrid | Hybrid & alternative architectures
+def: Models mixing attention with state-space or linear-attention layers for long context and cheaper inference; also diffusion language models that generate tokens in parallel.
+pre: dl.arch.ssm
+st: active
+d: adv
+
+######## L2: Pretraining
+== llm.pretrain | Pretraining
+def: The expensive first stage: train on a huge, diverse text corpus to predict the next token. Gives the model language, world knowledge and reasoning patterns.
+pre: llm.arch.recipe, ml.paradigms.selfsup
+paper: Radford, Narasimhan, Salimans, Sutskever | Improving Language Understanding by Generative Pre-Training | 2018
+
+== llm.pretrain.ntp | Next-token prediction
+def: The training objective: minimize cross-entropy of each actual next token given all previous tokens, computed for every position at once with causal masking.
+f: L = −Σₜ log p_θ(xₜ | x₍<ₜ₎)
+pre: found.info.cross-entropy, dl.arch.transformer.causal-mask
+d: beg
+
+== llm.pretrain.data | Pretraining data (web crawl, filtering, dedup, mixtures)
+def: Data is mostly filtered web text (Common Crawl) plus books, code, math and papers. Quality filtering, deduplication and the mix of sources matter as much as model size.
+pre: infra.data
+paper: Penedo et al. | The FineWeb Datasets: Decanting the Web for the Finest Text Data at Scale | 2024
+st: active
+
+== llm.pretrain.scaling | Scaling laws
+aka: Chinchilla; compute-optimal training
+def: Loss falls as a smooth power law in parameters, data and compute. Chinchilla showed models should be trained on roughly 20 tokens per parameter for compute-optimal training; models today are often trained far longer to be cheaper to serve.
+f: L(N,D) ≈ E + A/N^α + B/D^β
+pre: dl.train.scaling
+x: hist.schools.bitter
+paper: Hoffmann et al. | Training Compute-Optimal Large Language Models | 2022
+st: dominant
+
+== llm.pretrain.emergent | Emergent abilities (and the debate)
+def: Some abilities seem to appear suddenly at scale; others argue the jumps are artefacts of discontinuous metrics. Matters for predicting what bigger models will do.
+pre: llm.pretrain.scaling
+paper: Wei et al. | Emergent Abilities of Large Language Models | 2022
+st: debate
+d: adv
+
+== llm.pretrain.synthetic | Synthetic data
+def: Data generated by other models (rewritten text, textbook-style exercises, math and code with verified answers) to supplement or replace scarce high-quality human data.
+pre: llm.pretrain.data
+st: active
+d: adv
+
+== llm.pretrain.stability | Training at scale: instabilities & recipes
+def: Loss spikes, divergence and numeric issues at large scale, handled with careful initialization, learning-rate schedules, QK-norm, z-loss and checkpoint restarts.
+pre: dl.opt.schedule, infra.train
+d: adv
+
+== llm.pretrain.midtrain | Continued pretraining & annealing
+def: Extra pretraining phases on targeted or high-quality data (code, math, long documents, a new language) before post-training.
+pre: llm.pretrain.data
+d: adv
+
+######## L2: Post-training
+== llm.post | Post-training (alignment tuning)
+def: Turn a base model into a helpful, honest, harmless assistant with supervised fine-tuning and preference optimization. Shapes behaviour, style and safety far more than it adds knowledge.
+pre: llm.pretrain, ml.settings.transfer
+paper: Ouyang et al. | Training Language Models to Follow Instructions with Human Feedback | 2022
+
+== llm.post.sft | Supervised fine-tuning (instruction tuning)
+def: Fine-tune on examples of prompts and ideal responses in a chat format. Teaches the model to follow instructions.
+pre: dl.train.finetune
+paper: Wei et al. | Finetuned Language Models Are Zero-Shot Learners | 2021
+st: dominant
+
+== llm.post.chat-format | Chat templates, roles & system prompts
+def: Special tokens mark system, user, assistant and tool turns; the system prompt sets persistent instructions. Mismatched templates silently break fine-tuned models.
+pre: llm.post.sft
+d: beg
+
+== llm.post.rlhf | RLHF
+def: Collect human comparisons between responses, train a reward model on them, then optimize the LLM against that reward with RL (PPO) and a KL penalty to stay close to the original model. The method behind ChatGPT.
+pre: llm.post.sft, rl.imitation.preferences, rl.policy.ppo, found.info.kl
+x: hist.timeline.fm.instructgpt
+paper: Ouyang et al. | Training Language Models to Follow Instructions with Human Feedback | 2022
+
+== llm.post.reward-model | Reward models & preference data
+def: A model that scores responses, trained on pairwise human (or AI) preferences with a Bradley–Terry loss. Its flaws are what the policy learns to exploit.
+pre: llm.post.rlhf
+f: P(a ≻ b) = σ(r(a) − r(b))
+x: rl.reward.hacking
+d: adv
+
+== llm.post.dpo | Direct preference optimization (DPO) & variants
+def: Optimize directly on preference pairs with a classification-style loss, skipping the separate reward model and RL loop. Simple and widely used (with variants such as IPO, KTO, ORPO).
+pre: llm.post.reward-model
+paper: Rafailov et al. | Direct Preference Optimization: Your Language Model is Secretly a Reward Model | 2023
+st: dominant
+d: adv
+
+== llm.post.cai | Constitutional AI & RLAIF
+def: Use a written set of principles and AI feedback, instead of only human labels, to critique, revise and rank responses.
+pre: llm.post.rlhf
+paper: Bai et al. | Constitutional AI: Harmlessness from AI Feedback | 2022
+to: safe.alignment
+d: adv
+
+== llm.post.rejection | Rejection sampling & best-of-n
+def: Sample many responses, keep the best by a reward model or verifier, and train on them (or just return the best at inference time).
+pre: llm.post.reward-model
+d: adv
+
+== llm.post.safety-tuning | Safety training & refusals
+def: Teaching models to decline harmful requests and handle sensitive topics, while not over-refusing benign ones; tested with red-teaming.
+pre: llm.post.sft
+to: safe.llm
+
+== llm.post.agentic | Agentic & tool-use training
+def: Post-training on multi-step trajectories with tool calls, environments and verifiable outcomes so models can act as agents.
+pre: llm.post.sft, rl.policy
+to: sys.agents
+st: active
+d: adv
+
+######## L2: Reasoning
+== llm.reasoning | Reasoning models
+def: Models trained to think step by step at length before answering, mostly with reinforcement learning on problems with checkable answers. Big gains in math, code and science; more tokens spent per answer.
+pre: llm.post, sys.prompting.cot
+x: hist.timeline.genai.reasoning
+paper: DeepSeek-AI | DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning | 2025
+st: dominant
+
+== llm.reasoning.rlvr | RL with verifiable rewards
+def: Reward the model only when its final answer is checkably correct (unit tests pass, math answer matches), then optimize with policy-gradient methods such as GRPO.
+pre: rl.policy.grpo
+d: adv
+
+== llm.reasoning.prm | Process vs outcome reward models
+def: Outcome rewards judge only the final answer; process reward models score each reasoning step, giving denser feedback.
+pre: llm.post.reward-model
+paper: Lightman et al. | Let's Verify Step by Step | 2023
+d: adv
+
+== llm.reasoning.test-time | Test-time compute scaling
+def: Spend more inference compute for better answers: longer chains of thought, sampling many answers and voting, or searching over reasoning steps with a verifier.
+pre: sym.search.mcts
+paper: Snell, Lee, Xu, Kumar | Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters | 2024
+st: active
+d: adv
+
+== llm.reasoning.distill | Distilling reasoning into smaller models
+def: Fine-tune small models on reasoning traces from a large reasoning model; surprisingly effective.
+pre: llm.eff.distill
+d: adv
+
+== llm.reasoning.faithful | Faithfulness of chains of thought
+def: The written reasoning may not reflect what actually drives the answer. Important for trusting and monitoring reasoning models.
+to: safe.interp
+paper: Turpin, Michael, Perez, Bowman | Language Models Don't Always Say What They Think: Unfaithful Explanations in Chain-of-Thought Prompting | 2023
+st: active
+d: adv

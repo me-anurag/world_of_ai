@@ -1,0 +1,52 @@
+---
+// A small drawn view of one topic's neighbourhood, generated at build time as plain SVG:
+// what it builds on (left), the topic (centre), and what builds on it (right).
+import { get } from '../lib/data.js';
+interface Props { node: any }
+const { node } = Astro.props;
+const MAX = 7;
+const uniq = (xs) => [...new Set(xs)].filter(id => get(id));
+const leftAll = uniq([...node.pre, ...node.inheritedPre]);
+const rightAll = uniq([...node.to, ...node.requiredFor]);
+const left = leftAll.slice(0, MAX), right = rightAll.slice(0, MAX);
+const moreL = leftAll.length - left.length, moreR = rightAll.length - right.length;
+const show = left.length + right.length > 0;
+const W = 760, bw = 226, bh = 34, gap = 10, top = 34;
+const colX = [0, (W - bw) / 2, W - bw];
+const rows = Math.max(left.length + (moreL ? 1 : 0), right.length + (moreR ? 1 : 0), 1);
+const H = top + rows * (bh + gap) + 8;
+const yOf = (i, n) => top + ((rows - n) * (bh + gap)) / 2 + i * (bh + gap);
+const cy = top + (rows * (bh + gap) - gap) / 2 - bh / 2;
+const cut = (s, k = 29) => (s.length > k ? s.slice(0, k - 1).trimEnd() + '…' : s);
+---
+{show && (
+  <section class="neighbourhood" aria-labelledby="nb-h">
+    <h2 id="nb-h">Where it sits</h2>
+    <div class="scroll">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${node.name}: ${leftAll.length} topics it builds on, ${rightAll.length} topics that build on it`}>
+        <text class="nb-label" x={colX[0]} y="16">Builds on</text>
+        <text class="nb-label" x={colX[2]} y="16">Leads to</text>
+        {left.map((id, i) => {
+          const y = yOf(i, left.length + (moreL ? 1 : 0));
+          return <path class="nb-edge" d={`M${bw} ${y + bh / 2} C ${bw + 40} ${y + bh / 2}, ${colX[1] - 40} ${cy + bh / 2}, ${colX[1]} ${cy + bh / 2}`} />;
+        })}
+        {right.map((id, i) => {
+          const y = yOf(i, right.length + (moreR ? 1 : 0));
+          return <path class="nb-edge" d={`M${colX[1] + bw} ${cy + bh / 2} C ${colX[1] + bw + 40} ${cy + bh / 2}, ${colX[2] - 40} ${y + bh / 2}, ${colX[2]} ${y + bh / 2}`} />;
+        })}
+        {left.map((id, i) => {
+          const n = get(id); const y = yOf(i, left.length + (moreL ? 1 : 0));
+          return <a href={n.url}><title>{n.name}</title><rect class="nb-box" x={colX[0]} y={y} width={bw} height={bh} rx="7" /><text class="nb-text" x={colX[0] + 12} y={y + 22}>{cut(n.name)}</text></a>;
+        })}
+        {moreL > 0 && <text class="nb-label" x={colX[0] + 12} y={yOf(left.length, left.length + 1) + 21}>and {moreL} more, listed above</text>}
+        <rect class="nb-box here" x={colX[1]} y={cy} width={bw} height={bh} rx="7" />
+        <text class="nb-text here" x={colX[1] + bw / 2} y={cy + 22} text-anchor="middle">{cut(node.name)}</text>
+        {right.map((id, i) => {
+          const n = get(id); const y = yOf(i, right.length + (moreR ? 1 : 0));
+          return <a href={n.url}><title>{n.name}</title><rect class="nb-box" x={colX[2]} y={y} width={bw} height={bh} rx="7" /><text class="nb-text" x={colX[2] + 12} y={y + 22}>{cut(n.name)}</text></a>;
+        })}
+        {moreR > 0 && <text class="nb-label" x={colX[2] + 12} y={yOf(right.length, right.length + 1) + 21}>and {moreR} more, listed above</text>}
+      </svg>
+    </div>
+  </section>
+)}

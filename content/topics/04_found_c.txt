@@ -1,0 +1,524 @@
+# FIELD 1 — Foundations, part C: optimization, numerics, signals, discrete math, CS
+!defaults d=beg st=foundational
+
+######## L2: Optimization
+== found.opt | Optimization
+def: Finding the parameters that minimize a loss. Training any model is an optimization problem, and the choice of optimizer decides whether, how fast and where training converges.
+pre: found.calc.multi.gradient
+paper: Boyd, Vandenberghe | Convex Optimization | 2004
+
+#### Basics
+== found.opt.basics | Optimization fundamentals
+def: The vocabulary of every optimization problem.
+
+== found.opt.basics.objective | Objective, parameters & constraints
+def: Minimize f(θ) over parameters θ, possibly subject to constraints. In ML, f is the loss and θ the weights.
+f: θ* = argmin_θ f(θ)  s.t. constraints
+pre: found.calc.single.extrema
+to: ml.concepts.loss
+
+== found.opt.basics.local-global | Local vs global minima
+def: A local minimum beats its neighbours; a global minimum beats everything. Neural losses are non-convex, yet local minima found by SGD usually work well.
+pre: found.opt.basics.objective
+
+== found.opt.basics.saddle | Saddle points & plateaus
+def: Points where the gradient is zero but the point is a minimum in some directions and a maximum in others. In high dimensions they are far more common than bad local minima.
+pre: found.opt.basics.local-global, found.calc.multi.hessian
+d: int
+
+== found.opt.basics.conditioning | Conditioning & the condition number
+def: The ratio of the largest to smallest curvature. Ill-conditioned problems make gradient descent zig-zag, which is what momentum, Adam and normalization layers counteract.
+f: κ = λ_max / λ_min
+pre: found.opt.basics.saddle, found.linalg.decomp.eigen
+to: dl.opt.adam, dl.norm
+d: int
+
+== found.opt.basics.lipschitz | Lipschitz continuity & smoothness
+def: Bounds on how fast a function (or its gradient) can change. They set safe step sizes and appear in convergence proofs and GAN training (WGAN).
+pre: found.opt.basics.objective
+d: adv
+
+== found.opt.basics.convergence | Convergence rates
+def: How fast an optimizer approaches the optimum (sublinear, linear, quadratic). Used to compare methods in theory.
+pre: found.opt.basics.objective
+d: adv
+
+#### Convex optimization
+== found.opt.convex | Convex optimization
+def: When the objective is convex, any local minimum is global and efficient algorithms with guarantees exist. Linear/logistic regression and SVMs are convex; deep networks are not.
+pre: found.opt.basics.local-global
+d: int
+
+== found.opt.convex.sets-functions | Convex sets & convex functions
+def: A set is convex if the line between any two points stays inside; a function is convex if the line between two points on its graph stays above it. A PSD Hessian means convex.
+f: f(tx + (1−t)y) ≤ t f(x) + (1−t) f(y)
+pre: found.linalg.special.psd
+d: int
+
+== found.opt.convex.jensen | Jensen's inequality
+def: For convex f, f(E[X]) ≤ E[f(X)]. It gives the ELBO in variational inference and shows KL is non-negative.
+pre: found.opt.convex.sets-functions, found.prob.rv.expectation
+to: prob.inference.vi
+d: adv
+
+#### First-order methods
+== found.opt.first | First-order (gradient) methods
+def: Methods that use only gradients. They are the only methods cheap enough for millions or billions of parameters.
+pre: found.calc.multi.gradient
+
+== found.opt.first.gd | Gradient descent
+def: Repeatedly step opposite the gradient. The learning rate controls step size: too large diverges, too small crawls.
+f: θ ← θ − η ∇f(θ)
+paper: Cauchy | Méthode générale pour la résolution des systèmes d'équations simultanées | 1847
+to: dl.opt
+
+== found.opt.first.lr | Learning rate (step size)
+def: The most important hyperparameter in training. Schedules such as warmup and cosine decay change it over time.
+pre: found.opt.first.gd
+to: dl.opt.schedule
+
+== found.opt.first.sgd | Stochastic & mini-batch gradient descent
+def: Use the gradient on a random minibatch instead of the full dataset: noisy but far cheaper per step. The noise even helps generalization. This is how all deep networks are trained.
+f: θ ← θ − η ∇f_B(θ)
+pre: found.opt.first.gd, found.prob.mc.estimation
+paper: Robbins, Monro | A Stochastic Approximation Method | 1951
+to: dl.opt
+
+== found.opt.first.momentum | Momentum
+def: Accumulate a running average of past gradients so steps keep moving in consistent directions and damp oscillations.
+f: v ← βv + ∇f(θ);  θ ← θ − ηv
+pre: found.opt.first.sgd
+paper: Polyak | Some Methods of Speeding Up the Convergence of Iteration Methods | 1964
+to: dl.opt.adam
+d: int
+
+== found.opt.first.nesterov | Nesterov accelerated gradient
+def: Momentum that evaluates the gradient at the look-ahead point. It is provably faster on convex problems.
+pre: found.opt.first.momentum
+paper: Nesterov | A Method of Solving a Convex Programming Problem with Convergence Rate O(1/k²) | 1983
+d: adv
+
+== found.opt.first.line-search | Line search
+def: Choose each step size by searching along the descent direction until enough decrease is achieved (Armijo/Wolfe conditions). Common in classical optimization, rare in deep learning.
+pre: found.opt.first.gd
+d: int
+
+== found.opt.first.coordinate | Coordinate descent
+def: Optimize one coordinate (or block) at a time while holding the rest fixed. Used in lasso solvers and as the pattern behind EM and alternating minimization.
+pre: found.opt.first.gd
+d: int
+
+== found.opt.first.subgradient | Subgradients & proximal methods
+def: Optimizing non-smooth functions such as the L1 norm or ReLU kinks. The proximal operator handles the non-smooth part exactly (ISTA for lasso).
+pre: found.opt.first.gd, found.opt.convex.sets-functions
+to: ml.concepts.regularization
+d: adv
+
+#### Second-order methods
+== found.opt.second | Second-order & curvature methods
+def: Use curvature (the Hessian or approximations of it) to take better-shaped steps. Too expensive in full for large networks, but approximations inspire modern optimizers.
+pre: found.opt.first, found.calc.multi.hessian
+d: adv
+
+== found.opt.second.newton | Newton's method
+def: Jump to the minimum of the local quadratic approximation. Very fast near the optimum, but needs and inverts the Hessian.
+f: θ ← θ − H⁻¹∇f
+pre: found.calc.single.taylor
+d: adv
+
+== found.opt.second.quasi-newton | Quasi-Newton (BFGS, L-BFGS)
+def: Build an approximation of the inverse Hessian from successive gradients. L-BFGS keeps only a few vectors and is a standard choice for mid-sized smooth problems.
+pre: found.opt.second.newton
+d: adv
+
+== found.opt.second.gauss-newton | Gauss–Newton & Levenberg–Marquardt
+def: Second-order methods specialized for least-squares losses. Standard in curve fitting, bundle adjustment and camera calibration.
+pre: found.opt.second.newton, found.linalg.mat.least-squares
+to: dom.cv.geometry
+d: adv
+
+== found.opt.second.cg | Conjugate gradient
+def: Solves large symmetric positive-definite systems (and quadratic minimization) without forming the matrix, using only matrix–vector products. Used in TRPO and Hessian-free optimization.
+pre: found.opt.second.newton, found.linalg.special.psd
+d: adv
+
+== found.opt.second.natural | Natural gradient
+def: Steepest descent measured in the geometry of distributions (Fisher information) rather than raw parameters. It inspires K-FAC, TRPO and Shampoo.
+pre: found.opt.second.newton, found.stats.est.fisher
+paper: Amari | Natural Gradient Works Efficiently in Learning | 1998
+to: rl.policy.trpo
+d: adv
+
+#### Constrained optimization
+== found.opt.constrained | Constrained optimization
+def: Minimize subject to equality or inequality constraints. The theory behind SVMs, constrained RL and many resource-allocation problems.
+pre: found.opt.basics.objective
+d: int
+
+== found.opt.constrained.lagrange | Lagrange multipliers
+def: Fold equality constraints into the objective with one multiplier per constraint; at the optimum, gradients line up.
+f: ℒ(x,λ) = f(x) + λ g(x)
+pre: found.calc.multi.gradient
+d: int
+
+== found.opt.constrained.kkt | KKT conditions
+def: Generalize Lagrange multipliers to inequality constraints. They say which constraints are active at the optimum. In SVMs, the active points are the support vectors.
+paper: Kuhn, Tucker | Nonlinear Programming | 1951
+pre: found.opt.constrained.lagrange
+to: ml.sup.svm
+d: adv
+
+== found.opt.constrained.duality | Lagrangian duality
+def: Every constrained problem has a dual problem whose solution bounds the original. The SVM kernel trick comes from the dual form.
+pre: found.opt.constrained.kkt
+to: ml.kernel
+d: adv
+
+== found.opt.constrained.lp | Linear programming
+def: Optimize a linear objective under linear constraints, solved by the simplex method or interior-point methods. Workhorse of operations research, also used to solve MDPs.
+paper: Dantzig | Maximization of a Linear Function of Variables Subject to Linear Inequalities | 1951
+to: rl.mdp
+d: int
+
+== found.opt.constrained.qp | Quadratic programming
+def: A quadratic objective with linear constraints. Training an SVM is a QP.
+pre: found.opt.constrained.lp, found.linalg.special.psd
+to: ml.sup.svm
+d: adv
+
+== found.opt.constrained.projected | Projected gradient
+def: Take a gradient step, then project back onto the feasible set. Simple and used in adversarial attacks (PGD).
+pre: found.opt.first.gd, found.linalg.geom.projection
+to: safe.robust
+d: int
+
+#### Beyond gradients
+== found.opt.other | Gradient-free & discrete optimization
+def: When gradients don't exist or can't be computed (discrete choices, black boxes, hyperparameters). Each method is covered in its own field.
+pre: found.opt.basics
+d: int
+
+== found.opt.other.combinatorial | Combinatorial optimization
+def: Choosing the best item from a huge discrete set (routes, schedules, assignments). Often NP-hard, so heuristics and search are used. Border region with operations research.
+pre: found.cs.algo.complexity
+to: sym.search, sym.csp
+st: border
+d: int
+
+== found.opt.other.blackbox | Black-box & derivative-free optimization
+def: Optimize using only function evaluations: random search, Nelder–Mead, evolutionary strategies, Bayesian optimization.
+to: evo, prob.bayesopt
+d: int
+
+== found.opt.other.local-search | Local search heuristics (hill climbing, simulated annealing)
+def: Move between neighbouring solutions, sometimes accepting worse moves to escape local optima (simulated annealing).
+paper: Kirkpatrick, Gelatt, Vecchi | Optimization by Simulated Annealing | 1983
+to: sym.search.local
+d: int
+
+== found.opt.other.em | Alternating optimization & EM pattern
+def: Optimize groups of variables in turn. k-means and Expectation–Maximization alternate between assigning hidden variables and updating parameters.
+pre: found.opt.first.coordinate
+to: prob.inference.em, ml.unsup.kmeans
+d: int
+
+######## L2: Numerical computation
+== found.numerics | Numerical computation
+def: How real numbers behave on real hardware. Overflow, underflow and rounding silently break training; number formats decide memory use and speed.
+pre: found.cs.prog
+d: int
+
+== found.numerics.float | Floating-point representation (IEEE 754)
+aka: floating point; IEEE 754
+def: Numbers stored as sign, exponent and mantissa, giving finite precision and range. Most decimals are not exact (0.1 + 0.2 ≠ 0.3).
+paper: IEEE | IEEE 754 Standard for Binary Floating-Point Arithmetic | 1985
+d: int
+
+== found.numerics.formats | Number formats: FP32, FP16, BF16, FP8, INT8
+def: Lower-precision formats halve or quarter memory and speed up hardware. BF16 keeps FP32's range with less precision and is standard for LLM training; INT8 and INT4 are used for quantized inference.
+pre: found.numerics.float
+to: infra.train.mixed-precision, llm.eff.quant
+d: int
+
+== found.numerics.overflow | Overflow & underflow
+def: Numbers too large become inf; too small become 0. Multiplying many probabilities underflows, which is why work is done in log space.
+pre: found.numerics.float
+d: int
+
+== found.numerics.logsumexp | Log-sum-exp trick & stable softmax
+def: Subtract the maximum before exponentiating so softmax and log-likelihoods never overflow. Every framework's softmax and cross-entropy does this internally.
+f: log Σ eˣⁱ = m + log Σ e^(xᵢ − m),  m = max xᵢ
+pre: found.numerics.overflow, found.calc.single.explog
+to: dl.basics.softmax
+d: int
+
+== found.numerics.stability | Numerical stability & cancellation
+def: Algorithms that magnify rounding errors are unstable; subtracting nearly equal numbers loses precision. This is why QR beats the normal equations and Welford's method computes variance.
+pre: found.numerics.float
+d: adv
+
+== found.numerics.vectorization | Vectorization
+def: Replace Python loops with whole-array operations that run in optimized C or GPU kernels. The difference is often 100×.
+pre: found.linalg.tensor
+to: infra.hw.gpu
+
+== found.numerics.parallel | Parallel computation basics (SIMD, data/model parallelism)
+def: Doing many operations at once on CPU vector units, GPU cores, or across many devices. Scaling AI is mainly a parallelism problem.
+pre: found.numerics.vectorization
+to: infra.train.distributed
+d: int
+
+######## L2: Signals & transforms
+== found.signal | Signals & transforms
+def: Border region with signal processing, mapped to the depth AI uses directly: convolution for CNNs, Fourier analysis and spectrograms for audio, sampling theory for images and sound.
+pre: found.linalg.mat.matmul, found.calc.single.integral
+st: border
+
+== found.signal.signal | Signals, sampling & Nyquist
+def: A signal is a function of time or space; digitizing samples it. Sampling below twice the highest frequency causes aliasing, which matters in image downsampling and audio.
+d: int
+
+== found.signal.convolution | Convolution & cross-correlation
+def: Slide a small kernel over a signal and take weighted sums. This is the operation in CNNs (which technically compute cross-correlation), blurs and edge detectors.
+f: (f * g)[n] = Σₘ f[m] g[n − m]
+to: dl.arch.cnn, dom.cv.filters
+
+== found.signal.fourier | Fourier transform & frequency domain
+def: Any signal is a sum of sinusoids; the Fourier transform finds their amplitudes. Convolution in time is multiplication in frequency.
+f: X(ω) = ∫ x(t) e^(−iωt) dt
+pre: found.signal.convolution
+d: int
+
+== found.signal.fft | DFT & Fast Fourier Transform (FFT)
+def: The discrete Fourier transform computed in O(n log n) instead of O(n²). One of the most important algorithms ever.
+pre: found.signal.fourier
+paper: Cooley, Tukey | An Algorithm for the Machine Calculation of Complex Fourier Series | 1965
+d: int
+
+== found.signal.stft | Spectrograms, STFT & mel scale
+def: Fourier transforms over short sliding windows give a time–frequency picture. Mel spectrograms are the standard input to speech models such as Whisper.
+pre: found.signal.fft
+to: dom.speech
+d: int
+
+== found.signal.filters | Filters & frequency response
+def: Low-pass, high-pass and band-pass filters keep or remove frequency ranges. Image blur is a low-pass filter; edge detection is high-pass.
+pre: found.signal.fourier
+to: dom.cv.filters
+d: int
+
+== found.signal.positional | Sinusoidal encodings
+def: Representing position with sines and cosines of many frequencies. This is how the original Transformer encoded token positions, and related to RoPE and NeRF's positional encoding.
+pre: found.signal.fourier
+to: dl.arch.transformer.posenc
+d: int
+
+######## L2: Discrete mathematics
+== found.discrete | Discrete mathematics
+def: Sets, logic, counting and graphs: the math of discrete structures. It is the language of algorithms, knowledge graphs, search and tokenization.
+
+== found.discrete.sets | Sets, functions & relations
+def: Collections, mappings between them, and relations such as equivalence and order. Most definitions in math and CS are written in this language.
+
+== found.discrete.boolean | Boolean algebra
+def: Algebra over true/false with AND, OR, NOT. It is the basis of digital circuits, propositional logic and search filters.
+pre: found.discrete.sets
+paper: Boole | An Investigation of the Laws of Thought | 1854
+to: sym.logic.propositional
+
+== found.discrete.logic | Logic & proof basics
+def: Propositions, quantifiers (∀, ∃), implication, and proof by induction or contradiction. Needed to read any theory paper, and the gateway to symbolic AI.
+pre: found.discrete.boolean
+to: sym.logic
+d: int
+
+== found.discrete.combinatorics | Combinatorics
+def: Counting: permutations, combinations, and the binomial coefficient. It shows why search spaces explode (combinatorial explosion).
+f: C(n,k) = n! / (k!(n−k)!)
+pre: found.discrete.sets
+to: found.cs.algo.complexity
+
+== found.discrete.graphs | Graph theory
+def: Nodes connected by edges. Graphs model knowledge, social networks, molecules, computation graphs and the search spaces of AI.
+pre: found.discrete.sets
+to: dom.graph
+
+== found.discrete.graphs.basics | Graphs: directed, undirected, weighted
+def: The basic vocabulary: vertices, edges, degree, paths, cycles, connectivity, weighted edges.
+
+== found.discrete.graphs.trees | Trees
+def: Connected graphs with no cycles. Decision trees, parse trees, search trees and hierarchical clustering are all trees.
+pre: found.discrete.graphs.basics
+to: ml.sup.trees, sym.search
+
+== found.discrete.graphs.dag | Directed acyclic graphs (DAGs)
+def: Directed graphs with no cycles, giving a valid processing order (topological sort). Computational graphs, Bayesian networks and workflow pipelines are DAGs.
+pre: found.discrete.graphs.basics
+to: prob.gm.bayesnet, sys.agents.workflows
+
+== found.discrete.graphs.adjacency | Adjacency matrix & Laplacian
+def: Graphs stored as matrices. The graph Laplacian's eigenvectors give spectral clustering and the theory behind graph convolutional networks.
+f: L = D − A
+pre: found.discrete.graphs.basics, found.linalg.mat.matrix
+to: dom.graph.spectral
+d: int
+
+== found.discrete.graphs.knowledge | Graphs as knowledge (labelled graphs, triples)
+def: Labelled directed graphs storing facts as (subject, relation, object) triples. The structure of knowledge graphs and GraphRAG.
+pre: found.discrete.graphs.basics
+to: sym.kr.kg, sys.rag.graphrag
+
+######## L2: Computer science foundations
+== found.cs | Computer science foundations
+def: Algorithms, data structures, computability and the programming stack. AI is software: every model is trained, served and composed by code.
+
+#### Algorithms
+== found.cs.algo | Algorithms & complexity
+def: How to solve problems step by step, and how cost grows with input size.
+
+== found.cs.algo.bigo | Asymptotic analysis (Big-O)
+def: How time and memory grow with input size: O(1), O(log n), O(n), O(n²), O(2ⁿ). Example: standard attention is O(n²) in sequence length, the reason long context is expensive.
+pre: found.discrete.combinatorics
+to: llm.longctx
+
+== found.cs.algo.recursion | Recursion & divide-and-conquer
+def: Solve a problem by solving smaller copies of it (merge sort, FFT, tree traversal).
+pre: found.cs.algo.bigo
+
+== found.cs.algo.sorting | Sorting & searching
+def: Ordering data and finding items (binary search, quicksort, heaps). Top-k selection is used in decoding and retrieval.
+pre: found.cs.algo.recursion
+to: llm.decode
+
+== found.cs.algo.dp | Dynamic programming
+def: Solve overlapping subproblems once and reuse the answers. It is the algorithmic core of value iteration (RL), Viterbi (HMMs), edit distance and CTC.
+pre: found.cs.algo.recursion
+paper: Bellman | Dynamic Programming | 1957
+to: rl.dp, prob.gm.hmm
+d: int
+
+== found.cs.algo.greedy | Greedy algorithms
+def: Take the locally best choice at each step. Optimal for some problems (Huffman coding), a heuristic for others (greedy decoding, BPE merges).
+pre: found.cs.algo.bigo
+to: dom.nlp.tokenization, llm.decode
+
+== found.cs.algo.graph | Graph algorithms (BFS, DFS, Dijkstra, topological sort)
+def: Traversal and shortest paths. Classic AI search is built on these.
+pre: found.discrete.graphs.basics, found.cs.algo.bigo
+paper: Dijkstra | A Note on Two Problems in Connexion with Graphs | 1959
+to: sym.search
+
+== found.cs.algo.hashing | Hashing
+def: Map items to fixed-size codes for O(1) lookup. Locality-sensitive hashing extends this to similarity search, which leads to vector databases.
+pre: found.cs.algo.bigo
+to: sys.rag.ann
+d: int
+
+== found.cs.algo.string | String algorithms
+def: Matching, edit distance, tries and suffix structures. Used in tokenizers, fuzzy matching and text processing.
+pre: found.cs.algo.dp
+to: dom.nlp.tokenization
+d: int
+
+== found.cs.algo.complexity | Complexity classes (P, NP, NP-hard)
+def: Which problems can be solved efficiently. Many AI problems (planning, SAT, inference in Bayes nets) are NP-hard, so AI relies on heuristics, approximation and learning.
+pre: found.cs.algo.bigo
+paper: Cook | The Complexity of Theorem-Proving Procedures | 1971
+to: sym.csp
+d: int
+
+== found.cs.algo.randomized | Randomized & approximation algorithms
+def: Algorithms that use randomness or settle for provably near-optimal answers. Approximate nearest neighbour search and sketching are both.
+pre: found.cs.algo.complexity, found.prob.basics
+to: sys.rag.ann
+d: adv
+
+#### Data structures
+== found.cs.ds | Data structures
+def: Ways of organizing data for efficient access.
+pre: found.cs.algo.bigo
+
+== found.cs.ds.arrays | Arrays, lists, stacks, queues
+def: The basic containers. Contiguous arrays are why tensors are fast.
+
+== found.cs.ds.hashmap | Hash tables & dictionaries
+def: Key–value storage with fast lookup. Vocabularies, caches and feature stores are hash tables.
+pre: found.cs.algo.hashing
+
+== found.cs.ds.trees | Trees, heaps & priority queues
+def: Hierarchical structures for ordered access. Priority queues drive best-first and A* search; KD-trees speed up nearest-neighbour search.
+pre: found.cs.ds.arrays, found.discrete.graphs.trees
+to: sym.search.astar, ml.sup.knn
+
+== found.cs.ds.tries | Tries
+def: Prefix trees for fast string lookup. Used in tokenizers and autocomplete.
+pre: found.cs.ds.trees
+to: dom.nlp.tokenization
+d: int
+
+== found.cs.ds.graph-repr | Graph representations
+def: Adjacency lists vs adjacency matrices: the tradeoff between memory and lookup speed for sparse vs dense graphs.
+pre: found.cs.ds.arrays, found.discrete.graphs.adjacency
+d: int
+
+#### Theory of computation
+== found.cs.theory | Theory of computation
+def: What can be computed at all, by what kinds of machines. It sets the outer limits of any AI.
+pre: found.discrete.logic
+d: int
+
+== found.cs.theory.automata | Automata & formal languages
+def: Finite automata, regular expressions and context-free grammars. They define tokenizer patterns, parsers and constrained (structured) decoding.
+paper: Chomsky | Three Models for the Description of Language | 1956
+to: dom.nlp.parsing, llm.decode.constrained
+d: int
+
+== found.cs.theory.turing-machine | Turing machines & Church–Turing thesis
+def: The abstract model of all computation: anything computable can be computed by a Turing machine. Neural networks' computational power is often analysed against it.
+pre: found.cs.theory.automata
+paper: Turing | On Computable Numbers, with an Application to the Entscheidungsproblem | 1936
+d: int
+
+== found.cs.theory.computability | Computability & the halting problem
+def: Some problems no algorithm can solve, such as deciding whether any program halts. This bounds what any AI can guarantee about code.
+pre: found.cs.theory.turing-machine
+d: adv
+
+#### Programming
+== found.cs.prog | Programming for AI
+def: The practical toolkit: a language, numerical libraries, notebooks and version control. Nothing on this map can be learned in practice without it.
+
+== found.cs.prog.python | Python
+def: The dominant language of AI: readable, with the whole ecosystem of numerical and ML libraries.
+
+== found.cs.prog.numpy | NumPy & array programming
+def: Fast n-dimensional arrays and vectorized math in Python. The mental model carries directly into PyTorch and JAX.
+pre: found.cs.prog.python, found.linalg.tensor
+to: infra.frameworks
+
+== found.cs.prog.pandas | Pandas & tabular data
+def: DataFrames for loading, cleaning, joining and summarizing tables.
+pre: found.cs.prog.numpy
+to: infra.data
+
+== found.cs.prog.plotting | Plotting (Matplotlib & co.)
+def: Visualize data, loss curves and results. Looking at plots is how training problems get diagnosed.
+pre: found.cs.prog.numpy
+
+== found.cs.prog.scipy | SciPy & scientific libraries
+def: Optimization, linear algebra, statistics and signal-processing routines ready to use.
+pre: found.cs.prog.numpy
+d: int
+
+== found.cs.prog.notebooks | Jupyter notebooks
+def: Interactive documents that mix code, output and notes. The standard environment for exploring data and models.
+pre: found.cs.prog.python
+
+== found.cs.prog.git | Version control (Git)
+def: Track changes to code and collaborate. Experiments are only reproducible if the code that produced them is versioned.
+to: infra.mlops.repro
+
+== found.cs.prog.systems | Computer systems basics (memory hierarchy, CPU vs GPU)
+def: Caches, RAM, disks and the CPU vs GPU split. Moving data costs more than computing it; this explains FlashAttention, KV caching and batching.
+to: infra.hw, llm.inference.kvcache
+d: int

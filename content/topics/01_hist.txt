@@ -1,0 +1,1000 @@
+# FIELD 0 — History, Philosophy & Framing
+!defaults d=beg st=foundational
+
+######## L2: Defining AI
+== hist.define | Defining AI
+def: What counts as AI. There is no single agreed definition; the field is usually framed by four approaches and by how narrow or general a system is.
+
+== hist.define.four | The four approaches
+def: Russell & Norvig sort definitions of AI on two axes: thinking vs acting, and matching humans vs being rational. Modern AI mostly works in the "acting rationally" cell.
+paper: Russell, Norvig | Artificial Intelligence: A Modern Approach (1st ed.) | 1995
+to: hist.agents
+
+== hist.define.four.act-human | Acting humanly (Turing test approach)
+def: A system is intelligent if its behaviour is indistinguishable from a human's. Drives the skills a Turing-test passer needs: language, knowledge, reasoning, learning.
+x: hist.philosophy.can-think.turing-test
+
+== hist.define.four.think-human | Thinking humanly (cognitive modeling)
+def: Build programs whose internal steps match human thought, tested against psychology experiments. This is the bridge to cognitive science.
+x: hist.roots.psychology, front.cogarch
+
+== hist.define.four.think-rational | Thinking rationally (laws of thought)
+def: Intelligence as correct inference: encode knowledge in logic and derive conclusions. The root of the logicist tradition.
+x: sym.logic
+
+== hist.define.four.act-rational | Acting rationally (rational agent)
+def: Build an agent that acts to achieve the best expected outcome. This is the standard model of modern AI, and it absorbs the other three.
+to: hist.agents.rationality
+
+== hist.define.four.beneficial | Beneficial machines
+def: Russell's critique of the standard model: fixed objectives can be mis-specified, so machines should be uncertain about human preferences and defer to humans.
+yr: 2019
+paper: Russell | Human Compatible: Artificial Intelligence and the Problem of Control | 2019
+x: safe.alignment
+st: debate
+d: int
+
+== hist.define.nesting | AI ⊃ ML ⊃ DL
+def: AI is the whole field. Machine learning is the part that learns from data. Deep learning is the part of ML that uses multi-layer neural networks. Symbolic AI, search and planning are AI without being ML.
+to: ml, dl, sym
+
+== hist.define.scope | Narrow vs general AI
+def: Narrow AI does specific tasks; AGI would match humans across nearly all cognitive tasks; ASI would exceed them. The boundary has blurred since general-purpose LLMs appeared.
+aka: ANI; ASI; artificial general intelligence
+to: front.agi
+st: debate
+
+== hist.define.ai-effect | The AI effect
+def: Once a problem is solved (chess, route finding, spam filtering) people stop calling it AI. It explains why the field's definition keeps moving.
+st: debate
+
+######## L2: Agent framework (AIMA ch.2)
+== hist.agents | The agent framework
+def: The common language of the whole field: an agent perceives an environment through sensors and acts on it through actuators. Search, planning, RL and LLM agents are all instances.
+paper: Russell, Norvig | Artificial Intelligence: A Modern Approach (1st ed.) | 1995
+to: sys.agents, rl
+
+== hist.agents.agent | Agent, percept, action
+def: A percept is what the agent senses at one moment; the percept sequence is everything it has sensed. The agent function maps percept sequences to actions; the agent program implements it.
+f: f : P* → A
+
+== hist.agents.rationality | Rationality & performance measure
+def: A rational agent picks the action that maximizes the expected value of its performance measure, given its percepts and built-in knowledge. Rational ≠ omniscient: it acts well on what it can know.
+pre: hist.agents.agent
+to: prob.decision.utility, rl.mdp
+
+== hist.agents.autonomy | Autonomy & learning
+def: An agent is autonomous to the degree it relies on its own percepts and learning rather than built-in knowledge from its designer.
+pre: hist.agents.rationality
+
+== hist.agents.peas | PEAS (task environment)
+def: Specify a task by its Performance measure, Environment, Actuators and Sensors before designing the agent.
+pre: hist.agents.agent
+
+== hist.agents.env | Environment properties
+def: The properties of an environment decide which techniques can work. Hardest case: partially observable, multi-agent, stochastic, sequential, dynamic, continuous, unknown.
+pre: hist.agents.peas
+
+== hist.agents.env.observable | Fully vs partially observable
+def: Whether sensors give the complete relevant state. Partial observability forces the agent to keep internal state or beliefs.
+to: rl.pomdp, prob.gm.hmm
+
+== hist.agents.env.multi | Single vs multi-agent
+def: Whether other agents' goals affect yours, in competitive or cooperative settings.
+to: rl.multiagent
+
+== hist.agents.env.stochastic | Deterministic vs stochastic
+def: Whether the next state is fully determined by the current state and action. Stochastic environments need probability.
+to: found.prob
+
+== hist.agents.env.episodic | Episodic vs sequential
+def: Whether each decision is independent (image classification) or affects future ones (chess, driving).
+
+== hist.agents.env.dynamic | Static vs dynamic
+def: Whether the world changes while the agent is deliberating.
+
+== hist.agents.env.discrete | Discrete vs continuous
+def: Whether states, time, percepts and actions take finitely many distinct values.
+
+== hist.agents.env.known | Known vs unknown
+def: Whether the agent knows the rules (the outcome of each action). Unknown environments require learning or exploration.
+to: rl
+
+== hist.agents.types | Agent architectures
+def: The five classic agent designs, ordered from simplest to most general.
+pre: hist.agents.agent
+
+== hist.agents.types.reflex | Simple reflex agent
+def: Acts on the current percept only, through condition–action rules. Works only when the environment is fully observable.
+
+== hist.agents.types.model | Model-based reflex agent
+def: Keeps internal state, updated by a transition model (how the world changes) and a sensor model (how percepts reflect the world).
+pre: hist.agents.types.reflex
+
+== hist.agents.types.goal | Goal-based agent
+def: Chooses actions by considering which future states satisfy a goal, which requires search or planning.
+pre: hist.agents.types.model
+to: sym.search, sym.planning
+
+== hist.agents.types.utility | Utility-based agent
+def: Ranks outcomes with a utility function and maximizes expected utility, trading off conflicting goals and uncertainty.
+pre: hist.agents.types.goal
+to: prob.decision.utility
+
+== hist.agents.types.learning | Learning agent
+def: Has a performance element (acts), a critic (gives feedback), a learning element (improves) and a problem generator (explores). Any of the other four designs can learn.
+pre: hist.agents.types.utility
+to: ml, rl
+
+== hist.agents.repr | Atomic, factored & structured representations
+def: How an agent represents a state. Atomic: a black box (search, MDPs). Factored: variables with values (CSPs, propositional logic, Bayes nets). Structured: objects and relations (first-order logic, relational models, knowledge graphs).
+pre: hist.agents.agent
+to: sym.search, sym.csp, sym.logic.fol, prob.gm.bayesnet
+d: int
+
+######## L2: Intellectual roots (border regions)
+== hist.roots | Intellectual roots (border regions)
+def: The neighbouring disciplines AI borrowed from. Each node shows what AI takes from the field; the fields themselves are not mapped internally.
+st: border
+
+== hist.roots.philosophy | Philosophy
+st: border
+def: Gave AI rationalism, logic, the mind–body problem, and the idea that reasoning is calculation (Hobbes, Leibniz, Descartes).
+to: hist.philosophy
+
+== hist.roots.math | Mathematics
+st: border
+def: Gave formal logic (Boole, Frege), computation and its limits (Gödel, Turing), and probability (Cardano, Pascal, Bayes).
+to: found
+
+== hist.roots.economics | Economics
+st: border
+def: Gave utility, decision theory, game theory and operations research. These became the agent's way of choosing.
+to: prob.decision.utility, rl.multiagent
+
+== hist.roots.neuro | Neuroscience
+st: border
+def: Gave the neuron model behind neural networks, and later ideas like convolution (visual cortex) and reward prediction error (dopamine).
+to: dl, front.brain
+
+== hist.roots.psychology | Psychology & cognitive science
+st: border
+def: Behaviourism, then cognitive psychology's model of the mind as an information processor. Cognitive science is the joint field.
+to: front.cogarch
+
+== hist.roots.compeng | Computer engineering
+st: border
+def: The hardware AI runs on, from ENIAC to GPUs and TPUs. Hardware progress repeatedly decided which AI methods were practical.
+to: infra.hw
+
+== hist.roots.control | Control theory & cybernetics
+st: border
+def: Feedback, stability and optimal control (Wiener, Bellman). It merges with AI in reinforcement learning and robotics.
+to: rl, dom.robotics
+paper: Wiener | Cybernetics: Or Control and Communication in the Animal and the Machine | 1948
+
+== hist.roots.linguistics | Linguistics
+st: border
+def: Formal grammars (Chomsky) and the study of meaning. These shaped classical NLP until statistical and neural methods took over.
+to: dom.nlp
+
+######## L2: Timeline
+== hist.timeline | Timeline of AI
+def: AI's history as a sequence of eras: hype, disappointment ("winters"), and comebacks. Knowing the eras explains why methods exist in their current form.
+st: milestone
+
+#### Era: precursors
+== hist.timeline.pre | Precursors (antiquity–1940)
+st: milestone
+def: Mechanical reasoning and formal logic long before computers: Llull's logic machines, Leibniz's calculus of reasoning, Boole's algebra, Frege's logic, Babbage's engine, Gödel and Turing.
+
+== hist.timeline.pre.boole | Boole's Laws of Thought
+st: milestone
+yr: 1854
+def: Algebra of logic with true/false values. It became Boolean algebra, the basis of digital circuits and propositional logic.
+paper: Boole | An Investigation of the Laws of Thought | 1854
+to: found.discrete.boolean
+
+== hist.timeline.pre.lovelace | Lovelace's notes on the Analytical Engine
+st: milestone
+yr: 1843
+def: Ada Lovelace described programming Babbage's (never built) Analytical Engine. She argued it could only do what it was ordered to do, which Turing later called "Lady Lovelace's objection".
+x: hist.philosophy.can-think.lovelace
+
+== hist.timeline.pre.frege | Frege's Begriffsschrift
+st: milestone
+yr: 1879
+def: First full formal logic with quantifiers. It is the ancestor of first-order logic.
+to: sym.logic.fol
+
+== hist.timeline.pre.godel | Gödel's incompleteness theorems
+st: milestone
+yr: 1931
+def: Any consistent formal system rich enough for arithmetic contains true statements it cannot prove. Later used in arguments against machine minds.
+paper: Gödel | Über formal unentscheidbare Sätze der Principia Mathematica und verwandter Systeme I | 1931
+x: hist.philosophy.can-think.math-objection
+d: int
+
+== hist.timeline.pre.turing36 | Turing machine & Church's lambda calculus
+st: milestone
+yr: 1936
+def: Two equivalent definitions of "computable". Together they give the Church–Turing thesis and show some problems (the halting problem) are undecidable.
+paper: Turing | On Computable Numbers, with an Application to the Entscheidungsproblem | 1936
+to: found.cs.theory.turing-machine
+
+#### Era: inception
+== hist.timeline.inception | Inception (1943–1956)
+st: milestone
+def: The first artificial neuron, cybernetics, information theory and Turing's test, ending with the Dartmouth workshop that named the field.
+
+== hist.timeline.inception.mcp | McCulloch–Pitts neuron
+st: milestone
+yr: 1943
+def: First mathematical model of a neuron as a threshold logic unit. It showed networks of such units could compute logical functions.
+paper: McCulloch, Pitts | A Logical Calculus of the Ideas Immanent in Nervous Activity | 1943
+to: dl.basics.perceptron
+
+== hist.timeline.inception.cybernetics | Cybernetics
+st: milestone
+yr: 1948
+def: Wiener's science of feedback and control in animals and machines. It was a major pre-AI framework for goal-directed behaviour.
+x: hist.roots.control
+
+== hist.timeline.inception.shannon | Shannon's information theory
+st: milestone
+yr: 1948
+def: Defined information and entropy mathematically. It later became the source of cross-entropy loss and perplexity.
+paper: Shannon | A Mathematical Theory of Communication | 1948
+to: found.info
+
+== hist.timeline.inception.hebb | Hebbian learning
+st: milestone
+yr: 1949
+def: "Cells that fire together wire together": the first learning rule for connections between neurons.
+paper: Hebb | The Organization of Behavior | 1949
+to: front.brain
+
+== hist.timeline.inception.turing50 | Turing's "Computing Machinery and Intelligence"
+st: milestone
+yr: 1950
+def: Replaced "Can machines think?" with the imitation game (the Turing test), answered nine objections, and proposed learning "child machines".
+paper: Turing | Computing Machinery and Intelligence | 1950
+to: hist.philosophy.can-think.turing-test
+
+== hist.timeline.inception.snarc | SNARC
+st: milestone
+yr: 1951
+def: Minsky and Edmonds' hardware neural network of 40 neurons, built from vacuum tubes. It simulated a rat learning a maze.
+
+== hist.timeline.inception.logic-theorist | Logic Theorist
+st: milestone
+yr: 1956
+def: Newell, Simon and Shaw's program that proved theorems from Principia Mathematica. It is often called the first AI program.
+to: sym.search
+
+== hist.timeline.inception.dartmouth | Dartmouth workshop
+st: milestone
+yr: 1956
+def: Summer workshop organized by McCarthy, Minsky, Rochester and Shannon. The 1955 proposal coined "artificial intelligence"; this event is the field's official birth.
+paper: McCarthy, Minsky, Rochester, Shannon | A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence | 1955
+
+#### Era: early enthusiasm
+== hist.timeline.enthusiasm | Early enthusiasm (1952–1969)
+st: milestone
+def: Rapid early successes on toy problems and bold predictions. Symbolic search and reasoning dominated, and perceptrons were the first neural wave.
+
+== hist.timeline.enthusiasm.samuel | Samuel's checkers player
+st: milestone
+yr: 1959
+def: A checkers program that improved by playing itself. Samuel's paper popularized the term "machine learning".
+paper: Samuel | Some Studies in Machine Learning Using the Game of Checkers | 1959
+to: ml, rl.td
+
+== hist.timeline.enthusiasm.gps | General Problem Solver
+st: milestone
+yr: 1957
+def: Newell and Simon's program for solving any formalized problem by means–ends analysis. It imitated human problem-solving steps.
+to: sym.planning
+
+== hist.timeline.enthusiasm.lisp | LISP
+st: milestone
+yr: 1958
+def: McCarthy's list-processing language, dominant in AI research for three decades.
+
+== hist.timeline.enthusiasm.perceptron | Rosenblatt's perceptron
+st: milestone
+yr: 1958
+def: The first neural network that learned its weights from examples. It came with strong claims about future abilities.
+paper: Rosenblatt | The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain | 1958
+to: dl.basics.perceptron
+
+== hist.timeline.enthusiasm.adaline | ADALINE
+st: milestone
+yr: 1960
+def: Widrow and Hoff's adaptive linear neuron, trained by the LMS (delta) rule. It is an early form of gradient descent on squared error.
+to: found.opt.first.sgd
+
+== hist.timeline.enthusiasm.resolution | Robinson's resolution principle
+st: milestone
+yr: 1965
+def: A single complete inference rule for first-order logic. It made automated theorem proving and later Prolog possible.
+paper: Robinson | A Machine-Oriented Logic Based on the Resolution Principle | 1965
+to: sym.logic.fol
+d: int
+
+== hist.timeline.enthusiasm.eliza | ELIZA
+st: milestone
+yr: 1966
+def: Weizenbaum's pattern-matching chatbot imitating a therapist. People attributed understanding to it anyway (the "ELIZA effect").
+paper: Weizenbaum | ELIZA — A Computer Program for the Study of Natural Language Communication between Man and Machine | 1966
+to: dom.nlp
+
+== hist.timeline.enthusiasm.shakey | Shakey the robot
+st: milestone
+yr: 1966
+def: SRI's mobile robot (1966–1972) that combined perception, planning and action. STRIPS planning and A* search came out of the project.
+to: sym.planning.strips, sym.search.astar, dom.robotics
+
+== hist.timeline.enthusiasm.dendral | DENDRAL
+st: milestone
+yr: 1965
+def: Feigenbaum, Buchanan and Lederberg's system inferring molecular structure from mass spectra. It was the first knowledge-intensive expert system.
+to: sym.expert
+
+== hist.timeline.enthusiasm.shrdlu | SHRDLU
+st: milestone
+yr: 1970
+def: Winograd's program that understood English commands about a simulated blocks world. It was impressive inside its micro-world and brittle outside it.
+to: dom.nlp
+
+#### Era: dose of reality
+== hist.timeline.reality | A dose of reality & first AI winter (1966–1980)
+st: milestone
+def: Methods that worked on toy problems failed to scale (combinatorial explosion). Critical reports followed, funding was cut, and the first "AI winter" (~1974–1980) set in.
+
+== hist.timeline.reality.alpac | ALPAC report
+st: milestone
+yr: 1966
+def: US report concluding machine translation was slower, less accurate and more expensive than humans. Translation funding collapsed.
+
+== hist.timeline.reality.perceptrons | Minsky & Papert's "Perceptrons"
+st: milestone
+yr: 1969
+def: Proved single-layer perceptrons cannot compute functions like XOR. It is widely blamed for a decade of reduced neural network funding.
+paper: Minsky, Papert | Perceptrons: An Introduction to Computational Geometry | 1969
+to: dl.basics.mlp
+d: int
+
+== hist.timeline.reality.np | NP-completeness results
+st: milestone
+yr: 1971
+def: Cook (1971) and Karp (1972) showed many core problems are NP-complete. Scaling up search by brute force was hopeless.
+to: found.cs.algo.complexity
+
+== hist.timeline.reality.lighthill | Lighthill report
+st: milestone
+yr: 1973
+def: UK report concluding AI had failed its grand goals because of combinatorial explosion. It led to deep cuts in British AI funding.
+
+== hist.timeline.reality.winter1 | First AI winter
+st: milestone
+yr: 1974
+def: Roughly 1974–1980: reduced funding and interest after over-promising. DARPA also cut undirected AI research.
+
+#### Era: expert systems
+== hist.timeline.expert | Expert systems boom & second winter (1969–1993)
+st: milestone
+def: Knowledge-based systems encoded expert rules and became a billion-dollar industry in the 1980s. They proved costly to maintain and brittle, and the market crashed around 1987.
+
+== hist.timeline.expert.mycin | MYCIN
+st: milestone
+yr: 1972
+def: Stanford rule-based system diagnosing blood infections, with certainty factors for uncertain rules. It performed on par with specialists but was never deployed clinically.
+to: sym.expert
+
+== hist.timeline.expert.prolog | Prolog created
+st: milestone
+yr: 1972
+def: Colmerauer and Roussel's logic programming language. Programs are logical clauses, executed by backward chaining.
+to: sym.logic
+
+== hist.timeline.expert.frames | Minsky's frames
+st: milestone
+yr: 1974
+def: Knowledge as structured "frames" with slots and defaults for stereotyped situations. A forerunner of object-oriented representation.
+paper: Minsky | A Framework for Representing Knowledge | 1974
+to: sym.kr.frames
+
+== hist.timeline.expert.r1 | R1 / XCON
+st: milestone
+yr: 1980
+def: DEC's rule-based system configuring computer orders. It was the first commercially successful expert system, credited with large annual savings.
+to: sym.expert
+
+== hist.timeline.expert.fifthgen | Japan's Fifth Generation project
+st: milestone
+yr: 1982
+def: A ten-year national programme for logic-programming machines. It triggered competing programmes in the US (MCC, Strategic Computing) and UK (Alvey). It missed its goals.
+
+== hist.timeline.expert.cyc | Cyc
+st: milestone
+yr: 1984
+def: Lenat's project to hand-encode all of common-sense knowledge in logic. It is the longest-running symbolic AI effort.
+to: sym.kr
+
+== hist.timeline.expert.winter2 | Second AI winter
+st: milestone
+yr: 1987
+def: The specialized Lisp-machine market collapsed in 1987 as desktop computers caught up, and expert systems proved brittle. Funding and the "AI" label suffered into the early 1990s.
+
+#### Era: neural networks return
+== hist.timeline.nn | Return of neural networks (1980–2006)
+st: milestone
+def: Backpropagation made multi-layer networks trainable, and connectionism became a serious rival to symbolic AI. CNNs and LSTMs were invented, though compute and data held them back for two decades.
+
+== hist.timeline.nn.neocognitron | Neocognitron
+st: milestone
+yr: 1980
+def: Fukushima's hierarchical network inspired by the visual cortex. It is the direct ancestor of convolutional networks.
+paper: Fukushima | Neocognitron: A Self-organizing Neural Network Model for a Mechanism of Pattern Recognition Unaffected by Shift in Position | 1980
+to: dl.arch.cnn
+
+== hist.timeline.nn.hopfield | Hopfield networks introduced
+st: milestone
+yr: 1982
+def: Recurrent networks that store memories as energy minima. They revived physics-style interest in neural networks.
+paper: Hopfield | Neural Networks and Physical Systems with Emergent Collective Computational Abilities | 1982
+to: dl.arch.energy
+
+== hist.timeline.nn.backprop | Backpropagation popularized
+st: milestone
+yr: 1986
+def: Rumelhart, Hinton and Williams showed backprop learns useful internal representations in multi-layer networks. The method existed earlier (Linnainmaa 1970, Werbos 1974).
+paper: Rumelhart, Hinton, Williams | Learning Representations by Back-propagating Errors | 1986
+to: dl.basics.backprop
+x: found.calc.autodiff.reverse
+
+== hist.timeline.nn.pdp | Parallel Distributed Processing
+st: milestone
+yr: 1986
+def: Rumelhart and McClelland's two volumes, the manifesto of connectionism.
+to: hist.schools.connectionism
+
+== hist.timeline.nn.lenet | LeNet & convolutional networks
+st: milestone
+yr: 1989
+def: LeCun's CNNs trained with backprop to read handwritten digits. They were deployed to read cheques in the 1990s (LeNet-5, 1998).
+paper: LeCun, Bottou, Bengio, Haffner | Gradient-Based Learning Applied to Document Recognition | 1998
+to: dl.arch.cnn.lenet
+
+== hist.timeline.nn.lstm | LSTM invented
+st: milestone
+yr: 1997
+def: Hochreiter and Schmidhuber's gated recurrent unit, which solved vanishing gradients over long sequences. It dominated sequence modelling until Transformers.
+paper: Hochreiter, Schmidhuber | Long Short-Term Memory | 1997
+to: dl.arch.rnn.lstm
+
+#### Era: probabilistic & statistical turn
+== hist.timeline.stat | Probabilistic reasoning & machine learning (1987–2010)
+st: milestone
+def: AI adopted probability, statistics and rigorous benchmarks. Bayesian networks, HMMs, SVMs and ensembles replaced hand-written rules in most applications.
+
+== hist.timeline.stat.pearl | Pearl's Probabilistic Reasoning
+st: milestone
+yr: 1988
+def: Pearl's book established Bayesian networks as the way to reason under uncertainty.
+paper: Pearl | Probabilistic Reasoning in Intelligent Systems | 1988
+to: prob.gm.bayesnet
+
+== hist.timeline.stat.td | Temporal-difference learning introduced
+st: milestone
+yr: 1988
+def: Sutton's method of learning predictions from successive predictions. It is a core idea of reinforcement learning.
+paper: Sutton | Learning to Predict by the Methods of Temporal Differences | 1988
+to: rl.td
+
+== hist.timeline.stat.qlearning | Q-learning introduced
+st: milestone
+yr: 1989
+def: Watkins' model-free method to learn optimal action values. Proved convergent in 1992 (Watkins & Dayan).
+to: rl.qlearning
+
+== hist.timeline.stat.tdgammon | TD-Gammon
+st: milestone
+yr: 1992
+def: Tesauro's backgammon program that learned by self-play with TD learning and a neural network, reaching near-champion level.
+to: rl.td
+
+== hist.timeline.stat.svm | Soft-margin SVMs introduced
+st: milestone
+yr: 1995
+def: Cortes and Vapnik's soft-margin SVM. With the kernel trick it made SVMs a leading classifier through the 2000s.
+paper: Cortes, Vapnik | Support-Vector Networks | 1995
+to: ml.sup.svm
+
+== hist.timeline.stat.deepblue | Deep Blue beats Kasparov
+st: milestone
+yr: 1997
+def: IBM's chess machine beat the world champion. It used massive alpha–beta search and hand-tuned evaluation, not learning.
+to: sym.search.adversarial
+
+== hist.timeline.stat.rf | Random forests introduced
+st: milestone
+yr: 2001
+def: Breiman's ensemble of randomized decision trees. Still a strong default on tabular data.
+paper: Breiman | Random Forests | 2001
+to: ml.ensemble.rf
+
+== hist.timeline.stat.grandchallenge | DARPA Grand Challenge
+st: milestone
+yr: 2005
+def: Stanford's Stanley won a 132-mile autonomous desert race, using probabilistic robotics and machine learning. It launched the self-driving industry.
+to: apps.driving
+
+== hist.timeline.stat.dbn | Deep belief networks restart deep learning
+st: milestone
+yr: 2006
+def: Hinton, Osindero and Teh trained deep networks layer by layer as stacked RBMs. This restarted interest in "deep learning".
+paper: Hinton, Osindero, Teh | A Fast Learning Algorithm for Deep Belief Nets | 2006
+to: dl
+
+== hist.timeline.stat.imagenet | ImageNet released
+st: milestone
+yr: 2009
+def: Fei-Fei Li's team released a dataset of millions of labelled images. Its annual challenge (ILSVRC, from 2010) became the benchmark that proved deep learning.
+paper: Deng, Dong, Socher, Li, Li, Fei-Fei | ImageNet: A Large-Scale Hierarchical Image Database | 2009
+to: dom.cv.classification
+
+== hist.timeline.stat.watson | IBM Watson wins Jeopardy!
+st: milestone
+yr: 2011
+def: Question-answering system combining retrieval, NLP and many scoring models. It beat the top human champions.
+to: dom.ir
+
+#### Era: deep learning
+== hist.timeline.deep | Deep learning revolution (2012–2017)
+st: milestone
+def: GPUs, big datasets and better training made deep networks win in vision, speech, translation and games. It ended with the Transformer.
+
+== hist.timeline.deep.alexnet | AlexNet wins ImageNet
+st: milestone
+yr: 2012
+def: A GPU-trained CNN that won ImageNet 2012 by a huge margin. It is the usual starting point of the deep-learning era.
+paper: Krizhevsky, Sutskever, Hinton | ImageNet Classification with Deep Convolutional Neural Networks | 2012
+to: dl.arch.cnn.alexnet
+
+== hist.timeline.deep.word2vec | word2vec released
+st: milestone
+yr: 2013
+def: Mikolov et al. learned dense word vectors in which meaning becomes geometry (king − man + woman ≈ queen).
+paper: Mikolov, Chen, Corrado, Dean | Efficient Estimation of Word Representations in Vector Space | 2013
+to: dom.nlp.word2vec
+
+== hist.timeline.deep.dqn | DQN plays Atari
+st: milestone
+yr: 2013
+def: DeepMind's deep Q-network learned dozens of Atari games from pixels (workshop paper 2013; Nature 2015). Deep RL began here.
+paper: Mnih et al. | Human-level Control through Deep Reinforcement Learning | 2015
+to: rl.deep.dqn
+
+== hist.timeline.deep.gan | GANs introduced
+st: milestone
+yr: 2014
+def: Goodfellow et al. trained a generator against a discriminator. GANs led image generation until diffusion models.
+paper: Goodfellow et al. | Generative Adversarial Nets | 2014
+to: dl.gen.gan
+
+== hist.timeline.deep.seq2seq | Sequence-to-sequence & attention
+st: milestone
+yr: 2014
+def: Encoder–decoder RNNs (Sutskever et al.) plus attention (Bahdanau et al.) transformed machine translation. Attention is the seed of the Transformer.
+paper: Bahdanau, Cho, Bengio | Neural Machine Translation by Jointly Learning to Align and Translate | 2014
+to: dl.arch.seq2seq, dl.arch.attention
+
+== hist.timeline.deep.resnet | ResNet & residual connections
+st: milestone
+yr: 2015
+def: He et al.'s residual connections made networks with 100+ layers trainable. Residual connections are now in nearly every deep architecture, including Transformers.
+paper: He, Zhang, Ren, Sun | Deep Residual Learning for Image Recognition | 2015
+to: dl.arch.cnn.resnet
+
+== hist.timeline.deep.alphago | AlphaGo beats Lee Sedol
+st: milestone
+yr: 2016
+def: DeepMind combined deep networks, Monte Carlo tree search and RL to beat a top Go professional, a decade earlier than expected.
+paper: Silver et al. | Mastering the Game of Go with Deep Neural Networks and Tree Search | 2016
+to: rl.games.alphago
+x: sym.search.mcts
+
+== hist.timeline.deep.transformer | Transformer introduced
+st: milestone
+yr: 2017
+def: An architecture built entirely on attention, with no recurrence. It is the backbone of LLMs and spread to vision, audio and biology.
+paper: Vaswani et al. | Attention Is All You Need | 2017
+to: dl.arch.transformer
+
+#### Era: foundation models
+== hist.timeline.fm | Foundation models (2018–2022)
+st: milestone
+def: Pretrain one huge model on broad data, then adapt it to many tasks. Scaling laws, GPT-3 and CLIP changed AI from building task-specific models to adapting general ones.
+
+== hist.timeline.fm.bert-gpt | GPT-1 & BERT
+st: milestone
+yr: 2018
+def: OpenAI's GPT (generative pretraining, June 2018) and Google's BERT (masked pretraining, October 2018) established "pretrain, then fine-tune" in NLP.
+paper: Devlin, Chang, Lee, Toutanova | BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding | 2018
+to: llm.models.bert, llm.models.gpt
+
+== hist.timeline.fm.gpt3 | GPT-3 & scaling laws
+st: milestone
+yr: 2020
+def: A 175B-parameter model that could do new tasks from a few examples in the prompt (in-context learning). Kaplan et al.'s scaling laws predicted loss falls smoothly with scale.
+paper: Brown et al. | Language Models are Few-Shot Learners | 2020
+to: llm.pretrain.scaling, sys.prompting.icl
+
+== hist.timeline.fm.alphafold | AlphaFold 2
+st: milestone
+yr: 2020
+def: Predicted protein 3D structures at near-experimental accuracy at CASP14 (paper 2021). It became AI's landmark contribution to science.
+paper: Jumper et al. | Highly Accurate Protein Structure Prediction with AlphaFold | 2021
+to: apps.science.alphafold
+
+== hist.timeline.fm.clip | CLIP & DALL·E
+st: milestone
+yr: 2021
+def: CLIP learned a shared image–text embedding from web pairs; DALL·E generated images from text. Multimodal foundation models began here.
+paper: Radford et al. | Learning Transferable Visual Models From Natural Language Supervision | 2021
+to: dom.mm.clip
+
+== hist.timeline.fm.term | "Foundation models" named
+st: milestone
+yr: 2021
+def: A Stanford report coined the term for large pretrained models that are adapted to many tasks, and analysed their risks.
+paper: Bommasani et al. | On the Opportunities and Risks of Foundation Models | 2021
+to: llm
+
+== hist.timeline.fm.instructgpt | InstructGPT (RLHF)
+st: milestone
+yr: 2022
+def: Fine-tuning GPT-3 with human feedback (RLHF) made a much smaller model preferred over the original. This recipe made ChatGPT possible.
+paper: Ouyang et al. | Training Language Models to Follow Instructions with Human Feedback | 2022
+to: llm.post.rlhf
+
+== hist.timeline.fm.diffusion | Diffusion image generation goes mainstream
+st: milestone
+yr: 2022
+def: DALL·E 2, Imagen and the open-weight Stable Diffusion made high-quality text-to-image generation widely available.
+paper: Rombach, Blattmann, Lorenz, Esser, Ommer | High-Resolution Image Synthesis with Latent Diffusion Models | 2022
+to: dl.gen.diffusion
+
+== hist.timeline.fm.chatgpt | ChatGPT
+st: milestone
+yr: 2022
+def: Released 30 November 2022. A chat interface on an RLHF-tuned GPT-3.5 reached 100 million users within about two months and started the generative-AI boom.
+to: llm
+
+#### Era: generative AI boom
+== hist.timeline.genai | Generative AI & agents era (2023–present)
+st: milestone
+def: Multimodal frontier models, open-weight models, reasoning models trained with RL, and agents that use tools and write code. Dated, recent: re-check yearly.
+
+== hist.timeline.genai.gpt4 | GPT-4 & the frontier-model race
+st: milestone
+yr: 2023
+def: GPT-4 (March 2023) came alongside Anthropic's Claude (March 2023), Meta's open-weight LLaMA (February 2023) and Google's Gemini (December 2023). Several labs now compete at the frontier.
+to: llm.models
+
+== hist.timeline.genai.nobel | Nobel Prizes for AI
+st: milestone
+yr: 2024
+def: Physics prize to Hopfield and Hinton for foundational neural-network work; Chemistry prize shared by Hassabis and Jumper (AlphaFold) with Baker (protein design).
+x: hist.timeline.nn.hopfield, hist.timeline.fm.alphafold
+
+== hist.timeline.genai.reasoning | Reasoning models arrive
+st: milestone
+yr: 2024
+def: OpenAI's o1 (September 2024) used RL to train long chains of thought before answering. DeepSeek-R1 (January 2025) showed the recipe in open weights. "Thinking" became standard in frontier models.
+paper: DeepSeek-AI | DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning | 2025
+to: llm.reasoning
+
+== hist.timeline.genai.mcp | Model Context Protocol released
+st: milestone
+yr: 2024
+def: Anthropic's open protocol (November 2024) for connecting models to tools and data sources. It was quickly adopted across the industry.
+to: sys.agents.mcp
+
+== hist.timeline.genai.agents | Agentic AI
+st: milestone
+yr: 2025
+def: Models that take many steps with tools: coding agents (e.g. Claude Code, early 2025), computer-use and research agents. Agents became the main way frontier models were deployed.
+to: sys.agents
+
+== hist.timeline.genai.imo | Gold-medal level at the IMO
+st: milestone
+yr: 2025
+def: In July 2025, experimental models from Google DeepMind and OpenAI produced gold-medal-level solutions at the International Mathematical Olympiad in natural language.
+to: llm.reasoning
+
+######## L2: Philosophy
+== hist.philosophy | Philosophy of AI
+def: Can machines think, understand or be conscious? What would count as evidence? These questions are still open, and LLMs made them practical.
+st: debate
+d: int
+
+== hist.philosophy.can-think | Can machines think?
+st: debate
+def: The classic debate started by Turing (1950), with his test and the objections to machine intelligence.
+pre: hist.timeline.inception.turing50
+
+== hist.philosophy.can-think.turing-test | Turing test
+st: debate
+yr: 1950
+def: A judge chats by text with a human and a machine. If the judge can't reliably tell them apart, the machine passes. It is criticised as testing imitation rather than intelligence.
+aka: imitation game
+paper: Turing | Computing Machinery and Intelligence | 1950
+
+== hist.philosophy.can-think.lovelace | Lady Lovelace's objection
+st: debate
+yr: 1950
+def: Machines can only do what they are programmed to do and cannot originate anything. Turing replied that learning machines can surprise their makers.
+
+== hist.philosophy.can-think.disability | Argument from disability
+st: debate
+def: "A machine will never do X" (be kind, fall in love, have a sense of humour). Turing listed these claims; many specific Xs have since been matched in behaviour.
+
+== hist.philosophy.can-think.math-objection | Mathematical (Gödelian) objection
+st: debate
+yr: 1961
+def: Lucas (1961) and Penrose (1989) argued Gödel's theorems show human minds are not formal systems. Most logicians and AI researchers reject the argument.
+pre: hist.timeline.pre.godel
+paper: Lucas | Minds, Machines and Gödel | 1961
+d: adv
+
+== hist.philosophy.can-think.informality | Argument from informality (Dreyfus)
+st: debate
+yr: 1972
+def: Human expertise rests on intuition, embodiment and context that cannot be captured by rules. This was a strong critique of symbolic AI and partly vindicated by learning-based AI.
+paper: Dreyfus | What Computers Can't Do | 1972
+
+== hist.philosophy.mind | Mind, meaning & consciousness
+st: debate
+def: Even if a machine behaves intelligently, does it understand or experience anything? These are questions about what computation is and how symbols get meaning.
+
+== hist.philosophy.mind.strong-weak | Strong vs weak AI
+st: debate
+yr: 1980
+def: Weak AI: machines can act as if intelligent. Strong AI: a suitably programmed machine literally has a mind. The terms are Searle's.
+
+== hist.philosophy.mind.pssh | Physical symbol system hypothesis
+st: debate
+yr: 1976
+def: Newell and Simon's claim that a physical symbol system has the necessary and sufficient means for general intelligence. It is the thesis behind symbolic AI.
+paper: Newell, Simon | Computer Science as Empirical Inquiry: Symbols and Search | 1976
+x: hist.schools.symbolism
+
+== hist.philosophy.mind.computationalism | Computationalism & functionalism
+st: debate
+def: The mind is what the brain does, and what it does is computation (Putnam, Fodor). If so, the right program on any hardware could have a mind.
+
+== hist.philosophy.mind.chinese-room | Chinese room
+st: debate
+yr: 1980
+def: Searle follows rules to answer Chinese questions without understanding Chinese, so (he argues) running a program is not enough for understanding. Main replies: the systems reply and the robot reply.
+paper: Searle | Minds, Brains, and Programs | 1980
+pre: hist.philosophy.mind.strong-weak
+
+== hist.philosophy.mind.blockhead | Blockhead & the Chinese nation
+st: debate
+yr: 1978
+def: Block's thought experiments: a lookup table that passes the Turing test, and a nation simulating a brain. Behaviour alone may not imply a mind.
+d: int
+
+== hist.philosophy.mind.grounding | Symbol grounding problem
+st: debate
+yr: 1990
+def: How do symbols in a machine get meaning instead of only pointing to other symbols? Revived for LLMs trained on text alone.
+paper: Harnad | The Symbol Grounding Problem | 1990
+to: hist.philosophy.llm
+
+== hist.philosophy.mind.frame | Frame problem
+st: debate
+yr: 1969
+def: How to represent what does *not* change when an action happens without listing everything. It began as a logic problem and became a general problem of relevance.
+paper: McCarthy, Hayes | Some Philosophical Problems from the Standpoint of Artificial Intelligence | 1969
+to: sym.logic
+d: int
+
+== hist.philosophy.mind.moravec | Moravec's paradox
+st: debate
+yr: 1988
+def: High-level reasoning (chess, algebra) is computationally easy for machines; low-level perception and motor skill is hard. Robotics still shows this.
+paper: Moravec | Mind Children | 1988
+x: dom.robotics
+
+== hist.philosophy.mind.consciousness | Consciousness & the hard problem
+st: debate
+yr: 1995
+def: Why does any physical process feel like something from the inside (qualia)? Chalmers' "hard problem" is untouched by behavioural tests. It matters for questions of AI moral status.
+paper: Chalmers | Facing Up to the Problem of Consciousness | 1995
+to: safe.ethics.moral-status
+d: int
+
+== hist.philosophy.llm | Do LLMs understand?
+st: debate
+yr: 2020
+def: Live debate: are LLMs only modelling the form of text, or do they build internal world models? It mixes old philosophy with new interpretability evidence.
+pre: hist.philosophy.mind.grounding
+
+== hist.philosophy.llm.octopus | The octopus test
+st: debate
+yr: 2020
+def: Bender and Koller argued a system trained only on linguistic form cannot learn meaning, illustrated by an octopus eavesdropping on a telegraph cable.
+paper: Bender, Koller | Climbing towards NLU: On Meaning, Form, and Understanding in the Age of Data | 2020
+
+== hist.philosophy.llm.parrots | Stochastic parrots
+st: debate
+yr: 2021
+def: Bender, Gebru et al. described LMs as stitching together text without reference to meaning, and raised costs, bias and data risks.
+paper: Bender, Gebru, McMillan-Major, Shmitchell | On the Dangers of Stochastic Parrots: Can Language Models Be Too Big? | 2021
+x: safe.ethics
+
+== hist.philosophy.llm.worldmodel | Emergent world models
+st: debate
+yr: 2023
+def: Evidence that LMs form internal state representations. Example: a model trained only on Othello move lists encodes the board (Li et al., 2023).
+paper: Li et al. | Emergent World Representations: Exploring a Sequence Model Trained on a Synthetic Task | 2023
+x: safe.interp, front.worldmodels
+d: adv
+
+== hist.philosophy.llm.lamda | The LaMDA sentience claim
+st: debate
+yr: 2022
+def: A Google engineer publicly claimed the LaMDA chatbot was sentient. It became a case study in how fluent language triggers attributions of mind (the ELIZA effect at scale).
+x: hist.timeline.enthusiasm.eliza
+
+== hist.philosophy.measure | Measuring intelligence
+st: debate
+def: If not the Turing test, then what? Proposals define intelligence by generalization, adaptation and skill-acquisition efficiency.
+
+== hist.philosophy.measure.loebner | Loebner Prize
+st: milestone
+yr: 1991
+def: Annual Turing-test-style chatbot competition (1991–2019). It mostly rewarded tricks, which showed the test's weakness as a benchmark.
+
+== hist.philosophy.measure.legg-hutter | Universal intelligence
+st: debate
+yr: 2007
+def: Legg and Hutter defined intelligence as an agent's ability to achieve goals across all computable environments, weighted by simplicity. It is linked to AIXI.
+paper: Legg, Hutter | Universal Intelligence: A Definition of Machine Intelligence | 2007
+to: front.aixi
+d: adv
+
+== hist.philosophy.measure.winograd | Winograd Schema Challenge
+st: debate
+yr: 2012
+def: Pronoun-resolution questions that need common sense ("The trophy didn't fit in the suitcase because it was too big"). Proposed as a Turing-test alternative; largely solved by LLMs by ~2020.
+paper: Levesque, Davis, Morgenstern | The Winograd Schema Challenge | 2012
+to: llm.eval
+
+== hist.philosophy.measure.arc | ARC & "On the Measure of Intelligence"
+st: active
+yr: 2019
+def: Chollet defined intelligence as skill-acquisition efficiency and released ARC: visual puzzles that are easy for humans and were long hard for AI. Successor versions (ARC-AGI-2, …) are used to track frontier models.
+paper: Chollet | On the Measure of Intelligence | 2019
+to: llm.eval, front.agi
+
+== hist.philosophy.future | Singularity & the future of AI
+st: debate
+def: Arguments that AI could recursively improve itself and transform civilization, and the debate over timelines and risks.
+to: safe.xrisk
+
+== hist.philosophy.future.explosion | Intelligence explosion
+st: debate
+yr: 1965
+def: I. J. Good: an ultraintelligent machine could design even better machines, so it would be the last invention humans need make.
+paper: Good | Speculations Concerning the First Ultraintelligent Machine | 1965
+
+== hist.philosophy.future.singularity | Technological singularity
+st: debate
+yr: 1993
+def: Vinge's term for the point after which superhuman AI makes the future unpredictable. Popularized by Kurzweil.
+paper: Vinge | The Coming Technological Singularity | 1993
+pre: hist.philosophy.future.explosion
+
+######## L2: Schools of thought
+== hist.schools | Schools of thought
+def: The rival philosophies of how to build intelligence. Each school roughly corresponds to a field of this map. The recurring fight is between hand-built knowledge and learning from data at scale.
+d: beg
+
+== hist.schools.symbolism | Symbolism (GOFAI)
+def: Intelligence as manipulating explicit symbols with rules and logic. It dominated 1956–1990s. Haugeland named it "Good Old-Fashioned AI".
+yr: 1985
+to: sym
+x: hist.philosophy.mind.pssh
+
+== hist.schools.connectionism | Connectionism
+def: Intelligence emerging from many simple units with learned connection strengths. It won the 2010s as deep learning.
+to: dl
+
+== hist.schools.bayesian | Probabilistic / Bayesian school
+def: Intelligence as reasoning and learning under uncertainty with probability theory.
+to: prob
+
+== hist.schools.evolutionary | Evolutionary school
+def: Intelligence through simulated variation and selection, searching over solutions or programs.
+to: evo
+
+== hist.schools.analogizers | Analogizers
+def: Learning by similarity to known cases: nearest neighbours, kernel methods, case-based reasoning. Domingos counts them as one of five "tribes" alongside the four above.
+yr: 2015
+paper: Domingos | The Master Algorithm | 2015
+to: ml.sup.knn, ml.sup.svm
+
+== hist.schools.embodied | Behaviour-based & embodied AI
+yr: 1986
+def: Brooks argued intelligence comes from layered reactive behaviours interacting with the real world, not from symbolic world models (subsumption architecture). Strong influence on robotics.
+paper: Brooks | Intelligence without Representation | 1991
+to: dom.robotics, front.embodied
+
+== hist.schools.neats-scruffies | Neats vs scruffies
+st: classic
+def: A 1970s–80s split: neats wanted elegant, provable formal methods; scruffies built whatever worked through many ad hoc mechanisms. Modern practice mixes both.
+
+== hist.schools.bitter | The Bitter Lesson
+yr: 2019
+def: Sutton's essay: over 70 years, general methods that scale with computation (search and learning) have beaten methods built on human knowledge. It is the informal creed behind scaling.
+paper: Sutton | The Bitter Lesson | 2019
+to: llm.pretrain.scaling
+st: debate
+
+== hist.schools.hybrid | Hybrid / neuro-symbolic
+def: Combining learned neural components with symbolic structure such as logic, programs, search and tools. LLMs calling tools and search are a practical form.
+to: front.neurosym
+x: sys.agents.tools
+
+######## Gap-audit additions (from Wikipedia History/Philosophy of AI cross-check)
+== hist.timeline.enthusiasm.advice-taker | McCarthy's Advice Taker
+st: milestone
+yr: 1958
+def: A proposed program that would reason from common-sense knowledge stated in logic and accept new advice as sentences. The first statement of the logicist programme for common sense.
+paper: McCarthy | Programs with Common Sense | 1958
+to: sym.kr
+
+== hist.timeline.enthusiasm.fuzzy | Zadeh's fuzzy sets
+st: milestone
+yr: 1965
+def: Sets with degrees of membership between 0 and 1. The basis of fuzzy logic and fuzzy control systems.
+paper: Zadeh | Fuzzy Sets | 1965
+to: sym.fuzzy
+
+== hist.timeline.reality.mansfield | Mansfield Amendment
+st: milestone
+yr: 1969
+def: US law requiring military research funding to have direct mission relevance. DARPA shifted away from open-ended AI research.
+
+== hist.timeline.reality.weizenbaum | Weizenbaum's "Computer Power and Human Reason"
+st: milestone
+yr: 1976
+def: ELIZA's creator, alarmed at people confiding in it, argued some decisions should never be delegated to computers. An early ethics critique of AI.
+paper: Weizenbaum | Computer Power and Human Reason | 1976
+x: safe.ethics
+
+== hist.timeline.expert.marr | Marr's computational theory of vision
+st: milestone
+yr: 1982
+def: Vision as a sequence of representations (primal sketch → 2½-D sketch → 3D model), analysed at three levels: computational, algorithmic, implementational. Shaped computer vision and cognitive science.
+paper: Marr | Vision: A Computational Investigation into the Human Representation and Processing of Visual Information | 1982
+to: dom.cv
+
+== hist.timeline.nn.boltzmann | Boltzmann machines introduced
+st: milestone
+yr: 1985
+def: Stochastic recurrent networks that learn a probability distribution (Ackley, Hinton, Sejnowski). Their restricted form (RBM) was the building block of deep belief nets.
+paper: Ackley, Hinton, Sejnowski | A Learning Algorithm for Boltzmann Machines | 1985
+to: dl.arch.energy
+
+== hist.roots.psychology.dual-process | Dual-process theory (System 1 / System 2)
+st: border
+def: Fast, intuitive thinking vs slow, deliberate reasoning (Kahneman's popular framing). Often used as an analogy for direct answers vs chain-of-thought reasoning in LLMs.
+paper: Kahneman | Thinking, Fast and Slow | 2011
+x: llm.reasoning

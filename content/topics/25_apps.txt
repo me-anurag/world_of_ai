@@ -1,0 +1,88 @@
+# APPLICATION VERTICALS (shallower by design: shows where each field gets applied)
+# Audit: Stanford AI Index (applications chapters), AIMA 1.4 state of the art, major landmark systems per sector.
+!defaults d=beg st=active
+
+== apps.science | AI for science
+def: AI as a scientific instrument: predicting structures and properties, simulating physics, forecasting weather, proposing hypotheses and proving theorems.
+pre: dl.arch.gnn.equivariant
+x: front.discovery
+
+== apps.science.alphafold | AlphaFold
+def: Predicts a protein's 3D structure from its amino-acid sequence at near-experimental accuracy; its database covers over 200 million proteins. Its creators shared the 2024 Nobel Prize in Chemistry.
+pre: dl.arch.transformer
+x: hist.timeline.fm.alphafold, hist.timeline.genai.nobel
+paper: Jumper et al. | Highly Accurate Protein Structure Prediction with AlphaFold | 2021
+yr: 2020
+st: milestone
+
+== apps.science.weather | Weather & climate forecasting
+def: Learned global weather models (GraphCast, GenCast, Pangu-Weather) rival or beat physics-based forecasts at far lower cost.
+pre: dl.arch.gnn
+paper: Lam et al. | Learning Skillful Medium-Range Global Weather Forecasting | 2023
+
+== apps.science.materials | Materials, chemistry & drug discovery
+def: Predicting molecular and crystal properties, generating candidate drugs and materials, and planning synthesis.
+pre: dom.graph.molecules
+paper: Merchant et al. | Scaling Deep Learning for Materials Discovery | 2023
+
+== apps.science.math | AI for mathematics
+def: AI that proves theorems, finds counterexamples and discovers algorithms; reached IMO gold-medal level in 2025.
+pre: sym.logic.provers
+x: hist.timeline.genai.imo, evo.llm
+
+== apps.medicine | Medicine & healthcare
+def: Medical imaging diagnosis, clinical documentation, risk prediction, triage and drug discovery; constrained by validation, regulation, privacy and fairness.
+pre: dom.cv.classification, ml.eval.calibration
+paper: Esteva et al. | Dermatologist-level Classification of Skin Cancer with Deep Neural Networks | 2017
+x: safe.fairness
+
+== apps.driving | Autonomous driving
+def: Perception, prediction, planning and control for self-driving vehicles; driverless taxis operate commercially in several cities, while full general autonomy remains unsolved.
+pre: dom.cv.detection, dom.robotics.motion, dom.cv.3d.pointcloud
+x: hist.timeline.stat.grandchallenge
+
+== apps.finance | Finance
+def: Fraud detection, credit scoring, algorithmic trading, risk modelling and customer-service automation; heavily regulated for fairness and explainability.
+pre: dom.anomaly, dom.ts, ml.ensemble.gbm
+x: safe.fairness
+
+== apps.games | Games & interactive entertainment
+def: Game-playing agents, procedural content generation, AI-driven characters and AI-assisted game development.
+pre: rl.games
+x: dom.cv.generation
+
+== apps.education | Education
+def: Tutoring systems, automated feedback and LLM study assistants; raises questions about assessment and over-reliance.
+pre: sys.app
+x: safe.ethics.wellbeing
+
+== apps.law | Law & government
+def: Legal research, contract review, e-discovery and public-service automation; hallucinated citations have already caused court sanctions.
+pre: sys.rag
+x: llm.behavior.hallucination
+
+== apps.software | Software engineering
+def: Code completion, coding agents, automated testing and code review; the fastest-adopted professional use of LLMs.
+pre: sys.agents.coding
+
+== apps.business | Business operations, customer service & marketing
+def: Chat assistants, document processing, analytics, search, personalization and recommendation across enterprises.
+pre: sys.rag, dom.recsys
+
+== apps.creative | Creative industries
+def: Image, video, music and text generation for design, film, advertising and writing; contested over copyright and labour.
+pre: dom.cv.generation, dom.speech.tts
+x: safe.ethics.creative
+
+== apps.industry | Manufacturing, logistics & energy
+def: Visual inspection, predictive maintenance, demand forecasting, route optimization, robotics in warehouses and grid optimization.
+pre: dom.anomaly, dom.ts, sym.csp.optimization
+
+== apps.agriculture | Agriculture & environment
+def: Crop and pest detection from images, yield prediction, precision farming and satellite monitoring of land and climate.
+pre: dom.cv.classification, dom.ts
+
+== apps.cyber | Cybersecurity
+def: AI for intrusion and malware detection and for finding vulnerabilities, and the same capabilities used by attackers.
+pre: dom.anomaly
+x: safe.llm.misuse

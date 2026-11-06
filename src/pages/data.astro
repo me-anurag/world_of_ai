@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site.config.mjs';
+---
+<Base title="Download the data" description="The full map as JSON and CSV, free to reuse under CC BY 4.0." section="guide" wide>
+  <div class="prose" style="max-width:760px">
+    <h1>Download the data</h1>
+    <p class="lead">The whole map is available as open data under the Creative Commons Attribution 4.0 licence. You can reuse it for any purpose, including commercially, if you credit {site.name} and link to this site.</p>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th scope="col">File</th><th scope="col">Contents</th></tr></thead>
+        <tbody>
+          <tr><td><a href="/data/atlas-of-ai.json" download>atlas-of-ai.json</a></td><td>Every topic with all fields and connections, as nested JSON</td></tr>
+          <tr><td><a href="/data/atlas-of-ai.csv" download>atlas-of-ai.csv</a></td><td>One row per topic, with connections as semicolon-separated ids</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h2>Fields in each record</h2>
+    <p><code>id</code>, <code>name</code>, <code>kind</code> (field, area or topic), <code>parent</code>, <code>status</code>, <code>difficulty</code>, <code>year</code>, <code>def</code>, <code>formula</code>, <code>aka</code>, <code>pre</code>, <code>to</code>, <code>related</code>, the key paper, and the page <code>url</code>.</p>
+    <p>The source files and the build scripts are on <a href={`https://github.com/${site.repo}`}>GitHub</a>. Proposed changes are welcome as issues or pull requests.</p>
+  </div>
+</Base>

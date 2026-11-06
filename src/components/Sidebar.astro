@@ -1,0 +1,57 @@
+---
+import { fields, get } from '../lib/data.js';
+interface Props { current?: string }
+const { current } = Astro.props;
+const node = current ? get(current) : null;
+// The chain of places from the field down to the current page; each is shown open.
+const chain = new Set(node ? [...node.crumbs, node.id] : []);
+const branch = (id) => {
+  const n = get(id);
+  return { n, open: chain.has(id), here: id === current };
+};
+---
+<nav class="sidebar" aria-label="Contents" data-pagefind-ignore>
+  <h2>Contents</h2>
+  <ul class="toc">
+    {fields.map(f => {
+      const fb = branch(f.id);
+      return (
+        <li class={fb.open ? 'open' : undefined}>
+          <a href={f.url} aria-current={fb.here ? 'page' : undefined}>{f.name}<span class="count">{f.descendants}</span></a>
+          {fb.open && f.children.length > 0 && (
+            <ul>
+              {f.children.map(aid => {
+                const ab = branch(aid);
+                return (
+                  <li class={ab.open ? 'open' : undefined}>
+                    <a href={ab.n.url} aria-current={ab.here ? 'page' : undefined}>{ab.n.name}</a>
+                    {ab.open && ab.n.children.length > 0 && (
+                      <ul>
+                        {ab.n.children.map(tid => {
+                          const tb = branch(tid);
+                          return (
+                            <li class={tb.open ? 'open' : undefined}>
+                              <a href={tb.n.url} aria-current={tb.here ? 'page' : undefined}>{tb.n.name}</a>
+                              {tb.open && tb.n.children.length > 0 && (
+                                <ul>
+                                  {tb.n.children.map(vid => {
+                                    const vb = branch(vid);
+                                    return <li><a href={vb.n.url} aria-current={vb.here ? 'page' : undefined}>{vb.n.name}</a></li>;
+                                  })}
+                                </ul>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </li>
+      );
+    })}
+  </ul>
+</nav>

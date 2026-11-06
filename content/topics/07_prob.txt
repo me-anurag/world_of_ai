@@ -1,0 +1,505 @@
+# FIELD 3 — Probabilistic & Bayesian AI
+!defaults d=int st=foundational
+
+######## L2: Graphical models
+== prob.gm | Graphical models
+def: Represent a joint distribution over many variables as a graph whose missing edges encode independence. Turns exponentially large tables into small local pieces you can reason and learn with.
+pre: found.prob.basics.cond-indep, found.discrete.graphs.basics
+paper: Koller, Friedman | Probabilistic Graphical Models: Principles and Techniques | 2009
+
+== prob.gm.bayesnet | Bayesian networks
+def: A DAG where each node has a conditional distribution given its parents; the joint is the product of these. The standard model for causal-style reasoning under uncertainty (diagnosis, risk).
+f: P(x₁…xₙ) = Πᵢ P(xᵢ | parents(xᵢ))
+pre: found.discrete.graphs.dag, found.prob.basics.chain
+paper: Pearl | Probabilistic Reasoning in Intelligent Systems | 1988
+x: hist.timeline.stat.pearl
+
+== prob.gm.bayesnet.cpt | Conditional probability tables & local models
+def: How each node's conditional distribution is written: tables, deterministic functions, context-specific trees, or compact forms like noisy-OR when causes act independently.
+
+== prob.gm.bayesnet.dsep | d-separation
+def: A graphical test for whether two variables are independent given evidence, by checking whether every path is blocked (chains, forks, colliders).
+to: prob.causal.backdoor
+d: adv
+
+== prob.gm.bayesnet.explain-away | Explaining away (colliders)
+def: Two independent causes become dependent once their common effect is observed: if the alarm rang and there was an earthquake, a burglary becomes less likely.
+pre: prob.gm.bayesnet.dsep
+
+== prob.gm.bayesnet.gaussian | Gaussian & hybrid Bayesian networks
+def: Networks with continuous variables, linear-Gaussian dependencies, or a mix of discrete and continuous nodes.
+pre: found.prob.dist.mvn
+d: adv
+
+== prob.gm.mrf | Markov random fields (undirected models)
+def: Undirected graphs with potential functions on cliques; the joint is their normalized product. Natural for symmetric interactions such as neighbouring pixels.
+f: P(x) = (1/Z) Π_c ψ_c(x_c)
+paper: Kindermann, Snell | Markov Random Fields and Their Applications | 1980
+to: dl.arch.energy
+
+== prob.gm.mrf.gibbs | Gibbs distribution, partition function & Hammersley–Clifford
+def: Positive distributions that factor over cliques are exactly those with the graph's independencies. The normalizer Z (partition function) is usually intractable to compute.
+d: adv
+
+== prob.gm.mrf.ising | Ising & Potts models
+def: Grid MRFs from statistical physics with pairwise coupling; used in image denoising and segmentation and a link between physics and ML.
+d: adv
+
+== prob.gm.factor | Factor graphs
+def: Bipartite graphs of variables and factors that unify directed and undirected models and make message passing explicit.
+pre: prob.gm.bayesnet, prob.gm.mrf
+paper: Kschischang, Frey, Loeliger | Factor Graphs and the Sum-Product Algorithm | 2001
+d: adv
+
+== prob.gm.crf | Conditional random fields
+def: Discriminative undirected models of P(labels | input), typically chains over sequences. Were the standard for named-entity tagging and segmentation before neural nets.
+pre: prob.gm.mrf
+paper: Lafferty, McCallum, Pereira | Conditional Random Fields: Probabilistic Models for Segmenting and Labeling Sequence Data | 2001
+to: dom.nlp
+st: classic
+d: adv
+
+== prob.gm.hmm | Hidden Markov models
+def: A hidden state follows a Markov chain and emits observations. The workhorse of speech recognition and bioinformatics before deep learning; the simplest dynamic Bayesian network.
+pre: prob.gm.bayesnet, found.prob.process.markov
+paper: Rabiner | A Tutorial on Hidden Markov Models and Selected Applications in Speech Recognition | 1989
+to: dom.speech
+x: prob.temporal
+st: classic
+
+== prob.gm.dbn | Dynamic Bayesian networks
+def: Bayesian networks unrolled over time with a repeating slice; HMMs and Kalman filters are special cases.
+pre: prob.gm.hmm
+d: adv
+
+== prob.gm.plates | Plate notation & template models
+def: Draw a repeated structure once inside a box ("plate") indexed over data points. Template and relational models share parameters across many instances.
+pre: prob.gm.bayesnet
+to: prob.ppl
+
+== prob.gm.latent | Latent variable models
+def: Models with unobserved variables explaining the data: mixtures, factor analysis, HMMs, topic models, and deep generative models.
+pre: prob.gm.bayesnet
+to: ml.unsup.gmm, dl.gen.vae, prob.bayesml.ppca
+
+== prob.gm.learning | Learning graphical models
+def: Estimating the parameters (and sometimes the structure) of a graphical model from data.
+pre: prob.gm.bayesnet, found.stats.est.mle
+
+== prob.gm.learning.params | Parameter estimation (MLE & Bayesian)
+def: With complete data, each CPT is estimated from counts (with Dirichlet priors for smoothing). With hidden variables, use EM.
+to: prob.inference.em
+
+== prob.gm.learning.structure | Structure learning
+def: Learn the graph itself: constraint-based methods test independencies (PC algorithm); score-based methods search for the graph maximizing a score (BIC, Bayesian score); Chow–Liu finds the best tree.
+paper: Chow, Liu | Approximating Discrete Probability Distributions with Dependence Trees | 1968
+to: prob.causal.discovery
+d: adv
+
+== prob.gm.learning.undirected | Learning undirected models
+def: Hard because the gradient needs the partition function. Workarounds: pseudo-likelihood, contrastive divergence, score matching.
+pre: prob.gm.mrf.gibbs
+to: dl.arch.energy
+d: adv
+
+######## L2: Inference
+== prob.inference | Probabilistic inference
+def: Computing posteriors, marginals or most-likely assignments from a model and evidence. Exact inference is NP-hard in general, so most practice is approximate.
+pre: prob.gm.bayesnet, found.cs.algo.complexity
+
+== prob.inference.exact | Exact inference
+def: Algorithms that compute exact answers by exploiting graph structure; cost depends on the graph's treewidth.
+
+== prob.inference.exact.enumeration | Inference by enumeration
+def: Sum the joint over all hidden variables. Correct but exponential; the baseline everything else improves on.
+d: beg
+
+== prob.inference.exact.ve | Variable elimination
+def: Sum out variables one at a time, caching intermediate factors. Elimination order decides the cost.
+pre: prob.inference.exact.enumeration, found.cs.algo.dp
+
+== prob.inference.exact.bp | Belief propagation (sum-product)
+def: Pass messages along edges of a tree; each node's marginal is the product of incoming messages. Exact on trees, and an approximation (loopy BP) on graphs with cycles.
+pre: prob.inference.exact.ve, prob.gm.factor
+paper: Pearl | Reverend Bayes on Inference Engines: A Distributed Hierarchical Approach | 1982
+d: adv
+
+== prob.inference.exact.junction | Junction (clique) tree algorithm
+aka: junction tree; clique tree
+def: Cluster variables into a tree of cliques, then run message passing on it to get all marginals at once.
+pre: prob.inference.exact.bp
+paper: Lauritzen, Spiegelhalter | Local Computations with Probabilities on Graphical Structures and Their Application to Expert Systems | 1988
+d: adv
+
+== prob.inference.map | MAP inference (max-product, Viterbi)
+def: Find the single most likely joint assignment by replacing sums with maxes. Viterbi does this for HMMs; graph cuts solve some image MRFs exactly.
+pre: prob.inference.exact.bp
+paper: Viterbi | Error Bounds for Convolutional Codes and an Asymptotically Optimum Decoding Algorithm | 1967
+d: adv
+
+== prob.inference.sampling | Sampling-based (particle) inference
+def: Approximate the posterior with samples.
+pre: found.prob.mc.estimation
+
+== prob.inference.sampling.forward | Forward, rejection & likelihood-weighted sampling
+def: Sample the network in topological order; reject samples inconsistent with evidence, or weight them by evidence likelihood instead.
+pre: found.prob.mc.rejection, found.prob.mc.importance
+
+== prob.inference.mcmc | Markov chain Monte Carlo (MCMC)
+def: Build a Markov chain whose stationary distribution is the posterior and average over its states. The default engine of Bayesian statistics.
+pre: prob.inference.sampling, found.prob.process.stationary
+paper: Metropolis, Rosenbluth, Rosenbluth, Teller, Teller | Equation of State Calculations by Fast Computing Machines | 1953
+st: dominant
+d: adv
+
+== prob.inference.mcmc.mh | Metropolis–Hastings
+def: Propose a move, then accept it with a probability that keeps the chain targeting the right distribution.
+f: α = min(1, p(x')q(x|x') / p(x)q(x'|x))
+paper: Hastings | Monte Carlo Sampling Methods Using Markov Chains and Their Applications | 1970
+d: adv
+
+== prob.inference.mcmc.gibbs | Gibbs sampling
+def: Resample each variable in turn from its conditional given all the others. Natural for graphical models where conditionals are easy.
+paper: Geman, Geman | Stochastic Relaxation, Gibbs Distributions, and the Bayesian Restoration of Images | 1984
+d: adv
+
+== prob.inference.mcmc.hmc | Hamiltonian Monte Carlo & NUTS
+def: Use the gradient of the log-density to simulate physics-style trajectories, making large distant moves with high acceptance. NUTS tunes trajectory length automatically; default in Stan and PyMC.
+pre: prob.inference.mcmc.mh, found.calc.multi.gradient
+paper: Hoffman, Gelman | The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo | 2014
+st: dominant
+d: adv
+
+== prob.inference.mcmc.langevin | Langevin dynamics
+def: Gradient steps plus Gaussian noise that sample from a distribution. Its stochastic-gradient form (SGLD) scales to big data, and the same idea drives score-based diffusion sampling.
+pre: prob.inference.mcmc.hmc, found.prob.process.sde
+to: dl.gen.diffusion
+d: adv
+
+== prob.inference.mcmc.diagnostics | Convergence diagnostics (burn-in, mixing, R-hat)
+def: Checking that chains have converged and mixed: discard burn-in, compare several chains (R-hat), measure effective sample size.
+d: adv
+
+== prob.inference.vi | Variational inference
+def: Turn inference into optimization: pick the member of a tractable family closest (in KL) to the posterior by maximizing the ELBO. Faster than MCMC and the basis of VAEs.
+f: log p(x) ≥ E_q[log p(x,z)] − E_q[log q(z)]  (ELBO)
+pre: found.info.kl, found.opt.convex.jensen
+paper: Jordan, Ghahramani, Jaakkola, Saul | An Introduction to Variational Methods for Graphical Models | 1999
+to: dl.gen.vae
+st: dominant
+d: adv
+
+== prob.inference.vi.meanfield | Mean-field & coordinate-ascent VI
+def: Assume the posterior factorizes over variables and update each factor in turn.
+pre: found.opt.first.coordinate
+d: adv
+
+== prob.inference.vi.svi | Stochastic & black-box VI
+def: Optimize the ELBO with minibatches and Monte Carlo gradients so VI scales to large data and arbitrary models.
+pre: found.opt.first.sgd
+paper: Hoffman, Blei, Wang, Paisley | Stochastic Variational Inference | 2013
+d: adv
+
+== prob.inference.vi.amortized | Amortized inference & the reparameterization trick
+def: Train a network to output the approximate posterior for any input, and backpropagate through sampling by writing z = μ + σ·ε. The core of the VAE.
+pre: prob.inference.vi.svi, found.prob.rv.change-of-vars
+paper: Kingma, Welling | Auto-Encoding Variational Bayes | 2013
+to: dl.gen.vae
+d: adv
+
+== prob.inference.loopy | Loopy BP & expectation propagation
+def: Message passing on graphs with cycles (approximate, often good), and EP, which matches moments of each factor in turn.
+pre: prob.inference.exact.bp, prob.inference.vi
+paper: Minka | Expectation Propagation for Approximate Bayesian Inference | 2001
+d: adv
+
+== prob.inference.laplace | Laplace approximation
+def: Approximate the posterior by a Gaussian centred at its mode with covariance from the Hessian.
+pre: found.calc.multi.hessian
+d: adv
+
+== prob.inference.em | Expectation–maximization (EM)
+def: Fit models with hidden variables by alternating: E-step computes the posterior over hidden variables, M-step re-estimates parameters. Fits Gaussian mixtures and HMMs (Baum–Welch).
+pre: prob.gm.latent, found.stats.est.mle, found.opt.other.em
+paper: Dempster, Laird, Rubin | Maximum Likelihood from Incomplete Data via the EM Algorithm | 1977
+to: ml.unsup.gmm
+
+######## L2: Temporal models
+== prob.temporal | Temporal probabilistic models
+def: Models of a hidden state evolving over time and observed through noisy sensors: tracking, localization, speech, finance.
+pre: prob.gm.bayesnet, found.prob.process.markov
+
+== prob.temporal.tasks | Filtering, prediction, smoothing, decoding
+def: The four questions: where am I now (filtering), where next (prediction), where was I (smoothing), and what was the most likely path (decoding/Viterbi).
+
+== prob.temporal.forward-backward | Forward–backward algorithm & Baum–Welch
+def: Dynamic programming for HMM filtering and smoothing; Baum–Welch uses it inside EM to learn HMM parameters.
+pre: prob.temporal.tasks, prob.gm.hmm, found.cs.algo.dp
+paper: Baum, Petrie, Soules, Weiss | A Maximization Technique Occurring in the Statistical Analysis of Probabilistic Functions of Markov Chains | 1970
+d: adv
+
+== prob.temporal.kalman | Kalman filter
+def: Exact filtering for linear-Gaussian systems: predict, then correct with each measurement, weighted by uncertainty. Runs in GPS, aircraft, robots and phones.
+f: x̂ ← x̂ + K(z − Hx̂)
+pre: prob.temporal.tasks, found.prob.dist.mvn
+paper: Kalman | A New Approach to Linear Filtering and Prediction Problems | 1960
+st: dominant
+to: dom.robotics
+
+== prob.temporal.ekf | Extended & unscented Kalman filters
+def: Kalman filtering for nonlinear systems by local linearization (EKF) or by propagating sigma points (UKF).
+pre: prob.temporal.kalman
+d: adv
+
+== prob.temporal.particle | Particle filters (sequential Monte Carlo)
+def: Represent the belief by weighted samples, propagate and resample them. Handles any nonlinearity or multimodality; used in robot localization.
+pre: prob.temporal.tasks, found.prob.mc.importance
+paper: Gordon, Salmond, Smith | Novel Approach to Nonlinear/Non-Gaussian Bayesian State Estimation | 1993
+to: dom.robotics
+d: adv
+
+== prob.temporal.ssm | State-space models
+def: The general family of latent dynamical models (linear-Gaussian, switching, nonlinear). Its structured form was revived in deep learning as sequence models (S4, Mamba).
+pre: prob.temporal.kalman
+to: dl.arch.ssm
+d: adv
+
+######## L2: Bayesian machine learning
+== prob.bayesml | Bayesian machine learning
+def: Learning as posterior inference over model parameters, giving predictions with uncertainty and principled model comparison.
+pre: found.stats.bayes, prob.inference
+
+== prob.bayesml.linreg | Bayesian linear regression
+def: Put a Gaussian prior on weights; the posterior and predictive distributions are Gaussian in closed form, with error bars that widen away from the data.
+pre: found.stats.bayes.predictive
+to: prob.gp
+
+== prob.bayesml.evidence | Model comparison & Bayesian Occam's razor
+def: Compare models by marginal likelihood p(D|M), which automatically penalizes needless complexity. BIC approximates it.
+pre: found.stats.bayes.prior-posterior
+paper: Schwarz | Estimating the Dimension of a Model | 1978
+to: ml.eval.selection
+d: adv
+
+== prob.bayesml.hierarchical | Hierarchical & empirical Bayes
+def: Parameters share priors whose own parameters are learned, letting related groups borrow strength (e.g., per-school effects).
+d: adv
+
+== prob.bayesml.ppca | Probabilistic PCA & factor analysis
+def: Linear latent variable models: PCA reinterpreted as a Gaussian generative model, so it handles missing data and fits into larger models.
+pre: prob.gm.latent, found.prob.dist.mvn
+paper: Tipping, Bishop | Probabilistic Principal Component Analysis | 1999
+x: ml.unsup.pca
+d: adv
+
+== prob.bayesml.topic | Topic models (LDA)
+def: Each document is a mixture of topics and each topic a distribution over words, learned with Gibbs sampling or VI.
+pre: prob.gm.latent, found.prob.dist.dirichlet
+paper: Blei, Ng, Jordan | Latent Dirichlet Allocation | 2003
+x: dom.nlp.lda
+st: classic
+d: adv
+
+== prob.bayesml.nonparam | Bayesian nonparametrics (Dirichlet process)
+def: Priors over infinite-dimensional objects, so model size grows with data: Dirichlet processes for an unbounded number of clusters (the Chinese restaurant process), Gaussian processes for functions.
+pre: found.prob.dist.dirichlet
+paper: Ferguson | A Bayesian Analysis of Some Nonparametric Problems | 1973
+d: adv
+
+== prob.bayesml.bnn | Bayesian neural networks
+def: Distributions over network weights instead of point estimates, for calibrated uncertainty. Exact inference is intractable; approximations include VI, MC dropout and Laplace.
+pre: prob.inference.vi
+paper: Neal | Bayesian Learning for Neural Networks | 1996
+to: dl
+st: active
+d: adv
+
+== prob.bayesml.uncertainty | Uncertainty quantification (aleatoric vs epistemic)
+def: Aleatoric uncertainty is noise in the data itself; epistemic is the model's ignorance, which shrinks with more data. Deep ensembles and MC dropout are practical estimators.
+paper: Lakshminarayanan, Pritzel, Blundell | Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles | 2017
+to: safe.robust
+st: active
+
+######## L2: Gaussian processes
+== prob.gp | Gaussian processes
+def: A distribution over functions: any finite set of function values is jointly Gaussian, with covariance given by a kernel. Gives exact Bayesian regression with error bars for small data.
+f: f ~ GP(m(x), k(x, x'))
+pre: found.prob.dist.mvn, prob.bayesml.linreg
+paper: Rasmussen, Williams | Gaussian Processes for Machine Learning | 2006
+x: ml.kernel
+d: adv
+
+== prob.gp.kernels | Covariance functions (kernels)
+def: The kernel encodes assumptions about the function: smoothness (RBF), roughness (Matérn), periodicity, and their sums and products.
+pre: found.linalg.special.psd
+d: adv
+
+== prob.gp.regression | GP regression & hyperparameter learning
+def: The posterior mean and variance follow from Gaussian conditioning; kernel hyperparameters are fit by maximizing the marginal likelihood. Cost is O(n³).
+pre: prob.gp.kernels, found.linalg.decomp.cholesky
+d: adv
+
+== prob.gp.classification | GP classification
+def: GP priors with non-Gaussian likelihoods need approximate inference (Laplace, EP, VI).
+pre: prob.gp.regression, prob.inference.laplace
+d: adv
+
+== prob.gp.sparse | Sparse & scalable GPs
+def: Use a small set of inducing points (or structured kernels) to cut the cubic cost so GPs scale to large datasets.
+pre: prob.gp.regression, prob.inference.vi
+d: adv
+
+== prob.bayesopt | Bayesian optimization
+def: Optimize expensive black-box functions by fitting a surrogate model (often a GP) and choosing the next point with an acquisition function. Standard for hyperparameter tuning and experiment design.
+pre: prob.gp.regression, found.opt.other.blackbox
+paper: Jones, Schonlau, Welch | Efficient Global Optimization of Expensive Black-Box Functions | 1998
+to: ml.eval.hpo
+st: dominant
+d: adv
+
+== prob.bayesopt.acquisition | Acquisition functions (EI, UCB, PI)
+def: Rules that trade off exploring uncertain regions against exploiting good ones: expected improvement, upper confidence bound, probability of improvement.
+x: rl.bandits
+d: adv
+
+######## L2: Causal inference
+== prob.causal | Causal inference
+def: Moving from correlation to cause: what happens if we intervene, and what would have happened otherwise. Needed whenever ML is used to make decisions rather than just predictions.
+pre: prob.gm.bayesnet, found.stats.desc.correlation
+paper: Pearl | Causality: Models, Reasoning, and Inference | 2000
+st: active
+
+== prob.causal.ladder | Ladder of causation
+def: Pearl's three rungs: association (seeing), intervention (doing), counterfactuals (imagining). Standard ML lives on rung one.
+paper: Pearl, Mackenzie | The Book of Why | 2018
+d: beg
+
+== prob.causal.scm | Structural causal models & causal DAGs
+def: Each variable is a function of its causes plus noise; the graph of these functions is a causal DAG. Arrows mean "listens to", not just correlation.
+pre: prob.causal.ladder
+
+== prob.causal.confounding | Confounding & Simpson's paradox
+def: A hidden common cause creates misleading associations; a trend can reverse when data is split by a confounder.
+pre: prob.causal.scm
+d: beg
+
+== prob.causal.do | Interventions & the do-operator
+def: P(y | do(x)) is the outcome when x is set by intervention, which differs from P(y | x) when there is confounding. Do-calculus says when it can be computed from observational data.
+pre: prob.causal.scm
+paper: Pearl | Causal Diagrams for Empirical Research | 1995
+d: adv
+
+== prob.causal.backdoor | Back-door & front-door adjustment
+def: Graphical criteria for which variables to adjust for so that an observational estimate equals the interventional effect.
+pre: prob.causal.do, prob.gm.bayesnet.dsep
+d: adv
+
+== prob.causal.counterfactual | Counterfactuals
+def: Questions about a specific unit under a different past ("would this patient have recovered without the drug?"), answered with structural causal models.
+pre: prob.causal.do
+d: adv
+
+== prob.causal.potential-outcomes | Potential outcomes (Rubin causal model)
+def: The statistics tradition of causality: each unit has an outcome under treatment and under control, only one of which is observed. Defines average treatment effects (ATE).
+paper: Rubin | Estimating Causal Effects of Treatments in Randomized and Nonrandomized Studies | 1974
+
+== prob.causal.rct | Randomized controlled trials
+def: Randomize who gets the treatment to break all confounding. The gold standard, and the logic behind A/B tests.
+pre: prob.causal.potential-outcomes
+x: found.stats.testing.ab
+d: beg
+
+== prob.causal.observational | Observational methods (matching, IPW, IV, diff-in-diff)
+def: Estimating effects without randomization: propensity-score matching and weighting, instrumental variables, difference-in-differences, regression discontinuity.
+pre: prob.causal.potential-outcomes, prob.causal.backdoor
+d: adv
+
+== prob.causal.discovery | Causal discovery
+def: Inferring the causal graph from data using independence tests (PC algorithm), scores, or functional assumptions.
+pre: prob.causal.scm, prob.gm.learning.structure
+paper: Spirtes, Glymour, Scheines | Causation, Prediction, and Search | 1993
+st: active
+d: adv
+
+== prob.causal.ml | Causal machine learning
+def: Using flexible ML models to estimate causal effects (double/debiased ML, causal forests, uplift modelling) and using causality to make models robust to distribution shift.
+pre: prob.causal.observational
+paper: Chernozhukov et al. | Double/Debiased Machine Learning for Treatment and Structural Parameters | 2018
+to: ml.concepts.shift
+st: active
+d: adv
+
+######## L2: Decision theory
+== prob.decision | Decision theory
+def: Choosing actions under uncertainty by combining beliefs (probabilities) with desires (utilities). The "utility-based agent" made precise.
+pre: found.stats.decision, hist.agents.types.utility
+
+== prob.decision.utility | Utility theory
+def: If preferences satisfy a few rationality axioms, there is a utility function and rational choice maximizes its expected value.
+f: a* = argmax_a Σ_s P(s|a) U(s)
+paper: von Neumann, Morgenstern | Theory of Games and Economic Behavior | 1944
+
+== prob.decision.risk | Utility of money & risk attitudes
+def: Utility is usually concave in money (risk aversion), which explains insurance and the certainty-equivalent.
+pre: prob.decision.utility
+d: beg
+
+== prob.decision.multiattribute | Multiattribute utility & dominance
+def: Combining several criteria (cost, safety, time) into one utility, and ruling out options that are worse on every criterion.
+pre: prob.decision.utility
+
+== prob.decision.network | Decision networks (influence diagrams)
+def: Bayesian networks extended with decision nodes and utility nodes, evaluated to find the best policy.
+pre: prob.decision.utility, prob.gm.bayesnet
+paper: Howard, Matheson | Influence Diagrams | 1984
+d: adv
+
+== prob.decision.voi | Value of information
+def: How much an observation is worth before you make it: the expected gain in utility from deciding after seeing it. Guides what to measure or ask.
+pre: prob.decision.network
+paper: Howard | Information Value Theory | 1966
+to: ml.active
+d: adv
+
+== prob.decision.irrational | Human judgment & bounded rationality
+def: People systematically deviate from expected utility (prospect theory, framing effects) and satisfice under limited computation. Border region with behavioural economics.
+pre: prob.decision.utility
+paper: Kahneman, Tversky | Prospect Theory: An Analysis of Decision under Risk | 1979
+st: border
+d: beg
+
+== prob.decision.preferences | Uncertain preferences & assistance games
+def: When the machine doesn't know the human's utility, it should treat preferences as uncertain, learn them from behaviour, and defer. The formal basis of one approach to alignment.
+pre: prob.decision.voi
+paper: Hadfield-Menell, Dragan, Abbeel, Russell | Cooperative Inverse Reinforcement Learning | 2016
+x: hist.define.four.beneficial
+to: safe.alignment
+st: active
+d: adv
+
+######## L2: Probabilistic programming & relational models
+== prob.ppl | Probabilistic programming
+def: Write a generative model as an ordinary program with random choices; a general inference engine computes the posterior. Separates modelling from inference.
+pre: prob.inference.mcmc, prob.inference.vi
+paper: Carpenter et al. | Stan: A Probabilistic Programming Language | 2017
+st: active
+d: adv
+
+== prob.ppl.languages | PPL systems (Stan, PyMC, Pyro, NumPyro)
+def: Stan and PyMC focus on statistical models with HMC/NUTS; Pyro and NumPyro add deep models and stochastic VI.
+st: dominant
+d: adv
+
+== prob.ppl.relational | Relational & open-universe models
+def: Models over unknown numbers of objects and their relations (e.g., which citations refer to the same paper), written in languages like BLOG.
+pre: prob.gm.plates
+paper: Milch et al. | BLOG: Probabilistic Models with Unknown Objects | 2005
+d: adv
+
+== prob.ppl.srl | Statistical relational learning (Markov logic)
+def: Combining first-order logic with probability: weighted logical formulas define a Markov network over all groundings.
+pre: prob.ppl.relational, sym.logic.fol, prob.gm.mrf
+paper: Richardson, Domingos | Markov Logic Networks | 2006
+to: front.neurosym
+st: classic
+d: adv

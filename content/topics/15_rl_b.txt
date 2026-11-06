@@ -1,0 +1,303 @@
+# FIELD 7 — Reinforcement Learning, part B: policy methods, model-based, imitation, offline, games, multi-agent
+!defaults d=adv st=foundational
+
+######## L2: Policy optimization
+== rl.policy | Policy optimization
+def: Optimize the policy directly by gradient ascent on expected return. Handles continuous and stochastic actions, and is how LLMs are fine-tuned with RL.
+pre: rl.basics.taxonomy, found.opt.first.sgd
+d: int
+
+== rl.policy.pgt | Policy gradient theorem & REINFORCE
+def: The gradient of expected return is the expected gradient of log π(a|s) weighted by the return. REINFORCE estimates it from sampled episodes.
+f: ∇J(θ) = E[∇log π_θ(a|s) · Gₜ]
+pre: found.prob.mc.estimation
+paper: Williams | Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning | 1992
+d: int
+
+== rl.policy.baseline | Baselines & advantage
+def: Subtract a baseline (usually V(s)) from returns to cut variance without adding bias; what remains is the advantage A(s,a) = Q(s,a) − V(s).
+pre: rl.policy.pgt
+d: int
+
+== rl.policy.actor-critic | Actor–critic (A2C, A3C)
+def: An actor (the policy) is updated using advantages estimated by a critic (a value function). A3C ran many actors in parallel.
+pre: rl.policy.baseline, rl.td
+paper: Mnih et al. | Asynchronous Methods for Deep Reinforcement Learning | 2016
+
+== rl.policy.gae | Generalized advantage estimation
+def: Blend multi-step TD advantage estimates with a λ parameter to trade bias for variance.
+pre: rl.policy.actor-critic, rl.td.nstep
+paper: Schulman, Moritz, Levine, Jordan, Abbeel | High-Dimensional Continuous Control Using Generalized Advantage Estimation | 2015
+
+== rl.policy.trpo | TRPO
+def: Trust region policy optimization: limit each update by a KL constraint between old and new policies so performance improves monotonically.
+pre: rl.policy.actor-critic, found.opt.second.natural, found.info.kl
+paper: Schulman, Levine, Moritz, Jordan, Abbeel | Trust Region Policy Optimization | 2015
+st: classic
+
+== rl.policy.ppo | PPO
+def: Proximal policy optimization: a clipped objective that keeps the new policy near the old one, approximating TRPO with plain SGD. The default policy-gradient algorithm, and the one used in classic RLHF.
+f: L = E[min(r·A, clip(r, 1−ε, 1+ε)·A)],  r = π_new/π_old
+pre: rl.policy.trpo, rl.policy.gae, found.prob.mc.importance
+paper: Schulman, Wolski, Dhariwal, Radford, Klimov | Proximal Policy Optimization Algorithms | 2017
+st: dominant
+to: llm.post.rlhf
+
+== rl.policy.grpo | Critic-free policy optimization for LLMs (GRPO, RLOO)
+def: Estimate advantages by comparing several sampled answers to the same prompt instead of training a value network. Cheap and widely used to train reasoning models.
+pre: rl.policy.ppo
+paper: Shao et al. | DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models | 2024
+to: llm.reasoning
+st: dominant
+
+== rl.policy.ddpg | Deterministic policy gradients (DDPG, TD3)
+def: Off-policy actor–critic for continuous actions with a deterministic actor; TD3 adds twin critics and delayed updates to curb overestimation.
+pre: rl.policy.actor-critic, rl.deep.replay
+paper: Fujimoto, van Hoof, Meger | Addressing Function Approximation Error in Actor-Critic Methods | 2018
+
+== rl.policy.sac | Soft actor–critic & maximum-entropy RL
+def: Maximize reward plus policy entropy, encouraging exploration and robustness. A strong default for continuous control and robotics.
+pre: rl.policy.ddpg, found.info.entropy
+paper: Haarnoja, Zhou, Abbeel, Levine | Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor | 2018
+st: dominant
+
+######## L2: Model-based RL
+== rl.model | Model-based RL
+def: Learn or use a model of how the environment responds, then plan with it. Far more sample-efficient when the model is good.
+pre: rl.basics.taxonomy, rl.dp
+d: int
+
+== rl.model.dyna | Dyna (learning + planning)
+def: Learn a model from real experience and use simulated experience from it to update values as well.
+pre: rl.qlearning
+paper: Sutton | Dyna, an Integrated Architecture for Learning, Planning, and Reacting | 1991
+st: classic
+
+== rl.model.mpc | Model predictive control & trajectory optimization
+def: At each step, plan the best action sequence over a short horizon with the model, execute the first action, then replan. Standard in robotics and control.
+pre: hist.roots.control
+to: dom.robotics
+
+== rl.model.muzero | AlphaZero & MuZero
+def: AlphaZero learns Go, chess and shogi from self-play with MCTS guided by a policy/value network; MuZero also learns the model, planning in a learned latent space.
+pre: rl.games.alphago, sym.search.mcts
+paper: Schrittwieser et al. | Mastering Atari, Go, Chess and Shogi by Planning with a Learned Model | 2020
+
+== rl.model.dreamer | World-model agents (Dreamer)
+def: Learn a latent dynamics model and train the policy entirely in imagined rollouts. DreamerV3 handles many domains with one set of hyperparameters.
+pre: dl.gen.vae
+paper: Hafner et al. | Mastering Diverse Domains through World Models | 2023
+to: front.worldmodels
+st: active
+
+######## L2: Exploration & reward
+== rl.explore | Exploration strategies
+def: Methods for finding rewards in large or sparse environments beyond random actions.
+pre: rl.basics.explore, rl.bandits
+
+== rl.explore.intrinsic | Intrinsic motivation & curiosity
+def: Add self-generated rewards for novelty or prediction error (count bonuses, ICM, random network distillation) so agents explore without external rewards.
+paper: Burda, Edwards, Storkey, Klimov | Exploration by Random Network Distillation | 2018
+
+== rl.reward | Reward design
+def: The reward defines the task. Sparse rewards are hard to learn from; shaped rewards can be exploited in ways the designer didn't intend.
+pre: rl.basics.loop
+d: int
+
+== rl.reward.shaping | Reward shaping
+def: Add intermediate rewards to guide learning; potential-based shaping provably leaves the optimal policy unchanged.
+paper: Ng, Harada, Russell | Policy Invariance under Reward Transformations: Theory and Application to Reward Shaping | 1999
+
+== rl.reward.hacking | Reward hacking & specification gaming
+def: Agents maximize the literal reward in unintended ways (a boat racing in circles to collect points). Central to AI safety and to RL on language models.
+to: safe.alignment
+paper: Amodei et al. | Concrete Problems in AI Safety | 2016
+st: active
+d: int
+
+######## L2: Partial observability & hierarchy
+== rl.pomdp | POMDP
+def: An MDP where the agent sees only observations, not the state, so it must act on a belief (a distribution over states) or a memory of past observations.
+pre: rl.mdp, hist.agents.env.observable, prob.temporal.tasks
+paper: Kaelbling, Littman, Cassandra | Planning and Acting in Partially Observable Stochastic Domains | 1998
+
+== rl.pomdp.memory | Recurrent & memory-based policies
+def: In practice, deep RL handles partial observability by giving the policy an RNN or Transformer over its history.
+pre: dl.arch.rnn.lstm
+
+== rl.hier | Hierarchical RL (options)
+def: Learn and reuse temporally extended actions (options, skills) so agents plan at several time scales.
+pre: rl.mdp, sym.planning.htn
+paper: Sutton, Precup, Singh | Between MDPs and Semi-MDPs: A Framework for Temporal Abstraction in Reinforcement Learning | 1999
+
+######## L2: Learning from demonstrations
+== rl.imitation | Imitation learning
+def: Learn behaviour from expert demonstrations instead of (or before) rewards.
+pre: rl.basics.policy, ml.paradigms.supervised
+d: int
+
+== rl.imitation.bc | Behaviour cloning
+def: Supervised learning from states to expert actions. Simple, but errors compound once the agent drifts off the expert's states.
+d: int
+to: dom.robotics
+
+== rl.imitation.dagger | DAgger
+def: Fix compounding errors by letting the learner act, asking the expert to label the states it reaches, and retraining.
+pre: rl.imitation.bc
+paper: Ross, Gordon, Bagnell | A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning | 2011
+
+== rl.imitation.irl | Inverse reinforcement learning
+def: Infer the reward function an expert is optimizing from its behaviour, then optimize it.
+paper: Ng, Russell | Algorithms for Inverse Reinforcement Learning | 2000
+x: prob.decision.preferences
+
+== rl.imitation.gail | Adversarial imitation (GAIL)
+def: Train a policy so a discriminator can't distinguish its behaviour from the expert's, a GAN-style form of imitation.
+pre: rl.imitation.irl, dl.gen.gan
+paper: Ho, Ermon | Generative Adversarial Imitation Learning | 2016
+
+== rl.imitation.preferences | Learning from human preferences
+def: Learn a reward model from humans comparing pairs of behaviours, then optimize it with RL. The direct ancestor of RLHF for language models.
+pre: rl.imitation.irl, rl.policy.ppo
+paper: Christiano et al. | Deep Reinforcement Learning from Human Preferences | 2017
+to: llm.post.rlhf
+
+######## L2: Offline RL
+== rl.offline | Offline (batch) RL
+def: Learn a policy from a fixed dataset without further interaction. Hard because the policy may favour actions the data never covered; fixed by staying conservative (CQL, IQL).
+pre: rl.qlearning, ml.concepts.shift
+paper: Levine, Kumar, Tucker, Fu | Offline Reinforcement Learning: Tutorial, Review, and Perspectives on Open Problems | 2020
+st: active
+
+== rl.offline.dt | Decision Transformer & RL as sequence modelling
+def: Treat trajectories as token sequences and train a Transformer to output actions conditioned on desired return.
+pre: dl.arch.transformer
+paper: Chen et al. | Decision Transformer: Reinforcement Learning via Sequence Modeling | 2021
+
+######## L2: Safe RL
+== rl.safe | Safe & constrained RL
+def: Learn while respecting constraints and avoiding catastrophic actions during exploration (constrained MDPs, shielding).
+pre: rl.policy, found.opt.constrained.lagrange
+to: safe.alignment
+st: active
+
+######## L2: Landmark game-playing systems
+== rl.games | Game-playing AI
+def: Games have been AI's benchmarks for 70 years. The milestones show search, learning and self-play combining.
+pre: rl.deep, sym.search.adversarial
+d: beg
+
+== rl.games.alphago | AlphaGo
+def: Policy and value networks trained on human games and self-play, combined with Monte Carlo tree search; beat Lee Sedol in 2016.
+pre: sym.search.mcts, dl.arch.cnn
+x: hist.timeline.deep.alphago
+paper: Silver et al. | Mastering the Game of Go with Deep Neural Networks and Tree Search | 2016
+yr: 2016
+st: milestone
+
+== rl.games.alphazero | AlphaZero
+def: Learned Go, chess and shogi from self-play alone, with no human data.
+pre: rl.games.alphago
+paper: Silver et al. | A General Reinforcement Learning Algorithm that Masters Chess, Shogi, and Go through Self-Play | 2018
+yr: 2017
+st: milestone
+
+== rl.games.realtime | StarCraft II & Dota 2 (AlphaStar, OpenAI Five)
+def: Deep RL with self-play reached top human level in complex real-time games with partial information and long horizons.
+pre: rl.games.alphago, rl.policy.ppo
+paper: Vinyals et al. | Grandmaster Level in StarCraft II using Multi-Agent Reinforcement Learning | 2019
+yr: 2019
+st: milestone
+
+== rl.games.poker | Poker (Libratus, Pluribus)
+def: Superhuman no-limit Texas hold'em, two-player (2017) and six-player (2019), using counterfactual regret minimization and search rather than deep RL alone.
+pre: rl.multiagent.cfr
+paper: Brown, Sandholm | Superhuman AI for Multiplayer Poker | 2019
+yr: 2019
+st: milestone
+
+== rl.games.cicero | Diplomacy (CICERO)
+def: Combined a language model with strategic planning to negotiate and play the game Diplomacy at human level.
+pre: rl.games.poker, llm
+paper: Meta FAIR Diplomacy Team et al. | Human-level Play in the Game of Diplomacy by Combining Language Models with Strategic Reasoning | 2022
+yr: 2022
+st: milestone
+
+######## L2: Game theory & multi-agent systems
+== rl.multiagent | Multi-agent systems & game theory
+def: Several agents with their own goals sharing an environment, competing, cooperating or negotiating. Game theory gives the math; multi-agent RL and MAS give the algorithms.
+pre: hist.agents.env.multi, prob.decision.utility
+paper: Shoham, Leyton-Brown | Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations | 2008
+d: int
+
+== rl.multiagent.normal | Normal-form games & payoff matrices
+def: Games described by each player's strategies and a table of payoffs (prisoner's dilemma, chicken, matching pennies).
+d: beg
+
+== rl.multiagent.nash | Nash equilibrium & dominant strategies
+def: A profile where no player gains by changing strategy alone; may require mixed (randomized) strategies. Every finite game has one.
+pre: rl.multiagent.normal
+paper: Nash | Equilibrium Points in N-Person Games | 1950
+d: int
+
+== rl.multiagent.zerosum | Zero-sum games & the minimax theorem
+def: In two-player zero-sum games, maximin equals minimax and can be found by linear programming.
+pre: rl.multiagent.nash, found.opt.constrained.lp
+x: sym.search.adversarial.minimax
+paper: von Neumann | Zur Theorie der Gesellschaftsspiele | 1928
+
+== rl.multiagent.extensive | Extensive-form & imperfect-information games
+def: Games as trees of moves with information sets for what each player can't see (poker, negotiation).
+pre: rl.multiagent.nash, sym.search.adversarial.imperfect
+
+== rl.multiagent.cfr | Counterfactual regret minimization
+def: Iteratively minimize regret at each information set; the average strategy converges to a Nash equilibrium. Engine of superhuman poker.
+pre: rl.multiagent.extensive, ml.theory.regret
+paper: Zinkevich, Johanson, Bowling, Piccione | Regret Minimization in Games with Incomplete Information | 2007
+
+== rl.multiagent.repeated | Repeated games & cooperation
+def: Playing the same game many times makes cooperation sustainable (tit-for-tat in the iterated prisoner's dilemma).
+pre: rl.multiagent.nash
+paper: Axelrod | The Evolution of Cooperation | 1984
+d: int
+
+== rl.multiagent.cooperative | Cooperative game theory & Shapley value
+def: How coalitions form and how to divide their gains fairly; the Shapley value averages each player's marginal contribution. Reused for feature attribution (SHAP).
+pre: rl.multiagent.normal
+paper: Shapley | A Value for n-Person Games | 1953
+x: ml.interp.shap
+
+== rl.multiagent.mechanism | Mechanism design, auctions & social choice
+def: Design the rules so self-interested agents produce good outcomes: auctions (Vickrey), voting rules, matching markets. Arrow's theorem limits voting rules.
+pre: rl.multiagent.nash
+paper: Vickrey | Counterspeculation, Auctions, and Competitive Sealed Tenders | 1961
+
+== rl.multiagent.bargaining | Negotiation & bargaining
+def: Agents reaching agreements by exchanging offers (alternating-offers protocol, Nash bargaining solution).
+pre: rl.multiagent.nash
+d: int
+
+== rl.multiagent.mas | Classical multi-agent systems (BDI, contract net, agent communication)
+def: Agent architectures built on beliefs, desires and intentions; task allocation by announcing and bidding (contract net); agent communication languages. The design ancestors of LLM multi-agent frameworks.
+pre: sym.planning
+paper: Rao, Georgeff | BDI Agents: From Theory to Practice | 1995
+to: sys.agents.multi
+st: classic
+d: int
+
+== rl.multiagent.marl | Multi-agent reinforcement learning
+def: Several learning agents at once, so the environment is non-stationary from each one's view. Approaches: independent learners, centralized training with decentralized execution, self-play, population training.
+pre: rl.multiagent.nash, rl.policy.actor-critic
+paper: Lowe et al. | Multi-Agent Actor-Critic for Mixed Cooperative-Competitive Environments | 2017
+st: active
+
+== rl.multiagent.selfplay | Self-play & population-based training
+def: Train against copies of yourself or a league of past versions to create an ever-improving curriculum.
+pre: rl.multiagent.marl
+x: rl.games.alphazero
+
+== rl.multiagent.emergent | Emergent communication & social behaviour
+def: Agents trained together develop their own signalling protocols, tool use or division of labour (e.g., hide-and-seek).
+pre: rl.multiagent.marl
+paper: Baker et al. | Emergent Tool Use From Multi-Agent Autocurricula | 2019
+st: active

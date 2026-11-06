@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import { nodes, get } from '../lib/data.js';
+const entries = [];
+for (const n of nodes) {
+  if (n.level === 0) continue;
+  entries.push({ term: n.name, url: n.url, note: get(n.field).name === n.name ? 'Field' : get(n.field).name });
+  for (const a of n.aka) entries.push({ term: a, url: n.url, note: `see ${n.name}` });
+}
+const key = s => s.normalize('NFKD').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+entries.sort((a, b) => key(a.term).localeCompare(key(b.term)));
+const groups = new Map();
+for (const e of entries) {
+  const c = key(e.term).charAt(0).toUpperCase();
+  const L = /[A-Z]/.test(c) ? c : '0–9';
+  if (!groups.has(L)) groups.set(L, []);
+  groups.get(L).push(e);
+}
+---
+<Base title="Glossary" description="Every topic and abbreviation on the map, in alphabetical order." section="glossary" wide>
+  <h1>Glossary</h1>
+  <p class="lead">{entries.length.toLocaleString('en')} terms: every topic name and every alternative name or abbreviation, in alphabetical order.</p>
+  <nav class="letters" aria-label="Letters">{[...groups.keys()].map(L => <a href={`#${L === '0–9' ? 'num' : L}`}>{L}</a>)}</nav>
+  {[...groups.entries()].map(([L, es]) => (
+    <section>
+      <h2 id={L === '0–9' ? 'num' : L}>{L}</h2>
+      <ul class="list-plain cols">
+        {es.map(e => <li><a href={e.url}>{e.term}</a><span class="sub">{e.note}</span></li>)}
+      </ul>
+    </section>
+  ))}
+</Base>

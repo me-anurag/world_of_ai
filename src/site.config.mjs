@@ -6,7 +6,7 @@ export const site = {
   repo: 'me-anurag/world_of_ai',
   // Shown on About and in page metadata. Leave empty to omit.
   editor: process.env.SITE_EDITOR || '',
-  // Shown in the header while the site is in private beta.
-  beta: true,
+  // Shows a Beta badge in the header when true.
+  beta: false,
   updated: new Date().toISOString().slice(0, 10),
 };

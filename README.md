@@ -73,8 +73,6 @@ Looks every cited paper up on arXiv and Crossref (about 15 minutes; needs intern
 
 - Run `npm run verify:papers` and resolve every non-match.
 - Review the 150 most-required topics and add `rev:` lines.
-- Set `beta: false` in `src/site.config.mjs` to remove the Beta badge.
-- Add a changelog entry in `src/pages/changelog.astro`.
 
 ## Licence
 

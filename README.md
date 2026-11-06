@@ -15,7 +15,7 @@ npm run preview    # serve dist/
 
 `npm run build` does five things in order and stops at the first failure:
 
-1. `scripts/check_and_build_data.py` checks the source files in `content/topics/` (every link resolves, no prerequisite loops, no duplicate names, required fields present) and writes `build/atlas.json`.
+1. `scripts/check_and_build_data.py` checks the source files in `content/topics/` (every link resolves, no prerequisite loops, no duplicate names, required fields present) and writes `build/world-of-ai.json`.
 2. `scripts/prepare-data.mjs` assigns URL slugs, computes learning paths, and writes the site data and the public downloads.
 3. `scripts/lint-content.mjs` rejects filler phrasing, more than one em dash per definition, and sentences over 40 words.
 4. `astro build`, then Pagefind builds the search index.
@@ -65,7 +65,7 @@ Looks every cited paper up on arXiv and Crossref (about 15 minutes; needs intern
    - Framework preset: Astro
    - Build command: `npm run build`
    - Build output directory: `dist`
-   - Environment variables: `SITE_URL` = your final address, for example `https://atlasofai.org` (no trailing slash); `NODE_VERSION` = `20`; optionally `SITE_EDITOR` = the editor's name shown on the About page.
+   - Environment variables: `SITE_URL` = your final address, for example `https://worldofai.org` (no trailing slash); `NODE_VERSION` = `20`; optionally `SITE_EDITOR` = the editor's name shown on the About page.
 4. Deploy. The site is live at `<project>.pages.dev`.
 5. Custom domain: Pages project → Custom domains → Set up a domain. Then update `SITE_URL` and the address in `public/robots.txt`, and redeploy.
 

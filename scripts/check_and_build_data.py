@@ -188,7 +188,7 @@ def main():
     data = {"version": 1, "built": [n["id"] for n in out if n["level"]==1 and n["status"]!="unmapped"], "nodes": out,
             "reverse": rev, "pending": pending, "stats": dict(stats)}
     os.makedirs(os.path.join(HERE, "build"), exist_ok=True)
-    json.dump(data, open(os.path.join(HERE, "build", "atlas.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump(data, open(os.path.join(HERE, "build", "world-of-ai.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     for w in warnings: print("WARN ", w)
     for e in errors: print("ERROR", e)
     print("STATS", dict(stats))

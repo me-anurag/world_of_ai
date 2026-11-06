@@ -1,4 +1,4 @@
-// Turns build/atlas.json (from check_and_build_data.py) into src/data/site.json for the site.
+// Turns build/world-of-ai.json (from check_and_build_data.py) into src/data/site.json for the site.
 // Assigns stable, readable URL slugs (locked in content/slugs.json so published URLs never change),
 // computes learning paths, and adds the derived fields pages need.
 import fs from 'node:fs';
@@ -6,13 +6,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const atlas = JSON.parse(fs.readFileSync(path.join(root, 'build/atlas.json'), 'utf8'));
+const world = JSON.parse(fs.readFileSync(path.join(root, 'build/world-of-ai.json'), 'utf8'));
 const lockPath = path.join(root, 'content/slugs.json');
 const lock = fs.existsSync(lockPath) ? JSON.parse(fs.readFileSync(lockPath, 'utf8')) : {};
 
-const N = new Map(atlas.nodes.map(n => [n.id, n]));
-const kids = new Map(atlas.nodes.map(n => [n.id, []]));
-for (const n of atlas.nodes) if (n.parent) kids.get(n.parent).push(n.id);
+const N = new Map(world.nodes.map(n => [n.id, n]));
+const kids = new Map(world.nodes.map(n => [n.id, []]));
+for (const n of world.nodes) if (n.parent) kids.get(n.parent).push(n.id);
 
 const slugify = s => s
   .replace(/\s*\([^)]*\)/g, '').normalize('NFKD').replace(/[̀-ͯ]/g, '')
@@ -26,10 +26,10 @@ const fieldOf = id => id.split('.')[0];
 // --- slugs: fields and areas are unique within their parent; topics are unique site-wide
 const used = new Set();
 const slug = {};
-for (const n of atlas.nodes) {
+for (const n of world.nodes) {
   if (lock[n.id]) { slug[n.id] = lock[n.id]; used.add(kindOf(n) + ':' + lock[n.id]); }
 }
-for (const n of atlas.nodes) {
+for (const n of world.nodes) {
   if (slug[n.id] || n.level === 0) continue;
   const k = kindOf(n);
   let base = slugify(n.name) || slugify(n.id);
@@ -43,7 +43,7 @@ for (const n of atlas.nodes) {
   used.add(key); slug[n.id] = s;
 }
 const newLock = {};
-for (const n of atlas.nodes) if (n.level > 0) newLock[n.id] = slug[n.id];
+for (const n of world.nodes) if (n.level > 0) newLock[n.id] = slug[n.id];
 fs.writeFileSync(lockPath, JSON.stringify(newLock, null, 1) + '\n');
 
 const url = id => {
@@ -93,8 +93,8 @@ const desc = {};
 const count = id => (desc[id] = kids.get(id).reduce((s, k) => s + 1 + count(k), 0));
 count('ai');
 
-const rev = atlas.reverse;
-const nodes = atlas.nodes.map(n => {
+const rev = world.reverse;
+const nodes = world.nodes.map(n => {
   const r = rev[n.id] || { neededBy: [], from: [], xBack: [] };
   const crumbs = []; let p = n.parent; while (p) { crumbs.unshift(p); p = N.get(p).parent; }
   const ip = n.level >= 2 ? inherited(n.id) : [];
@@ -113,17 +113,17 @@ const nodes = atlas.nodes.map(n => {
 });
 
 fs.mkdirSync(path.join(root, 'src/data'), { recursive: true });
-fs.writeFileSync(path.join(root, 'src/data/site.json'), JSON.stringify({ stats: atlas.stats, nodes }));
+fs.writeFileSync(path.join(root, 'src/data/site.json'), JSON.stringify({ stats: world.stats, nodes }));
 
 // downloadable dataset (JSON + CSV) in public/data
 fs.mkdirSync(path.join(root, 'public/data'), { recursive: true });
 const pub = nodes.map(({ path: _p, descendants: _d, crumbs: _c, ...rest }) => rest);
-fs.writeFileSync(path.join(root, 'public/data/atlas-of-ai.json'), JSON.stringify({ version: new Date().toISOString().slice(0, 10), license: 'CC BY 4.0', topics: pub }, null, 1));
+fs.writeFileSync(path.join(root, 'public/data/world-of-ai.json'), JSON.stringify({ version: new Date().toISOString().slice(0, 10), license: 'CC BY 4.0', topics: pub }, null, 1));
 const csvCell = v => { const s = v == null ? '' : Array.isArray(v) ? v.join('; ') : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 const cols = ['id', 'name', 'kind', 'parent', 'status', 'difficulty', 'year', 'def', 'formula', 'aka', 'pre', 'to', 'related', 'paper_authors', 'paper_title', 'paper_year', 'url'];
 const rows = [cols.join(',')].concat(nodes.map(n => cols.map(c => csvCell(
   c === 'paper_authors' ? n.paper?.authors : c === 'paper_title' ? n.paper?.title : c === 'paper_year' ? n.paper?.year : n[c])).join(',')));
-fs.writeFileSync(path.join(root, 'public/data/atlas-of-ai.csv'), rows.join('\n') + '\n');
+fs.writeFileSync(path.join(root, 'public/data/world-of-ai.csv'), rows.join('\n') + '\n');
 
 const withPath = nodes.filter(n => n.path.length).length;
 console.log(`site data: ${nodes.length} nodes, ${withPath} learning paths, slugs locked in content/slugs.json`);

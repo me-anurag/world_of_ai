@@ -11,7 +11,7 @@ const sim = (a, b) => { const A = new Set(norm(a).split(' ')), B = new Set(norm(
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function crossref(p) {
   const u = `https://api.crossref.org/works?rows=3&query.bibliographic=${encodeURIComponent(p.title + ' ' + p.authors)}`;
-  const r = await fetch(u, { headers: { 'User-Agent': 'atlas-of-ai-verifier/1.0' } }); if (!r.ok) return [];
+  const r = await fetch(u, { headers: { 'User-Agent': 'world-of-ai-verifier/1.0' } }); if (!r.ok) return [];
   const j = await r.json();
   return j.message.items.map(it => ({ title: (it.title || [''])[0], year: (it.issued?.['date-parts']?.[0]?.[0]) || null, id: it.DOI ? 'doi:' + it.DOI : '' }));
 }

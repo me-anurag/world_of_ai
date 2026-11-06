@@ -1,4 +1,4 @@
-# Atlas of AI
+# World of AI
 
 A reference map of artificial intelligence: 1,505 topics in 15 fields, each with a definition, prerequisites, what it leads to, and the paper that introduced it. Static site built with Astro.
 

@@ -3,8 +3,9 @@
 // computes learning paths, and adds the derived fields pages need.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const atlas = JSON.parse(fs.readFileSync(path.join(root, 'build/atlas.json'), 'utf8'));
 const lockPath = path.join(root, 'content/slugs.json');
 const lock = fs.existsSync(lockPath) ? JSON.parse(fs.readFileSync(lockPath, 'utf8')) : {};

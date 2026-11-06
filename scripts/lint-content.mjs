@@ -1,6 +1,7 @@
 // Content lint: rejects phrasing that reads as filler or machine-written,
 // and definitions that are hard to read. Runs on the built data before the site build.
 import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
 const { nodes } = JSON.parse(fs.readFileSync('src/data/site.json', 'utf8'));
 
 export const BANNED = [
@@ -27,7 +28,7 @@ for (const n of nodes) {
   }
   if (!n.def || n.def.length < 30) problems.push(`${n.id}: definition missing or too short`);
 }
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+const isMain = !!process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain && problems.length) {
   console.error(problems.join('\n'));
   console.error(`\nlint-content: ${problems.length} problem(s)`);

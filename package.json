@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
-    "data": "python3 scripts/check_and_build_data.py && node scripts/prepare-data.mjs",
+    "data": "node scripts/run-python.mjs scripts/check_and_build_data.py && node scripts/prepare-data.mjs",
     "lint:content": "node scripts/lint-content.mjs",
     "dev": "npm run data && astro dev",
     "build": "npm run data && npm run lint:content && astro build && pagefind --site dist && node scripts/lint-site.mjs",
